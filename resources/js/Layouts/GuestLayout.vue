@@ -4,14 +4,23 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <div class="flex min-h-screen items-center justify-center bg-[#F5F5F5] font-sans text-slate-900 antialiased relative overflow-hidden">
-        <div class="relative z-10 w-full max-w-lg px-4 py-12 sm:px-6">
-            <div class="backdrop-blur-xl bg-white/90 px-8 py-10 shadow-2xl shadow-slate-900/5 ring-1 ring-slate-900/5 sm:rounded-3xl sm:p-14">
-                <div class="mb-8 flex flex-col items-center justify-center">
-                    <Link href="/" class="transition-transform duration-300 hover:scale-105">
-                        <ApplicationLogo class="h-16" />
+    <div class="flex min-h-screen items-center justify-center relative overflow-hidden font-sans antialiased">
+        <!-- Premium Background -->
+        <div class="absolute inset-0 bg-[#E5ECEC] z-0"></div>
+        <img class="absolute inset-0 h-full w-full object-cover opacity-[0.15] mix-blend-multiply blur-[2px]" src="/images/login_feature_bg.png" alt="Background" />
+        
+        <div class="relative z-10 w-full max-w-[22rem] px-4 py-6">
+            <!-- Glassmorphism Card -->
+            <div class="bg-white/80 backdrop-blur-2xl px-6 py-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 ring-slate-900/5 rounded-2xl relative overflow-hidden">
+                <!-- Subtle top glow -->
+                <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"></div>
+                
+                <div class="mb-5 flex flex-col items-center justify-center text-center">
+                    <Link href="/" class="transition-transform duration-300 hover:scale-105 inline-block w-48 h-16">
+                        <ApplicationLogo class="w-full h-full drop-shadow-sm" />
                     </Link>
                 </div>
+                
                 <slot />
             </div>
         </div>
