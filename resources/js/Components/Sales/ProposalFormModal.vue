@@ -34,22 +34,99 @@ const paymentCategories = [
     { key: 'taxa_manutencao', label: 'Taxa de Manutenção', color: 'bg-purple-500', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
 ];
 
+const getCategoryMissingBalance = (category) => {
+    if (!selectedProduct.value) return 0;
+    
+    const currentSum = form.payments
+        .filter(p => p.category === category)
+        .reduce((acc, curr) => acc + (parseFloat(curr.total_value) || 0), 0);
+
+    if (category === 'taxa_contrato') {
+        const target = parseFloat(selectedProduct.value.contract_fee) || 0;
+        return Math.max(0, target - currentSum);
+    } 
+    else if (category === 'taxa_manutencao') {
+        const target = (parseInt(selectedProduct.value.maintenance_fee_installments) || 12) * (parseFloat(selectedProduct.value.maintenance_fee_value) || 0);
+        return Math.max(0, target - currentSum);
+    }
+    else if (category === 'entrada' || category === 'saldo') {
+        // Entrada e Saldo dividem o Valor Total da Proposta. O que falta é o remainingBalance.
+        return Math.max(0, remainingBalance.value);
+    }
+    return 0;
+};
+
 const addPaymentLine = (category) => {
     const linesInCategory = form.payments.filter(p => p.category === category).length;
     if (linesInCategory < 5) {
+        const missingBalance = getCategoryMissingBalance(category);
+        
         form.payments.push({
             category: category,
             payment_method: getDefaultPaymentMethod(),
             installments: 1,
-            installment_value: 0,
-            total_value: 0,
+            installment_value: missingBalance,
+            total_value: missingBalance,
             start_date: new Date().toISOString().split('T')[0]
         });
     }
 };
 
+const autoBalanceCategory = (category, ignoreIndex = -1) => {
+    if (!selectedProduct.value) return;
+
+    // 1. Auto-balance para taxas (Contrato e Manutenção)
+    if (category === 'taxa_contrato' || category === 'taxa_manutencao') {
+        const catLines = form.payments.filter(p => p.category === category);
+        if (catLines.length > 0) {
+            const lastLine = catLines[catLines.length - 1];
+            const lastLineGlobalIndex = form.payments.indexOf(lastLine);
+            
+            if (ignoreIndex !== lastLineGlobalIndex) {
+                const sumExceptLast = catLines
+                    .filter(p => p !== lastLine)
+                    .reduce((acc, curr) => acc + (parseFloat(curr.total_value) || 0), 0);
+                    
+                let target = 0;
+                if (category === 'taxa_contrato') target = parseFloat(selectedProduct.value.contract_fee) || 0;
+                if (category === 'taxa_manutencao') target = (parseInt(selectedProduct.value.maintenance_fee_installments) || 12) * (parseFloat(selectedProduct.value.maintenance_fee_value) || 0);
+
+                let diff = target - sumExceptLast;
+                if (diff < 0) diff = 0;
+                
+                lastLine.total_value = diff;
+                lastLine.installment_value = diff / (parseInt(lastLine.installments) || 1);
+            }
+        }
+    }
+
+    // 2. Auto-balance para Entrada e Saldo (afeta a última linha de Saldo)
+    if (category === 'entrada' || category === 'saldo') {
+        const saldoLines = form.payments.filter(p => p.category === 'saldo');
+        if (saldoLines.length > 0) {
+            const lastSaldo = saldoLines[saldoLines.length - 1];
+            const lastSaldoGlobalIndex = form.payments.indexOf(lastSaldo);
+            
+            if (ignoreIndex !== lastSaldoGlobalIndex) {
+                const sumExceptLastSaldo = form.payments
+                    .filter(p => (p.category === 'entrada' || p.category === 'saldo') && p !== lastSaldo)
+                    .reduce((acc, curr) => acc + (parseFloat(curr.total_value) || 0), 0);
+                    
+                let diff = form.total_value - sumExceptLastSaldo;
+                if (diff < 0) diff = 0;
+                
+                lastSaldo.total_value = diff;
+                lastSaldo.installment_value = diff / (parseInt(lastSaldo.installments) || 1);
+            }
+        }
+    }
+};
+
 const removePaymentLine = (index) => {
+    const category = form.payments[index].category;
     form.payments.splice(index, 1);
+    autoBalanceCategory(category);
+    calculateGrandTotal();
 };
 
 const updateLineTotal = (index) => {
@@ -63,7 +140,6 @@ const updateLineTotal = (index) => {
             .filter((p, i) => p.category === 'entrada' && i !== index)
             .reduce((acc, curr) => acc + (parseFloat(curr.total_value) || 0), 0);
         
-        // O limite agora é o percentual "definido" no produto
         const percentualLimite = parseFloat(selectedProduct.value.min_down_payment_percentage) || 100;
         const limiteMaximo = (parseFloat(selectedProduct.value.price) * percentualLimite) / 100;
         const totalComNovaLinha = othersSum + newTotalLine;
@@ -71,26 +147,25 @@ const updateLineTotal = (index) => {
         if (totalComNovaLinha > (limiteMaximo + 0.01)) {
             const valorDisponivel = Math.max(0, limiteMaximo - othersSum);
             
-            // Lógica Inteligente de Ajuste (Solicitada pelo usuário)
-            // Tenta manter o valor da parcela e reduzir a quantidade se possível
             if (value > 0 && Math.floor(valorDisponivel / value) >= 1) {
                 line.installments = Math.floor(valorDisponivel / value);
                 line.total_value = line.installments * value;
                 showLimitWarning(`A entrada atingiu o teto de ${percentualLimite}%. Reduzimos a quantidade de parcelas para ${line.installments} para respeitar o limite.`);
             } else {
-                // Se não cabe nem 1 parcela desse valor, ajusta o valor unitário e fixa em 1 parcela
                 line.installments = 1;
                 line.installment_value = valorDisponivel;
                 line.total_value = valorDisponivel;
                 showLimitWarning(`A entrada atingiu o limite de ${percentualLimite}% (${maskCurrency(limiteMaximo)}). O valor da parcela foi ajustado.`);
             }
             
+            autoBalanceCategory(line.category, index);
             calculateGrandTotal();
             return;
         }
     }
 
     line.total_value = newTotalLine;
+    autoBalanceCategory(line.category, index);
     calculateGrandTotal();
 };
 
@@ -100,12 +175,29 @@ const paymentsSum = computed(() => {
         .reduce((acc, curr) => acc + (parseFloat(curr.total_value) || 0), 0);
 });
 
+const getCategoryTotal = (category) => {
+    return form.payments
+        .filter(p => p.category === category)
+        .reduce((acc, curr) => acc + (parseFloat(curr.total_value) || 0), 0);
+};
+
 const remainingBalance = computed(() => {
     return form.total_value - paymentsSum.value;
 });
 
 const calculateGrandTotal = () => {
     // Total fixo
+};
+
+const onInstallmentsInput = (index) => {
+    const line = form.payments[index];
+    const installments = parseInt(line.installments) || 1;
+    
+    // Quando o usuário muda a quantidade de parcelas, o valor total da linha se mantém,
+    // e o sistema apenas recalcula o valor de cada parcela dividindo o total.
+    line.installment_value = (parseFloat(line.total_value) || 0) / installments;
+    
+    calculateGrandTotal();
 };
 
 const onLinePriceInput = (e, index) => {
@@ -229,7 +321,10 @@ watch(() => form.product_id, (newProductId) => {
     const product = products.value.find(p => p.id === newProductId);
     if (product && !isEditMode.value) {
         form.quantity = product.quantity || 0;
-        form.total_value = parseFloat(product.min_price) || 0;
+        
+        // Define o valor total padrão como o preço cheio do produto
+        const productPrice = parseFloat(product.price) || parseFloat(product.min_price) || 0;
+        form.total_value = productPrice;
         
         // Inicializar Pagamentos com Padrões do Produto
         const initialPayments = [];
@@ -267,7 +362,7 @@ watch(() => form.product_id, (newProductId) => {
         }
 
         // 3. Linha de Entrada (Pré-preenchida com o mínimo exigido)
-        const minDownPaymentValue = (parseFloat(product.price) * (parseFloat(product.min_down_payment_percentage) || 0)) / 100;
+        const minDownPaymentValue = (productPrice * (parseFloat(product.min_down_payment_percentage) || 0)) / 100;
         
         initialPayments.push({
             category: 'entrada',
@@ -277,6 +372,23 @@ watch(() => form.product_id, (newProductId) => {
             total_value: minDownPaymentValue,
             start_date: new Date().toISOString().split('T')[0]
         });
+
+        // 4. Saldo (Pré-preenchido com o restante a pagar)
+        const saldoValue = productPrice - minDownPaymentValue;
+        if (saldoValue > 0) {
+            // Data de vencimento da primeira parcela do saldo: 1 mês para frente
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            
+            initialPayments.push({
+                category: 'saldo',
+                payment_method: getDefaultPaymentMethod('boleto'),
+                installments: 1, // Padrão 1x, o usuário pode alterar as parcelas
+                installment_value: saldoValue,
+                total_value: saldoValue,
+                start_date: nextMonth.toISOString().split('T')[0]
+            });
+        }
 
         form.payments = initialPayments;
     }
@@ -405,6 +517,9 @@ watch(() => form.total_value, (val) => {
 const onPriceInput = (e) => {
     let val = e.target.value.replace(/\D/g, '');
     form.total_value = parseFloat(val) / 100;
+    
+    // Auto-balanceia a última linha do Saldo se o valor total for alterado manualmente
+    autoBalanceCategory('saldo');
 };
 
 const close = () => {
@@ -414,18 +529,18 @@ const close = () => {
 </script>
 
 <template>
-    <Modal :show="show" @close="close" max-width="5xl">
-        <div v-if="show" class="h-[90vh] flex flex-col bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden relative shadow-2xl transition-colors duration-300">
+    <Modal :show="show" @close="close" :closeable="false" max-width="5xl">
+        <div v-if="show" class="h-[90vh] flex flex-col bg-white/95 dark:bg-[#0f1219]/95 backdrop-blur-3xl border border-white/60 dark:border-white/10 rounded-2xl overflow-hidden relative shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-500">
             <!-- Header -->
-            <div class="border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-emerald-500/10 flex items-center justify-between"
-                 :class="isViewMode ? 'p-3 px-6' : 'p-6'">
-                <div class="flex items-center gap-4">
-                    <div class="rounded-xl flex items-center justify-center shadow-lg transition-all"
+            <div class="border-b border-white/40 dark:border-white/10 bg-white/40 dark:bg-emerald-500/5 flex items-center justify-between backdrop-blur-xl relative z-10"
+                 :class="isViewMode ? 'p-4 px-6' : 'p-6'">
+                <div class="flex items-center gap-5">
+                    <div class="rounded-2xl flex items-center justify-center shadow-xl transition-all"
                          :class="[
-                            isViewMode ? 'bg-amber-500/20 border border-amber-500/30 w-8 h-8' : 
-                            (isEditMode ? 'bg-indigo-500/20 dark:bg-cyan-500/20 border border-indigo-500/30 dark:border-cyan-500/30 w-10 h-10' : 'bg-indigo-500/20 dark:bg-emerald-500/20 border border-indigo-500/30 dark:border-emerald-500/30 w-10 h-10')
+                            isViewMode ? 'bg-amber-500/10 border border-amber-500/20 w-10 h-10' : 
+                            (isEditMode ? 'bg-indigo-500/10 dark:bg-cyan-500/10 border border-indigo-500/20 dark:border-cyan-500/20 w-12 h-12' : 'bg-indigo-500/10 dark:bg-emerald-500/10 border border-indigo-500/20 dark:border-emerald-500/20 w-12 h-12')
                          ]">
-                        <svg class="transition-all" :class="[isViewMode ? 'w-4 h-4 text-amber-400' : (isEditMode ? 'w-5 h-5 text-indigo-600 dark:text-cyan-400' : 'w-5 h-5 text-indigo-600 dark:text-emerald-400')]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="transition-all" :class="[isViewMode ? 'w-5 h-5 text-amber-500' : (isEditMode ? 'w-6 h-6 text-indigo-600 dark:text-cyan-400' : 'w-6 h-6 text-indigo-600 dark:text-emerald-400')]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -455,30 +570,33 @@ const close = () => {
 
             <!-- Content -->
             <div 
-                class="overflow-y-auto flex-1 custom-scrollbar transition-all duration-300"
-                :class="isViewMode ? 'p-4 space-y-3' : 'p-8 space-y-6'"
+                class="overflow-y-auto flex-1 custom-scrollbar transition-all duration-300 bg-white/50 dark:bg-transparent"
+                :class="isViewMode ? 'p-4 space-y-4' : 'p-8 space-y-8'"
             >
                 <!-- Cliente Info -->
-                <div class="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-xl p-4 flex items-center justify-between shadow-sm dark:shadow-none"
-                     :class="{ 'py-2 px-3': isViewMode }">
+                <div class="bg-white/80 dark:bg-white/[0.02] backdrop-blur-md border border-slate-200/60 dark:border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-sm dark:shadow-none hover:shadow-md transition-shadow"
+                     :class="{ 'py-3 px-4': isViewMode }">
                     <div>
-                        <p class="text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Cliente / Titular</p>
-                        <p class="text-slate-900 dark:text-white font-bold" :class="{ 'text-sm': isViewMode }">{{ service?.client?.nome }}</p>
+                        <p class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-0.5">Cliente / Titular</p>
+                        <p class="text-slate-900 dark:text-white font-black" :class="isViewMode ? 'text-sm' : 'text-base'">{{ service?.client?.nome }}</p>
                     </div>
-                    <div v-if="selectedProduct" class="text-center px-4 border-x border-slate-100 dark:border-white/5">
-                        <p class="text-[9px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Duração</p>
-                        <p class="text-slate-900 dark:text-white font-bold" :class="isViewMode ? 'text-[10px]' : 'text-xs'">{{ selectedProduct.duration || 'N/A' }}</p>
+                    <div v-if="selectedProduct" class="text-center px-6 border-x border-slate-200/50 dark:border-white/5">
+                        <p class="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-0.5">Duração</p>
+                        <p class="text-slate-900 dark:text-white font-black" :class="isViewMode ? 'text-xs' : 'text-sm'">{{ selectedProduct.duration || 'N/A' }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">{{ isViewMode || isEditMode ? 'Proposta' : 'Protocolo' }}</p>
-                        <p class="text-indigo-600 dark:text-cyan-400 font-mono" :class="isViewMode ? 'text-[10px]' : 'text-xs'">
-                             {{ isViewMode || isEditMode ? `#PR${service?.proposal?.id}` : `#${service?.id}` }}
-                        </p>
+                        <p class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-0.5">{{ service?.proposal?.contract_number ? 'Contrato' : 'Protocolo' }}</p>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 dark:bg-cyan-500/10 rounded-md">
+                            <svg class="w-3 h-3 text-indigo-500 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
+                            <p class="text-indigo-600 dark:text-cyan-400 font-mono font-black tracking-wider" :class="isViewMode ? 'text-[11px]' : 'text-sm'">
+                                 {{ service?.proposal?.contract_number || `#${service?.id}` }}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Alerta de CPF Ausente -->
-                <div v-if="!hasCpf && !isViewMode" class="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-4 animate-pulse">
+                <div v-if="!hasCpf && !isViewMode" class="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
                     <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -491,17 +609,17 @@ const close = () => {
                 </div>
 
                 <!-- Categorias de Produto -->
-                <div :class="isViewMode ? 'space-y-2' : 'space-y-4'">
-                    <div class="flex gap-2 p-1 bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 rounded-xl w-fit shadow-inner dark:shadow-none">
+                <div :class="isViewMode ? 'space-y-3' : 'space-y-5'">
+                    <div class="flex gap-2 p-1.5 bg-white/60 dark:bg-white/[0.02] backdrop-blur-sm border border-slate-200/50 dark:border-white/5 rounded-2xl w-fit shadow-sm dark:shadow-none">
                         <button 
                             v-for="type in productTypes" 
                             :key="type.id"
                             @click="activeTypeTab = type.id; form.product_id = ''"
                             :disabled="isViewMode"
-                            class="px-4 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                            class="px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
                             :class="[
-                                activeTypeTab === type.id ? 'bg-indigo-600 dark:bg-emerald-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white',
-                                isViewMode ? 'py-1' : 'py-1.5'
+                                activeTypeTab === type.id ? 'bg-indigo-600 dark:bg-emerald-500 text-white shadow-lg shadow-indigo-500/20 dark:shadow-emerald-500/20 scale-105' : 'text-slate-500 dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white',
+                                isViewMode ? 'py-1.5' : 'py-2'
                             ]"
                         >
                             {{ type.name }}
@@ -509,7 +627,7 @@ const close = () => {
                     </div>
 
                     <!-- Produto -->
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative z-20">
                         <SearchableSelect 
                             v-model="form.product_id"
                             :options="filteredProducts.map(p => ({ label: p.name, value: p.id }))"
@@ -521,41 +639,44 @@ const close = () => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" :class="{ 'gap-2': isViewMode }">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" :class="{ 'gap-3': isViewMode }">
                     <!-- Quantidade -->
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1">{{ quantityLabel }}</label>
-                        <div class="relative">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest px-1">{{ quantityLabel }}</label>
+                        <div class="relative group">
                             <input 
                                 v-model="form.quantity"
                                 type="number"
-                                :readonly="(!!selectedProduct?.quantity && !isEditMode) || isViewMode"
+                                :readonly="(!!selectedProduct?.quantity) || isViewMode"
                                 :disabled="isViewMode"
-                                class="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:border-emerald-500/40 transition-all outline-none"
+                                class="w-full bg-white/80 dark:bg-[#0f1219]/50 border border-slate-200 dark:border-white/10 rounded-2xl px-5 text-slate-900 dark:text-white font-black focus:border-indigo-500/40 dark:focus:border-emerald-500/40 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-emerald-500/10 transition-all outline-none shadow-sm disabled:opacity-60"
                                 :class="[
-                                    isViewMode ? 'py-2 text-base' : 'py-3 text-lg',
-                                    { 'border-red-500/50': form.errors.quantity, 'opacity-70': (!!selectedProduct?.quantity && !isEditMode) || isViewMode }
+                                    isViewMode ? 'py-2.5 text-base' : 'py-3.5 text-xl',
+                                    { 'border-red-500/50 focus:ring-red-500/10': form.errors.quantity, 'bg-slate-50 dark:bg-white/[0.02] border-dashed text-slate-500': (!!selectedProduct?.quantity) || isViewMode }
                                 ]"
                             >
-                            <div v-if="!!selectedProduct?.quantity && !isEditMode" class="absolute right-3 top-1/2 -translate-y-1/2">
-                                <span class="text-[8px] font-black bg-indigo-500/10 dark:bg-cyan-500/10 text-indigo-600 dark:text-cyan-400 px-2 py-1 rounded uppercase tracking-tighter">Automático</span>
+                            <div v-if="!!selectedProduct?.quantity" class="absolute right-4 top-1/2 -translate-y-1/2">
+                                <span class="text-[9px] font-black bg-indigo-500/10 dark:bg-cyan-500/10 text-indigo-600 dark:text-cyan-400 px-2.5 py-1 rounded-md uppercase tracking-[0.2em]">Automático</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Valor Total Consolidado -->
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1">Valor Total Final (Proposta)</label>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest px-1">Valor Total Final (Proposta)</label>
                         <div class="relative group">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500/50 dark:text-emerald-500/50 font-bold group-focus-within:text-indigo-400 dark:group-focus-within:text-emerald-400 transition-colors"
-                                  :class="isViewMode ? 'text-base' : 'text-lg'">R$</span>
+                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-500/50 dark:text-emerald-500/50 font-black group-focus-within:text-indigo-500 dark:group-focus-within:text-emerald-400 transition-colors"
+                                  :class="isViewMode ? 'text-lg' : 'text-xl'">R$</span>
                             <input 
                                 :value="maskCurrency(form.total_value).replace('R$', '').trim()"
                                 @input="onPriceInput"
                                 type="text"
                                 :disabled="isViewMode"
-                                class="w-full bg-indigo-500/5 dark:bg-emerald-500/5 border border-indigo-500/10 dark:border-emerald-500/20 rounded-xl pl-12 pr-4 text-indigo-900 dark:text-white font-black shadow-inner focus:border-indigo-500/40 dark:focus:border-emerald-500/40 transition-all outline-none disabled:opacity-50"
-                                :class="isViewMode ? 'py-2 text-lg' : 'py-3 text-xl'"
+                                class="w-full bg-indigo-50/50 dark:bg-[#0f1219]/80 border border-indigo-200 dark:border-emerald-500/20 rounded-2xl pl-14 pr-5 text-indigo-900 dark:text-emerald-400 font-black focus:border-indigo-500/50 dark:focus:border-emerald-500/50 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-emerald-500/10 transition-all outline-none disabled:opacity-60 shadow-inner"
+                                :class="[
+                                    isViewMode ? 'py-2.5 text-xl' : 'py-3.5 text-2xl',
+                                    { 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-gray-400 border-slate-200 dark:border-white/10': isViewMode }
+                                ]"
                             >
                         </div>
                     </div>
@@ -601,53 +722,53 @@ const close = () => {
                             <div 
                                 v-for="(payment, idx) in form.payments.map((p, i) => ({...p, originalIndex: i})).filter(p => p.category === cat.key)" 
                                 :key="payment.originalIndex"
-                                class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 items-end bg-slate-50 dark:bg-white/[0.01] rounded-xl border border-slate-200 dark:border-white/5 relative group transition-all"
-                                :class="isViewMode ? 'p-2 px-3' : 'p-3 shadow-sm dark:shadow-none'"
+                                class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end bg-white/60 dark:bg-white/[0.02] backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-white/5 relative group transition-all hover:border-slate-300 dark:hover:border-white/10"
+                                :class="isViewMode ? 'p-3 px-4' : 'p-4 shadow-sm'"
                             >
                                 <!-- Forma de Pagamento -->
-                                <div class="md:col-span-3 space-y-0.5">
-                                    <label class="text-[7px] font-black text-slate-500 dark:text-gray-600 uppercase">Forma</label>
-                                    <select v-model="form.payments[payment.originalIndex].payment_method" :disabled="isViewMode" class="w-full bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 text-slate-900 dark:text-white text-[10px] outline-none disabled:opacity-50 transition-all">
+                                <div class="md:col-span-3 space-y-1">
+                                    <label class="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Forma</label>
+                                    <select v-model="form.payments[payment.originalIndex].payment_method" :disabled="isViewMode" class="w-full bg-white/80 dark:bg-[#0f1219]/50 border border-slate-200/60 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold text-[11px] outline-none disabled:opacity-50 transition-all focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-emerald-500/20">
                                         <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
                                     </select>
                                 </div>
 
-                                <div class="md:col-span-1 space-y-0.5">
-                                    <label class="text-[7px] font-black text-gray-600 uppercase">Parc.</label>
+                                <div class="md:col-span-1 space-y-1">
+                                    <label class="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Parc.</label>
                                     <input 
                                         v-model="form.payments[payment.originalIndex].installments" 
-                                        @input="updateLineTotal(payment.originalIndex)"
+                                        @input="onInstallmentsInput(payment.originalIndex)"
                                         type="number" 
                                         min="1"
                                         :disabled="isViewMode"
-                                        class="w-full bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-lg px-1.5 py-1 text-slate-900 dark:text-white text-[10px] outline-none disabled:opacity-50 text-center transition-all"
+                                        class="w-full bg-white/80 dark:bg-[#0f1219]/50 border border-slate-200/60 dark:border-white/10 rounded-xl px-2 py-2 text-slate-900 dark:text-white font-black text-[11px] outline-none disabled:opacity-50 text-center transition-all focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-emerald-500/20"
                                     >
                                 </div>
 
-                                <div class="md:col-span-3 space-y-0.5">
-                                    <label class="text-[7px] font-black text-gray-600 uppercase">Vlr. Parcela</label>
+                                <div class="md:col-span-3 space-y-1">
+                                    <label class="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Vlr. Parcela</label>
                                     <input 
                                         :value="maskCurrency(form.payments[payment.originalIndex].installment_value)"
                                         @input="onLinePriceInput($event, payment.originalIndex)"
                                         type="text"
                                         :disabled="isViewMode"
-                                        class="w-full bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 text-slate-900 dark:text-white text-[10px] outline-none font-bold disabled:opacity-50 transition-all"
+                                        class="w-full bg-white/80 dark:bg-[#0f1219]/50 border border-slate-200/60 dark:border-white/10 rounded-xl px-3 py-2 text-indigo-600 dark:text-emerald-400 font-black text-[11px] outline-none disabled:opacity-50 transition-all focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-emerald-500/20"
                                     >
                                 </div>
 
-                                <div class="md:col-span-3 space-y-0.5">
-                                    <label class="text-[7px] font-black text-gray-600 uppercase">Data Inicial</label>
+                                <div class="md:col-span-3 space-y-1">
+                                    <label class="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Data Inicial</label>
                                     <input 
                                         v-model="form.payments[payment.originalIndex].start_date" 
                                         type="date"
                                         :disabled="isViewMode"
-                                        class="w-full bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 text-slate-900 dark:text-white text-[10px] outline-none disabled:opacity-50 transition-all"
+                                        class="w-full bg-white/80 dark:bg-[#0f1219]/50 border border-slate-200/60 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold text-[11px] outline-none disabled:opacity-50 transition-all focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-emerald-500/20"
                                     >
                                 </div>
 
-                                <div class="md:col-span-2 space-y-0.5">
-                                    <label class="text-[7px] font-black text-emerald-600 dark:text-emerald-500/50 uppercase">Total</label>
-                                    <div class="w-full bg-emerald-500/5 border border-emerald-500/10 dark:border-emerald-500/20 rounded-lg px-1.5 py-1 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] text-center">
+                                <div class="md:col-span-2 space-y-1">
+                                    <label class="text-[8px] font-black text-emerald-500/50 uppercase tracking-widest">Total</label>
+                                    <div class="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-2 py-2 text-emerald-600 dark:text-emerald-400 font-black text-[11px] text-center shadow-inner">
                                         {{ maskCurrency(form.payments[payment.originalIndex].total_value) }}
                                     </div>
                                 </div>
@@ -656,35 +777,49 @@ const close = () => {
                                     v-if="!isViewMode"
                                     @click="removePaymentLine(payment.originalIndex)"
                                     type="button"
-                                    class="absolute -right-2 -top-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                    class="absolute -right-2 -top-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
                                 >
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 </button>
                             </div>
                             
                             <div v-if="form.payments.filter(p => p.category === cat.key).length === 0" class="py-2 text-center border-2 border-dashed border-white/[0.02] rounded-xl">
                                 <p class="text-[8px] text-gray-600 uppercase font-bold tracking-widest italic">Sem lançamentos</p>
                             </div>
+                            
+                            <!-- Total da Categoria -->
+                            <div v-if="form.payments.filter(p => p.category === cat.key).length > 0" class="flex justify-end pt-0.5">
+                                <div class="bg-white/60 dark:bg-white/[0.02] backdrop-blur-sm border border-slate-200/50 dark:border-white/5 rounded-xl px-4 py-2 flex items-center gap-3 shadow-sm">
+                                    <span class="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Subtotal ({{ cat.label }})</span>
+                                    <span class="text-[12px] font-black" :class="[
+                                        cat.key === 'entrada' ? 'text-emerald-500' : 
+                                        (cat.key === 'saldo' ? 'text-blue-500' : 
+                                        (cat.key === 'taxa_contrato' ? 'text-amber-500' : 'text-purple-500'))
+                                    ]">
+                                        {{ maskCurrency(getCategoryTotal(cat.key)) }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Observações -->
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1">Observações</label>
+                <div class="space-y-1.5 mt-4">
+                    <label class="text-[10px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest px-1">Observações / Detalhes Adicionais</label>
                     <textarea 
                         v-model="form.observations"
                         :rows="isViewMode ? 2 : 3"
                         :disabled="isViewMode"
-                        placeholder="Detalhes extras..."
-                        class="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-slate-900 dark:text-white text-xs focus:border-emerald-500/40 transition-all outline-none resize-none disabled:opacity-50"
+                        placeholder="Insira detalhes complementares sobre a negociação..."
+                        class="w-full bg-white/80 dark:bg-[#0f1219]/50 border border-slate-200/60 dark:border-white/10 rounded-2xl px-5 py-4 text-slate-900 dark:text-white font-medium text-xs focus:border-indigo-500/40 dark:focus:border-emerald-500/40 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-emerald-500/10 transition-all outline-none resize-none disabled:opacity-60 shadow-inner"
                     ></textarea>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/40 flex flex-col md:flex-row items-center gap-6 transition-all duration-300"
-                 :class="{ 'py-3': isViewMode }">
+            <div class="p-6 border-t border-white/40 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-xl flex flex-col md:flex-row items-center gap-6 transition-all duration-300 relative z-20"
+                 :class="{ 'py-4': isViewMode }">
                 <div class="flex-1 flex gap-8 items-center">
                     <div class="flex flex-col">
                         <span class="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Total</span>

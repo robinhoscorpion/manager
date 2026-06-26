@@ -84,7 +84,7 @@ onUnmounted(() => {
     <!-- Trigger Button -->
     <button 
         @click="toggleSearch"
-        class="flex items-center gap-2 md:gap-3 px-3 py-1.5 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl transition-all group shadow-sm dark:shadow-none"
+        class="flex items-center gap-2 md:gap-3 px-3 h-[40px] bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-[10px] transition-all group shadow-sm dark:shadow-none"
     >
         <svg class="w-4 h-4 text-indigo-600 dark:text-cyan-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

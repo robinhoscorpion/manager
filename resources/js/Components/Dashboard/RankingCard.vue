@@ -3,169 +3,110 @@ defineProps({
     title: String,
     sellers: {
         type: Array,
-        required: true, // Expected order: [2nd, 1st, 3rd] to match visual alignment or [Rank 1, Rank 2, Rank 3]
-    },
-    accentColor: {
-        type: String,
-        default: 'border-cyan-500'
+        required: true,
     },
     headerColor: {
         type: String,
-        default: 'bg-cyan-500'
+        default: 'bg-indigo-500'
     }
 });
-
-// Sellers props assumed as [ {name, avatar, rank} ] sorted 1, 2, 3
 </script>
 
 <template>
-    <div class="ranking-card bg-white dark:bg-[#11151c] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col h-full group relative">
-        <!-- Mesh Gradient Header -->
-        <div class="px-5 py-3 flex items-center justify-between relative overflow-hidden h-12" :class="headerColor">
-            <div class="absolute inset-0 opacity-40 bg-[radial-gradient(at_0%_0%,_rgba(255,255,255,0.3)_0,_transparent_50%),_radial-gradient(at_100%_100%,_rgba(0,0,0,0.3)_0,_transparent_50%)]"></div>
-            <div class="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-            
-            <div class="relative z-10 flex items-center gap-3">
-                <div class="w-1.5 h-6 bg-white/40 rounded-full"></div>
-                <h3 class="text-base font-black text-white uppercase tracking-[0.2em] font-sans">{{ title }}</h3>
+    <div class="professional-card flex flex-col h-full group">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)]">
+            <div class="flex items-center gap-3">
+                <div class="w-1.5 h-6 rounded-full" :class="headerColor"></div>
+                <h3 class="text-base font-bold text-[var(--text-main)] font-heading uppercase tracking-wide">{{ title }}</h3>
             </div>
-
-            <div class="w-9 h-9 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center relative z-10 shadow-inner group-hover:rotate-12 transition-transform duration-500">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            <div class="w-8 h-8 rounded-lg bg-[var(--nav-hover-bg)] flex items-center justify-center text-[var(--text-muted)]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
             </div>
         </div>
 
-        <!-- Podium Content -->
-        <div class="relative flex-1 md:p-8 p-4 flex items-end justify-center md:min-h-[400px] min-h-[350px] bg-grid-light dark:bg-grid-dark overflow-hidden">
-            <!-- Background Aura for 1st Place -->
-            <div class="absolute left-1/2 md:bottom-48 bottom-40 -translate-x-1/2 md:w-80 md:h-80 w-60 h-60 bg-cyan-500/5 dark:bg-cyan-500/10 blur-[100px] md:blur-[120px] rounded-full pointer-events-none"></div>
-
-            <!-- Glassmorphism Podium Steps -->
-            <div class="relative w-full flex items-end justify-center md:gap-4 gap-2 h-full">
-                <!-- 2nd Place -->
-                <div class="flex flex-col items-center flex-1 relative group/seller">
-                    <div class="relative mb-6">
-                        <div class="md:w-20 md:h-20 w-16 h-16 rounded-full border-2 border-slate-200 dark:border-white/20 bg-white dark:bg-white/10 backdrop-blur-md flex items-center justify-center p-1 group-hover/seller:scale-110 group-hover/seller:-translate-y-1 transition-all duration-500 cursor-help shadow-2xl overflow-hidden text-slate-900 dark:text-white font-bold text-lg">
-                            <img v-if="sellers[1]?.profile_photo_url || sellers[1]?.avatar" :src="sellers[1]?.profile_photo_url || sellers[1]?.avatar" class="w-full h-full object-cover rounded-full" alt="2nd">
-                            <span v-else>{{ (sellers[1]?.name || '??').substring(0, 2).toUpperCase() }}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Tooltip -->
-                    <div class="absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/90 backdrop-blur-xl border border-white rounded-lg text-[#11151c] text-xs font-black whitespace-nowrap opacity-0 md:group-hover/seller:opacity-100 group-hover/seller:-top-16 transition-all duration-300 pointer-events-none shadow-[0_10px_30px_rgba(255,255,255,0.2)] z-30">
-                        {{ sellers[1]?.name }}
-                    </div>
-
-                    <div class="w-full md:h-[150px] h-[130px] bg-gradient-to-t from-slate-50 to-slate-100 dark:from-white/10 dark:to-white/20 border border-slate-200 dark:border-white/20 rounded-xl flex flex-col items-center justify-center gap-1 shadow-inner relative overflow-hidden px-[1px]">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-300 dark:via-white/40 to-transparent"></div>
-                        <span class="text-slate-100 dark:text-white/10 md:text-6xl text-5xl font-black italic absolute md:top-4 top-2 left-1/2 -translate-x-1/2">2</span>
-                        <div class="flex flex-col items-center relative z-10 md:pt-10 pt-8 w-full">
-                            <span class="text-slate-400 dark:text-white/60 text-[10px] font-black tracking-[0.2em] mb-1">VENDAS</span>
-                            <span class="text-slate-900 dark:text-white md:text-xl text-lg font-black tracking-tight leading-none text-center truncate w-full">{{ sellers[1]?.value }}</span>
-                        </div>
+        <!-- Premium Glassmorphism Podium -->
+        <div class="flex-1 flex items-end justify-center gap-2 sm:gap-4 relative px-2 mt-4">
+            
+            <!-- 2nd Place -->
+            <div class="flex flex-col items-center w-1/3 relative group/podium">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-slate-300 dark:border-slate-500 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-lg overflow-hidden z-10 relative mb-[-1.5rem] group-hover/podium:-translate-y-2 transition-transform duration-300">
+                    <img v-if="sellers[1]?.profile_photo_url || sellers[1]?.avatar" :src="sellers[1]?.profile_photo_url || sellers[1]?.avatar" class="w-full h-full object-cover">
+                    <div v-else class="w-full h-full flex items-center justify-center font-bold text-[var(--text-muted)] text-sm">
+                        {{ (sellers[1]?.name || '??').substring(0, 2).toUpperCase() }}
                     </div>
                 </div>
-
-                <!-- 1st Place -->
-                <div class="flex flex-col items-center flex-1 relative group/seller z-10">
-                    <div class="relative mb-8">
-                        <!-- Orbit Effect -->
-                        <div class="absolute inset-0 md:-m-3 -m-2 border border-cyan-500/20 rounded-2xl animate-spin-slow pointer-events-none"></div>
-                        
-                        <div class="md:w-24 md:h-24 w-20 h-20 rounded-full border-4 border-cyan-500/50 bg-white dark:bg-white/10 backdrop-blur-md flex items-center justify-center p-1 shadow-xl dark:shadow-[0_0_50px_rgba(6,182,212,0.4)] group-hover/seller:scale-110 group-hover/seller:-translate-y-3 transition-all duration-500 cursor-help relative animate-float overflow-hidden text-slate-900 dark:text-white font-black text-2xl">
-                            <img v-if="sellers[0]?.profile_photo_url || sellers[0]?.avatar" :src="sellers[0]?.profile_photo_url || sellers[0]?.avatar" class="w-full h-full object-cover rounded-full" alt="1st">
-                            <span v-else>{{ (sellers[0]?.name || '??').substring(0, 2).toUpperCase() }}</span>
-                            
-                            <!-- Crown Badge -->
-                            <div class="absolute -top-4 -right-4 md:w-10 md:h-10 w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center shadow-lg dark:shadow-[0_10px_20px_rgba(250,204,21,0.4)] rotate-12 group-hover/seller:rotate-0 transition-transform duration-500">
-                                <svg class="md:w-6 md:h-6 w-5 h-5 text-yellow-900" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72a1 1 0 00.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Tooltip -->
-                    <div class="absolute -top-16 left-1/2 -translate-x-1/2 px-4 py-2 bg-cyan-500 dark:bg-cyan-400 border border-cyan-400 dark:border-cyan-300 rounded-lg text-white dark:text-black text-xs font-black whitespace-nowrap opacity-0 md:group-hover/seller:opacity-100 group-hover/seller:-top-20 transition-all duration-300 pointer-events-none shadow-xl dark:shadow-[0_10px_30px_rgba(6,182,212,0.4)] z-30">
-                        {{ sellers[0]?.name }}
-                    </div>
-
-                    <div class="w-full md:h-[210px] h-[180px] bg-gradient-to-t from-cyan-500/10 to-cyan-500/20 dark:from-cyan-500/20 dark:to-cyan-500/30 border border-cyan-500/30 dark:border-cyan-500/40 rounded-xl flex flex-col items-center justify-center gap-0 shadow-inner dark:shadow-[inset_0_0_30px_rgba(6,182,212,0.3)] relative overflow-hidden px-[1px]">
-                        <!-- Neon Line -->
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_rgba(6,182,212,1)]"></div>
-                        <span class="text-cyan-500/5 dark:text-cyan-500/10 md:text-8xl text-7xl font-black italic absolute md:top-8 top-4 left-1/2 -translate-x-1/2">1</span>
-                        <div class="flex flex-col items-center relative z-10 md:pt-16 pt-12 w-full">
-                            <span class="text-cyan-600 dark:text-cyan-400 md:text-xs text-[10px] font-black tracking-[0.3em] mb-2">DADOS DE VENDAS</span>
-                            <span class="text-slate-900 dark:text-white md:text-2xl text-xl font-black tracking-tighter leading-none dark:glow-text text-center truncate w-full">{{ sellers[0]?.value }}</span>
-                        </div>
-                        
-                        <!-- Shining Effect -->
-                        <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-                    </div>
-                </div>
-
-                <!-- 3rd Place -->
-                <div class="flex flex-col items-center flex-1 relative group/seller">
-                    <div class="relative mb-4">
-                        <div class="md:w-16 md:h-16 w-14 h-14 rounded-full border-2 border-slate-200 dark:border-white/20 bg-white dark:bg-white/10 backdrop-blur-md flex items-center justify-center p-1 group-hover/seller:scale-110 group-hover/seller:-translate-y-1 transition-all duration-500 cursor-help shadow-xl overflow-hidden text-slate-900 dark:text-white font-bold text-base">
-                            <img v-if="sellers[2]?.profile_photo_url || sellers[2]?.avatar" :src="sellers[2]?.profile_photo_url || sellers[2]?.avatar" class="w-full h-full object-cover rounded-full" alt="3rd">
-                            <span v-else>{{ (sellers[2]?.name || '??').substring(0, 2).toUpperCase() }}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Tooltip -->
-                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg text-white text-[10px] font-bold whitespace-nowrap opacity-0 md:group-hover/seller:opacity-100 group-hover/seller:-top-12 transition-all duration-300 pointer-events-none shadow-xl z-30">
-                        {{ sellers[2]?.name }}
-                    </div>
-
-                    <div class="w-full md:h-[120px] h-[110px] bg-gradient-to-t from-slate-50 to-slate-100 dark:from-white/10 dark:to-white/20 border border-slate-200 dark:border-white/20 rounded-xl flex flex-col items-center justify-center gap-0 shadow-inner relative overflow-hidden px-[1px]">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-300 dark:via-white/40 to-transparent"></div>
-                        <span class="text-slate-100 dark:text-white/10 md:text-5xl text-4xl font-black italic absolute md:top-4 top-2 left-1/2 -translate-x-1/2">3</span>
-                        <div class="flex flex-col items-center relative z-10 md:pt-10 pt-8 w-full">
-                            <span class="text-slate-400 dark:text-white/60 text-[9px] font-black tracking-[0.2em] mb-1">VENDAS</span>
-                            <span class="text-slate-900 dark:text-white md:text-lg text-base font-black tracking-tighter leading-none text-center truncate w-full">{{ sellers[2]?.value }}</span>
-                        </div>
-                    </div>
+                <div class="w-full h-28 sm:h-32 rounded-t-2xl border border-b-0 backdrop-blur-xl flex flex-col items-center justify-end pb-3 transition-all duration-300 relative overflow-hidden bg-slate-100/60 dark:bg-slate-800/40 border-white/60 dark:border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    <span class="text-slate-400/30 dark:text-slate-500/20 text-3xl sm:text-4xl font-black italic absolute top-4">2</span>
+                    <p class="font-semibold text-[var(--text-main)] text-xs sm:text-sm truncate w-full text-center px-1 relative z-10">{{ sellers[1]?.name || '-' }}</p>
+                    <p class="font-black text-[var(--text-main)] text-sm sm:text-base mt-1 relative z-10">{{ sellers[1]?.value || '0' }}</p>
+                    <!-- Glass shine -->
+                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 dark:via-white/5 to-transparent opacity-0 group-hover/podium:opacity-100 transition-opacity duration-500"></div>
                 </div>
             </div>
+
+            <!-- 1st Place -->
+            <div class="flex flex-col items-center w-1/3 relative group/podium z-20">
+                <div class="absolute -top-6 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg shadow-amber-400/40 z-20 animate-bounce ring-4 ring-amber-400/20">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72a1 1 0 00.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                </div>
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-amber-300 dark:border-amber-500 bg-white/90 dark:bg-amber-900/40 backdrop-blur-md shadow-xl shadow-amber-400/20 overflow-hidden z-10 relative mb-[-2rem] group-hover/podium:-translate-y-2 transition-transform duration-300 ring-4 ring-white/50 dark:ring-black/20">
+                    <img v-if="sellers[0]?.profile_photo_url || sellers[0]?.avatar" :src="sellers[0]?.profile_photo_url || sellers[0]?.avatar" class="w-full h-full object-cover">
+                    <div v-else class="w-full h-full flex items-center justify-center font-bold text-[var(--text-muted)] text-base">
+                        {{ (sellers[0]?.name || '??').substring(0, 2).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="w-full h-36 sm:h-44 rounded-t-2xl border border-b-0 backdrop-blur-xl flex flex-col items-center justify-end pb-4 transition-all duration-300 relative overflow-hidden bg-amber-100/50 dark:bg-amber-900/20 border-white/80 dark:border-amber-500/20 shadow-[inset_0_1px_3px_rgba(255,255,255,0.9)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                    <span class="text-amber-500/20 dark:text-amber-500/10 text-5xl sm:text-6xl font-black italic absolute top-4">1</span>
+                    <p class="font-bold text-[var(--text-main)] text-sm sm:text-base truncate w-full text-center px-1 relative z-10">{{ sellers[0]?.name || '-' }}</p>
+                    <p class="font-black text-amber-600 dark:text-amber-400 text-lg sm:text-xl mt-1 relative z-10">{{ sellers[0]?.value || '0' }}</p>
+                    <!-- Glass shine -->
+                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 dark:via-white/5 to-transparent opacity-0 group-hover/podium:opacity-100 transition-opacity duration-500"></div>
+                </div>
+            </div>
+
+            <!-- 3rd Place -->
+            <div class="flex flex-col items-center w-1/3 relative group/podium">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-orange-300 dark:border-orange-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-md overflow-hidden z-10 relative mb-[-1rem] group-hover/podium:-translate-y-2 transition-transform duration-300">
+                    <img v-if="sellers[2]?.profile_photo_url || sellers[2]?.avatar" :src="sellers[2]?.profile_photo_url || sellers[2]?.avatar" class="w-full h-full object-cover">
+                    <div v-else class="w-full h-full flex items-center justify-center font-bold text-[var(--text-muted)] text-xs">
+                        {{ (sellers[2]?.name || '??').substring(0, 2).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="w-full h-20 sm:h-24 rounded-t-2xl border border-b-0 backdrop-blur-xl flex flex-col items-center justify-end pb-2 transition-all duration-300 relative overflow-hidden bg-orange-50/60 dark:bg-orange-900/10 border-white/60 dark:border-white/5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    <span class="text-orange-400/20 dark:text-orange-500/10 text-2xl sm:text-3xl font-black italic absolute top-3">3</span>
+                    <p class="font-medium text-[var(--text-main)] text-[11px] sm:text-xs truncate w-full text-center px-1 relative z-10">{{ sellers[2]?.name || '-' }}</p>
+                    <p class="font-bold text-[var(--text-main)] text-xs sm:text-sm mt-1 relative z-10">{{ sellers[2]?.value || '0' }}</p>
+                    <!-- Glass shine -->
+                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 dark:via-white/5 to-transparent opacity-0 group-hover/podium:opacity-100 transition-opacity duration-500"></div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
 
 <style scoped>
-.ranking-card {
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ranking-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+.font-heading {
+    font-family: var(--font-heading);
 }
 
-@keyframes spin-slow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-.animate-spin-slow {
-    animation: spin-slow 12s linear infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-.animate-float {
-    animation: float 4s ease-in-out infinite;
+.professional-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
-.bg-grid-light {
-    background-image: radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.03) 1px, transparent 0);
-    background-size: 32px 32px;
-}
-
-.bg-grid-dark {
-    background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
-    background-size: 32px 32px;
+.professional-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-3px);
+    border-color: var(--primary-border);
 }
 </style>

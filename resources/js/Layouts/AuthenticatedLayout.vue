@@ -1,10 +1,30 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Toast from '@/Components/Toast.vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 import GlobalSearch from '@/Components/GlobalSearch.vue';
 import '@/../css/dashboard_style.css';
+
+const pageLoading = ref(false);
+let loadingTimeout = null;
+
+onMounted(() => {
+    router.on('start', () => {
+        pageLoading.value = true;
+    });
+
+    router.on('finish', () => {
+        // Atraso de 400ms para manter a fluidez do fantasma
+        loadingTimeout = setTimeout(() => {
+            pageLoading.value = false;
+        }, 400);
+    });
+});
+
+onUnmounted(() => {
+    clearTimeout(loadingTimeout);
+});
 
 const showingMobileMenu = ref(false);
 const user = usePage().props.auth.user;
@@ -38,7 +58,7 @@ const can = (permission) => {
 };
 
 // Theme Management
-const theme = ref(localStorage.getItem('theme') || 'dark');
+const theme = ref(localStorage.getItem('theme') || 'light');
 
 const toggleTheme = () => {
     theme.value = theme.value === 'dark' ? 'light' : 'dark';
@@ -56,10 +76,17 @@ const updateTheme = () => {
 
 // Initialize theme
 updateTheme();
+// Sidebar Collapsed State
+const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true');
+
+const toggleSidebar = () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value);
+};
 </script>
 
 <template>
-    <div class="dashboard-layout">
+    <div class="dashboard-layout" :class="{ 'collapsed': sidebarCollapsed }">
         <!-- Sidebar -->
         <aside class="sidebar" :class="{ 'show': showingMobileMenu }">
             <div class="sidebar-content">
@@ -256,24 +283,34 @@ updateTheme();
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar / Header -->
-            <div class="flex items-center justify-between mb-8">
-                <div v-if="$slots.header" class="max-w-7xl">
-                    <slot name="header" />
+            <!-- Top Bar -->
+            <div class="topbar">
+                <!-- Page Header slot -->
+                <div class="topbar-left flex items-start sm:items-center gap-4">
+                    <button @click="toggleSidebar" class="menu-toggle hidden md:flex mt-1 sm:mt-0" title="Recolher menu">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <div class="flex-1 min-w-0">
+                        <slot name="header" />
+                    </div>
                 </div>
-                <div v-else></div> <!-- Spacer -->
 
-                <div class="flex items-center justify-end gap-4">
+                <!-- Actions -->
+                <div class="topbar-right">
                     <!-- Theme Toggle -->
-                    <button 
-                        @click="toggleTheme" 
-                        class="w-10 h-10 rounded-xl border border-border-color bg-card-bg flex items-center justify-center hover:bg-nav-hover-bg transition-all active:scale-95 shadow-sm"
-                        :title="theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'"
+                    <button
+                        @click="toggleTheme"
+                        class="theme-toggle-btn"
+                        :title="theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'"
                     >
-                        <svg v-if="theme === 'dark'" class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Sun (dark → light) -->
+                        <svg v-if="theme === 'dark'" class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <svg v-else class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Moon (light → dark) -->
+                        <svg v-else class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
                     </button>
@@ -283,7 +320,7 @@ updateTheme();
             </div>
 
             <!-- Page Content -->
-            <div class="max-w-7xl">
+            <div class="page-content">
                 <slot />
             </div>
         </main>

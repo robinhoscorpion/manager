@@ -40,21 +40,30 @@ class ProposalController extends Controller
             $product = Product::lockForUpdate()->find($validated['product_id']);
             
             // Gerar Número do Contrato
-            $sequence = str_pad($product->current_sequence, 5, '0', STR_PAD_LEFT);
             $contractNumber = '';
 
-            switch ($product->contract_format) {
-                case 'prefix_sep_seq':
-                    $contractNumber = ($product->contract_prefix ? $product->contract_prefix . '-' : '') . $sequence;
-                    break;
-                case 'prefix_seq':
-                    $contractNumber = ($product->contract_prefix ? $product->contract_prefix : '') . $sequence;
-                    break;
-                case 'seq_only':
-                default:
-                    $contractNumber = $product->current_sequence;
-                    break;
-            }
+            do {
+                $sequence = str_pad($product->current_sequence, 5, '0', STR_PAD_LEFT);
+                switch ($product->contract_format) {
+                    case 'prefix_sep_seq':
+                        $contractNumber = ($product->contract_prefix ? $product->contract_prefix . '-' : '') . $sequence;
+                        break;
+                    case 'prefix_seq':
+                        $contractNumber = ($product->contract_prefix ? $product->contract_prefix : '') . $sequence;
+                        break;
+                    case 'seq_only':
+                    default:
+                        $contractNumber = $product->current_sequence;
+                        break;
+                }
+
+                // Verifica se já existe
+                $exists = \App\Models\Proposal::where('contract_number', $contractNumber)->exists();
+                if ($exists) {
+                    $product->current_sequence++;
+                    // Não salva ainda, salvará no final ou deixaremos em memória até o $product->increment
+                }
+            } while ($exists);
 
             $validated['contract_number'] = $contractNumber;
             // O payment_method original foi removido da proposta e passado para os pagamentos individuais
@@ -67,11 +76,15 @@ class ProposalController extends Controller
                 $proposal->payments()->create($paymentData);
             }
 
-            // Incrementar Sequência
-            $product->increment('current_sequence');
+            // Salvar a nova sequência (mesmo que tenha precisado pular números para evitar colisão)
+            $product->current_sequence++;
+            $product->save();
 
-            // Auto-qualificar atendimento como Q ao gerar proposta
-            $proposal->salesService->update(['qualification' => 'Q']);
+            // Auto-qualificar atendimento como Q e alterar status para Proposta ao gerar proposta
+            $proposal->salesService->update([
+                'qualification' => 'Q',
+                'status' => \App\Models\SalesService::STATUS_PROPOSTA
+            ]);
 
             return $proposal;
         });
@@ -118,8 +131,11 @@ class ProposalController extends Controller
                 $proposal->payments()->create($paymentData);
             }
 
-            // Garante que o atendimento esteja qualificado como Q
-            $proposal->salesService->update(['qualification' => 'Q']);
+            // Garante que o atendimento esteja qualificado como Q e com status de Proposta
+            $proposal->salesService->update([
+                'qualification' => 'Q',
+                'status' => \App\Models\SalesService::STATUS_PROPOSTA
+            ]);
         });
 
         return redirect()->back()->with('success', 'Proposta #' . $proposal->contract_number . ' atualizada com sucesso!');

@@ -17,7 +17,7 @@ const props = defineProps({
     initialData: Object,
 });
 
-const emit = defineEmits(['close', 'create']);
+const emit = defineEmits(['close', 'created']);
 
 const statuses = Object.values(SERVICE_STATUS).map(s => ({
     label: s.label,
@@ -38,7 +38,7 @@ const form = ref({
     local: 'hotel',
     opc_id: null,
     qualification: 'Q',
-    status: 'MESA',
+    status: 'queue',
     
     // Novas informações do Titular
     isEstrangeiro: false,
@@ -162,10 +162,13 @@ const calculateAge = (dob, targetField) => {
     form.value[targetField] = age;
 };
 
+const isLoadingCEP = ref(false);
+
 const lookupCEP = async () => {
     const cep = form.value.cep.replace(/\D/g, '');
     if (cep.length !== 8) return;
 
+    isLoadingCEP.value = true;
     try {
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
@@ -177,6 +180,8 @@ const lookupCEP = async () => {
         }
     } catch (error) {
         console.error('Erro ao buscar CEP:', error);
+    } finally {
+        isLoadingCEP.value = false;
     }
 };
 
@@ -281,10 +286,13 @@ const incomes = [
     { label: 'ACIMA DE R$ 20.000', value: '20k+' },
 ];
 
-const togetherOptions = Array.from({ length: 50 }, (_, i) => ({
-    label: `${i + 1} ${i === 0 ? 'ano' : 'anos'}`,
-    value: `${i + 1} ${i === 0 ? 'ano' : 'anos'}`
-}));
+const togetherOptions = [
+    { label: '0 anos', value: '0 anos' },
+    ...Array.from({ length: 50 }, (_, i) => ({
+        label: `${i + 1} ${i === 0 ? 'ano' : 'anos'}`,
+        value: `${i + 1} ${i === 0 ? 'ano' : 'anos'}`
+    }))
+];
 
 const giftOptions = computed(() => {
     const options = props.complimentaryItems?.map(item => ({
@@ -441,7 +449,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" v-model="form.temConjuge" :disabled="isReadOnly" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-200 dark:bg-white/5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 dark:after:bg-gray-500 after:border-slate-300 dark:after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:bg-pink-500 peer-checked:bg-pink-500/20 disabled:opacity-50"></div>
-                            <span class="ml-3 text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">{{ form.temConjuge ? 'Com Cônjuge' : 'Sem Cônjuge' }}</span>
+                            <span class="ml-3 text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">{{ form.temConjuge ? 'Com 2º Titular' : 'Sem 2º Titular' }}</span>
                         </label>
                     </div>
 
@@ -454,7 +462,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <!-- Dados do Cônjuge (Condicional) -->
                         <div v-if="form.temConjuge" class="col-span-12 grid grid-cols-12 gap-x-4 gap-y-2 p-4 bg-white dark:bg-white/5 rounded-xl border border-pink-500/10 animate-in fade-in slide-in-from-top-2">
                             <div class="col-span-12 sm:col-span-6 flex flex-col">
-                                <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nome do Cônjuge</label>
+                                <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nome do 2º Titular / Cônjuge</label>
                                 <input v-model="form.nomeConjuge" type="text" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-transparent border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px] uppercase">
                                 <div class="h-[14px]"></div>
                             </div>
@@ -469,7 +477,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
-                                <SearchableSelect v-model="form.profissaoConjuge" :options="professions" label="Profissão do Cônjuge" placeholder="SELECIONE" :disabled="isReadOnly" />
+                                <SearchableSelect v-model="form.profissaoConjuge" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly" />
                                 <div class="h-[14px]"></div>
                             </div>
                         </div>
@@ -497,12 +505,23 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
                             <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">CEP</label>
                             <div class="relative h-[38px]">
-                                <input :value="form.cep" @input="onInputMask($event, 'cep', 'cep')" @blur="lookupCEP" type="text" placeholder="00000-000" :disabled="isReadOnly" class="w-full h-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px]">
-                                <div class="absolute right-3 top-1/2 -translate-y-1/2" v-if="!errors.cep">
-                                    <svg class="w-3 h-3 text-orange-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                <input :value="form.cep" @input="onInputMask($event, 'cep', 'cep')" @blur="lookupCEP" type="text" placeholder="00000-000" :disabled="isReadOnly" class="w-full h-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 pr-9 text-slate-900 dark:text-white text-[13px]">
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <!-- Spinner de carregamento -->
+                                    <svg v-if="isLoadingCEP" class="w-3.5 h-3.5 text-orange-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                    <!-- Ícone padrão -->
+                                    <svg v-else class="w-3 h-3 text-orange-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                 </div>
                             </div>
-                            <div class="h-[14px]"></div>
+                            <div class="h-[14px] flex items-center">
+                                <span v-if="isLoadingCEP" class="flex items-center gap-1 text-[9px] font-bold text-orange-500 uppercase tracking-widest animate-pulse px-1">
+                                    <svg class="w-2.5 h-2.5 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                    Buscando endereço...
+                                </span>
+                            </div>
                         </div>
                         <div class="col-span-12 sm:col-span-7 flex flex-col">
                             <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Logradouro (Rua/Av)</label>
@@ -534,16 +553,16 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-if="!errors.local"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.opc_id" :options="availableAvatars.map(av => ({ label: av.name, value: av.id }))" label="OPC Responsável" placeholder="NENHUM" :disabled="isReadOnly" />
-                            <div class="h-[14px]"></div>
+                            <SearchableSelect v-model="form.opc_id" :options="availableAvatars.map(av => ({ label: av.name, value: av.id }))" label="Promotor Responsável" placeholder="NENHUM" :error="errors.opc_id" :disabled="isReadOnly" />
+                            <div class="h-[14px]" v-if="!errors.opc_id"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.qualification" :options="qualifications.map(q => ({ label: q.code + ' - ' + q.name, value: q.code }))" label="Qualificação Atual" placeholder="SELECIONE" :disabled="isReadOnly || (form.status !== 'MESA' && form.status !== 'table')" />
-                            <div class="h-[14px]"></div>
+                            <SearchableSelect v-model="form.qualification" :options="qualifications.map(q => ({ label: q.code + ' - ' + q.name, value: q.code }))" label="Qualificação Atual" placeholder="SELECIONE" :error="errors.qualification" :disabled="isReadOnly || (form.status !== 'MESA' && form.status !== 'table' && form.status !== 'queue')" />
+                            <div class="h-[14px]" v-if="!errors.qualification"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.cortesia" :options="giftOptions" label="Cortesias Entregues" placeholder="SELECIONE" multiple :disabled="isReadOnly" />
-                            <div class="h-[14px]"></div>
+                            <SearchableSelect v-model="form.cortesia" :options="giftOptions" label="Cortesias Entregues" placeholder="SELECIONE" multiple :error="errors.cortesia" :disabled="isReadOnly" />
+                            <div class="h-[14px]" v-if="!errors.cortesia"></div>
                         </div>
                     </div>
                 </section>

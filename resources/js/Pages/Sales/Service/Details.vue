@@ -378,241 +378,403 @@ const getStatusColor = (status) => {
     <Head :title="'Contrato #' + (proposal?.contract_number || service.id)" />
 
     <AuthenticatedLayout>
-        <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
-            
-            <!-- Professional Header -->
-            <div class="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-2xl p-6 relative overflow-hidden backdrop-blur-md shadow-sm dark:shadow-none">
-                <div class="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                    <svg class="w-32 h-32 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                </div>
+        <!-- ============================================================ -->
+        <!--  PAGE WRAPPER — Full width, padding lateral generoso          -->
+        <!-- ============================================================ -->
+        <div class="min-h-screen bg-slate-50 dark:bg-[#0d1117]">
+            <div class="px-6 lg:px-10 py-8 space-y-6 max-w-[1600px] mx-auto animate-in">
 
-                <div class="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div class="space-y-2">
-                        <nav class="flex items-center gap-2 text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">
-                            <Link :href="route('sales.atendimentos')" class="hover:text-indigo-600 dark:hover:text-cyan-400">Sala de Vendas</Link>
-                            <span class="text-slate-300 dark:text-white/20">/</span>
-                            <span class="text-slate-400 dark:text-white/40">Contrato #{{ proposal?.contract_number || 'S/N' }}</span>
+                <!-- =========================================================== -->
+                <!--  HERO HEADER                                                  -->
+                <!-- =========================================================== -->
+                <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-[#0d1117] dark:via-indigo-950/50 dark:to-[#0d1117] border border-indigo-500/20 shadow-2xl shadow-indigo-500/10">
+                    <!-- Ambient glow -->
+                    <div class="absolute top-0 left-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+                    <div class="absolute bottom-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                    
+                    <div class="relative z-10 p-8 lg:p-10">
+                        <!-- Breadcrumb -->
+                        <nav class="flex items-center gap-2 text-[10px] font-bold text-indigo-300/60 uppercase tracking-widest mb-6">
+                            <Link :href="route('sales.atendimentos')" class="hover:text-indigo-300 transition-colors">Sala de Vendas</Link>
+                            <span class="text-white/20">/</span>
+                            <span class="text-indigo-200/40">Contrato #{{ proposal?.contract_number || 'S/N' }}</span>
                         </nav>
-                        <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none">
-                            {{ client?.nome }}
-                        </h1>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 rounded-md text-[8px] font-black uppercase tracking-widest">
-                                Status: {{ proposal?.contract_number ? 'Ativo' : 'Pendente' }}
-                            </span>
-                            <span class="text-[9px] font-bold text-slate-500 dark:text-gray-500 uppercase tracking-widest border-l border-slate-200 dark:border-white/10 pl-2">
-                                {{ formatDate(service.date) }} às {{ service.time }}
-                            </span>
+
+                        <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+                            <!-- Identity -->
+                            <div class="space-y-4">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border"
+                                        :class="proposal?.contract_number
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'">
+                                        {{ proposal?.contract_number ? '● Contrato Ativo' : '○ Sem Contrato' }}
+                                    </span>
+                                    <span class="text-white/30 text-xs">|</span>
+                                    <span class="text-indigo-200/50 text-[10px] font-bold uppercase tracking-widest">{{ formatDate(service.date) }} às {{ service.time }}</span>
+                                </div>
+
+                                <h1 class="text-3xl lg:text-4xl font-black text-white uppercase tracking-tight leading-none">
+                                    {{ client?.nome }}
+                                </h1>
+
+                                <div class="flex flex-wrap items-center gap-4 text-[11px] font-bold text-indigo-200/50 uppercase tracking-widest">
+                                    <span v-if="client?.cpf">CPF: <span class="text-white/70 font-mono">{{ client.cpf }}</span></span>
+                                    <span v-if="product">Produto: <span class="text-white/70">{{ product.name }}</span></span>
+                                    <span v-if="proposal?.contract_number">Contrato: <span class="text-cyan-400 font-mono font-black">{{ proposal.contract_number }}</span></span>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex flex-wrap gap-3 shrink-0">
+                                <button @click="printDocument('sales.atendimentos.contrato.pdf')"
+                                    class="flex items-center gap-2.5 bg-white text-slate-900 hover:bg-indigo-500 hover:text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-black/20 active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Contrato
+                                </button>
+                                <button @click="printDocument('sales.atendimentos.proposta.pdf')"
+                                    class="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                    Proposta
+                                </button>
+                                <button @click="printDocument('sales.atendimentos.checklist.pdf')"
+                                    class="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                    Checklist
+                                </button>
+                                <button @click="printDocument('sales.atendimentos.ficha.pdf')"
+                                    class="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    Ficha
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Action Hub -->
-                    <div class="flex flex-wrap gap-2">
-                        <button @click="printDocument('sales.atendimentos.contrato.pdf')" 
-                                class="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-indigo-600 dark:hover:bg-cyan-400 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-lg">
-                            <span>📄</span> Contrato
-                        </button>
-                        <button @click="printDocument('sales.atendimentos.proposta.pdf')" 
-                                class="flex items-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
-                            <span>💰</span> Proposta
-                        </button>
-                        <button @click="printDocument('sales.atendimentos.checklist.pdf')" 
-                                class="flex items-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
-                            <span>✅</span> Checklist
-                        </button>
-                        <button @click="printDocument('sales.atendimentos.pdf')" 
-                                class="flex items-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
-                            <span>📋</span> Ficha
-                        </button>
-                    </div>
-                </div>
-            </div>
+                <!-- =========================================================== -->
+                <!--  METRICS ROW — 4 cards financeiros premium                    -->
+                <!-- =========================================================== -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
-            <!-- Section 1: Vigência -->
-            <div class="space-y-3">
-                <div class="flex items-center gap-3 px-1">
-                    <span class="text-indigo-500 font-black text-xs">#</span>
-                    <h3 class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em]">Vigência do Contrato</h3>
-                </div>
-                <div class="flex flex-wrap gap-4">
-                    <div v-for="(val, label) in { 'Duração': {v: product?.duration || 'S/N', i: '⏳'}, 'Expira': {v: usableUntilStr, i: '📅'}, 'Restam': {v: yearsRemainingVal + ' Anos', i: '⏳'} }" :key="label" class="flex-1 min-w-[160px] bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:scale-[1.02] transition-all hover:bg-slate-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-                        <span class="text-xs opacity-50 mb-2">{{ val.i }}</span>
-                        <p class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest leading-none mb-1.5">{{ label }}</p>
-                        <p class="text-sm font-black text-slate-900 dark:text-white uppercase font-mono">{{ val.v }}</p>
-                    </div>
-                </div>
-            </div>
+                    <!-- Valor Total -->
+                    <div class="relative bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/10 rounded-2xl p-6 overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+                        <!-- Decorative icon -->
+                        <div class="absolute -bottom-4 -right-4 w-24 h-24 text-slate-100 dark:text-white/5 pointer-events-none">
+                            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
+                        </div>
 
-            <!-- Section 2: Financeiro -->
-            <div class="space-y-3 pt-4">
-                <div class="flex items-center gap-3 px-1">
-                    <span class="text-emerald-500 font-black text-xs">#</span>
-                    <h3 class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em]">Status Financeiro</h3>
-                </div>
-                <div class="flex flex-wrap gap-4">
-                    <!-- Valor Contrato -->
-                    <div class="flex-1 min-w-[180px] bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:scale-[1.02] transition-all hover:bg-slate-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-                        <span class="text-xs opacity-50 mb-2">💰</span>
-                        <p class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest leading-none mb-1.5">Valor Contrato</p>
-                        <p class="text-lg font-black text-slate-900 dark:text-white font-mono">{{ formatCurrency(totalValue) }}</p>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                </div>
+                                <p class="text-[10px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Valor do Contrato</p>
+                            </div>
+                            <p class="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{{ formatCurrency(totalValue) }}</p>
+                            <div class="mt-3 flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] font-black uppercase tracking-widest">{{ totalPoints.toLocaleString() }} pts</span>
+                                <span class="text-[10px] text-slate-400 dark:text-gray-600 font-medium">{{ product?.duration || 'S/D' }}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Valor Pago -->
-                    <div class="flex-1 min-w-[180px] bg-emerald-500/[0.02] dark:bg-emerald-500/[0.02] border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:scale-[1.02] transition-all hover:bg-emerald-500/[0.05] shadow-sm dark:shadow-none">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
-                        <span class="text-xs opacity-60 mb-2 text-emerald-500">✅</span>
-                        <p class="text-[8px] font-black text-emerald-700 dark:text-emerald-500 uppercase tracking-widest leading-none mb-1.5">Valor Pago</p>
-                        <p class="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatCurrency(totalPaid) }}</p>
-                        <div class="w-full mt-3 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div :style="{ width: percentPaid + '%' }" class="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                    <div class="relative bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/10 rounded-2xl p-6 overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+                        <div class="absolute -bottom-4 -right-4 w-24 h-24 text-slate-100 dark:text-white/5 pointer-events-none">
+                            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500/80 uppercase tracking-widest">Total Pago</p>
+                            </div>
+                            <p class="text-3xl font-black text-emerald-700 dark:text-emerald-400 font-mono leading-none">{{ formatCurrency(totalPaid) }}</p>
+                            <div class="mt-3 space-y-1.5">
+                                <div class="w-full h-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full overflow-hidden">
+                                    <div :style="{ width: percentPaid + '%' }"
+                                        class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-emerald-600/70 dark:text-emerald-500/60 font-bold">{{ percentPaid }}% quitado</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- % Pago -->
-                    <div class="flex-1 min-w-[120px] bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:scale-[1.02] transition-all hover:bg-slate-50 dark:hover:bg-white/10 shadow-sm dark:shadow-none">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-400"></div>
-                        <span class="text-xs opacity-50 mb-2">📈</span>
-                        <p class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest leading-none mb-1.5">% Pago</p>
-                        <p class="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ percentPaid }}%</p>
-                    </div>
+                    <!-- Saldo em Aberto -->
+                    <div class="relative bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/10 rounded-2xl p-6 overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+                        <div class="absolute -bottom-4 -right-4 w-24 h-24 text-slate-100 dark:text-white/5 pointer-events-none">
+                            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        </div>
 
-                    <!-- Saldo Aberto -->
-                    <div class="flex-1 min-w-[180px] bg-orange-500/[0.02] dark:bg-orange-500/[0.02] border border-orange-200 dark:border-orange-500/20 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:scale-[1.02] transition-all hover:bg-orange-500/[0.05] shadow-sm dark:shadow-none">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
-                        <span class="text-xs opacity-60 mb-2 text-orange-500">⚠️</span>
-                        <p class="text-[8px] font-black text-orange-700 dark:text-orange-500 uppercase tracking-widest leading-none mb-1.5">Saldo em Aberto</p>
-                        <p class="text-lg font-black text-orange-600 dark:text-orange-400 font-mono">{{ formatCurrency(amountOpen) }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Pontuação -->
-            <div class="space-y-3 pt-4">
-                <div class="flex items-center gap-3 px-1">
-                    <span class="text-amber-500 font-black text-xs">#</span>
-                    <h3 class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em]">Controle de Pontos</h3>
-                </div>
-                <div class="flex flex-wrap gap-4">
-                    <div v-for="(val, label) in { 'Pontuação': {v: totalPoints.toLocaleString() + ' pts', i: '⭐️', c: 'amber'}, 'Disponível': {v: availablePoints.toLocaleString() + ' pts', i: '🔓', c: 'amber'}, 'Utilizado': {v: utilizedPoints.toLocaleString() + ' pts', i: '🏷️', c: 'slate'} }" :key="label" :class="label === 'Disponível' ? 'bg-amber-500/[0.03] border-amber-200 dark:border-amber-500/20' : 'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/5'" class="flex-1 min-w-[160px] border rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:scale-[1.02] transition-all shadow-sm dark:shadow-none">
-                        <div :class="label === 'Disponível' ? 'bg-amber-500' : (label === 'Utilizado' ? 'bg-slate-400' : 'bg-amber-500/50')" class="absolute top-0 left-0 w-1.5 h-full"></div>
-                        <span class="text-xs opacity-50 mb-2">{{ val.i }}</span>
-                        <p class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest leading-none mb-1.5">{{ label }}</p>
-                        <p :class="label === 'Disponível' ? 'text-amber-600 dark:text-amber-500' : 'text-slate-900 dark:text-white'" class="text-base font-black uppercase">{{ val.v }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Installments Section -->
-            <div class="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm dark:shadow-none">
-                <div class="px-6 py-4 bg-slate-50 dark:bg-white/[0.01] border-b border-slate-100 dark:border-white/5 flex items-center justify-between flex-wrap gap-4">
-                    <div class="flex items-center gap-4">
-                        <div v-for="(color, lbl) in { 'A Receber': 'bg-blue-500', 'Baixado': 'bg-green-500', 'Inadimplente': 'bg-yellow-500', 'Cancelado': 'bg-red-500' }" :key="lbl" class="flex items-center gap-2">
-                             <div :class="color" class="w-2 h-2 rounded-full"></div>
-                             <span class="text-[8px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">{{ lbl }}</span>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-8 h-8 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <p class="text-[10px] font-black text-orange-600 dark:text-orange-500/80 uppercase tracking-widest">Saldo em Aberto</p>
+                            </div>
+                            <p class="text-3xl font-black text-orange-700 dark:text-orange-400 font-mono leading-none">{{ formatCurrency(amountOpen) }}</p>
+                            <div class="mt-3">
+                                <span class="px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[9px] font-black uppercase tracking-widest">{{ (100 - parseFloat(percentPaid)).toFixed(1) }}% pendente</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest hidden sm:block">Extrato Financeiro</span>
-                        <button v-if="proposal" @click="openCreateModal" class="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center gap-1.5 shrink-0">
-                            <span>+</span> Nova Parcela
+
+                    <!-- Pontos Disponíveis -->
+                    <div class="relative bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/10 rounded-2xl p-6 overflow-hidden group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+                        <div class="absolute -bottom-4 -right-4 w-24 h-24 text-slate-100 dark:text-white/5 pointer-events-none">
+                            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-8 h-8 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                </div>
+                                <p class="text-[10px] font-black text-amber-600 dark:text-amber-500/80 uppercase tracking-widest">Pontos Disponíveis</p>
+                            </div>
+                            <p class="text-3xl font-black text-amber-700 dark:text-amber-400 leading-none">
+                                {{ availablePoints.toLocaleString() }} <span class="text-lg font-bold opacity-50">pts</span>
+                            </p>
+                            <div class="mt-3 flex flex-wrap gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest">{{ releasedPoints.toLocaleString() }} liberados</span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-500 text-[9px] font-black uppercase tracking-widest">{{ utilizedPoints.toLocaleString() }} usados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =========================================================== -->
+                <!--  INFO ROW — Vigência + Cliente em 2 colunas                   -->
+                <!-- =========================================================== -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Vigência -->
+                    <div class="bg-white dark:bg-[#141925] border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 hover:shadow-lg transition-all duration-300">
+                        <h3 class="text-[10px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest mb-5 flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center">
+                                <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </span>
+                            Vigência do Contrato
+                        </h3>
+                        <div class="grid grid-cols-3 gap-6">
+                            <div class="space-y-2">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">Duração</p>
+                                <p class="text-lg font-black text-slate-900 dark:text-white leading-none">{{ product?.duration || 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">Expira em</p>
+                                <p class="text-lg font-black text-slate-900 dark:text-white leading-none">{{ usableUntilStr }}</p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">Restam</p>
+                                <p class="text-lg font-black text-indigo-600 dark:text-cyan-400 leading-none">{{ yearsRemainingVal }} <span class="text-sm font-bold opacity-60">anos</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dados do Titular -->
+                    <div class="bg-white dark:bg-[#141925] border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 hover:shadow-lg transition-all duration-300">
+                        <h3 class="text-[10px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest mb-5 flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center">
+                                <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </span>
+                            Dados do Titular
+                        </h3>
+                        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">Celular</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ client?.celular1 || '—' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">Estado Civil</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-white capitalize">{{ client?.estado_civil || '—' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">Cidade / UF</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ [client?.address?.cidade, client?.address?.estado].filter(Boolean).join(' / ') || '—' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black text-slate-400 dark:text-gray-600 uppercase tracking-widest">E-mail</p>
+                                <p class="text-sm font-bold text-slate-900 dark:text-white truncate">{{ client?.email || '—' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =========================================================== -->
+                <!--  EXTRATO FINANCEIRO — Tabela Principal                        -->
+                <!-- =========================================================== -->
+                <div class="bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/5 rounded-2xl hover:shadow-lg transition-all duration-300">
+                    <!-- Header da tabela -->
+                    <div class="px-6 py-5 border-b border-slate-200/80 dark:border-white/5 flex items-center justify-between flex-wrap gap-4 bg-slate-50/50 dark:bg-white/[0.01] rounded-t-2xl">
+                        <div class="flex items-center gap-4">
+                            <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Extrato Financeiro
+                            </h3>
+                            <!-- Legenda de Status -->
+                            <div class="hidden sm:flex items-center gap-3 border-l border-slate-200 dark:border-white/10 pl-4">
+                                <div v-for="(cfg, key) in { pending: { label: 'A Receber', color: 'bg-blue-500' }, paid: { label: 'Baixado', color: 'bg-emerald-500' }, overdue: { label: 'Inadimplente', color: 'bg-orange-500' }, cancelled: { label: 'Cancelado', color: 'bg-red-500' } }" :key="key" class="flex items-center gap-1.5">
+                                    <div :class="cfg.color" class="w-2 h-2 rounded-full"></div>
+                                    <span class="text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">{{ cfg.label }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button v-if="proposal" @click="openCreateModal"
+                            class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-indigo-500/20 active:scale-95">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Nova Parcela
                         </button>
                     </div>
-                </div>
 
-                <div class="p-6 space-y-10">
-                    <div v-for="group in groupedBills" :key="group.key" class="space-y-4">
-                        <div class="flex items-center gap-4">
-                            <h3 class="text-[10px] font-black text-indigo-500 dark:text-cyan-400 uppercase tracking-[0.2em] whitespace-nowrap">{{ group.label }}</h3>
-                            <div class="h-px w-full bg-gradient-to-r from-indigo-500/20 to-transparent"></div>
-                        </div>
+                    <div class="p-0">
+                        <div v-for="group in groupedBills" :key="group.key" class="border-b border-slate-200/80 dark:border-white/5 last:border-0">
+                            <!-- Cabeçalho do grupo -->
+                            <div class="px-6 py-3.5 bg-slate-100/50 dark:bg-white/[0.02] border-b border-slate-200/80 dark:border-white/5 flex items-center gap-3">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                <h4 class="text-[10px] font-black text-slate-700 dark:text-gray-300 uppercase tracking-widest">{{ group.label }}</h4>
+                                <span class="ml-auto text-[9px] px-2 py-0.5 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-bold text-slate-500 dark:text-gray-500 uppercase tracking-widest">{{ group.items.length }} parcela{{ group.items.length > 1 ? 's' : '' }}</span>
+                            </div>
 
-                        <div class="overflow-visible rounded-xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none">
-                            <table class="w-full text-left">
-                                <thead class="bg-slate-50 dark:bg-white/[0.02] text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">
-                                    <tr>
-                                        <th class="px-3 py-3 w-8 text-center">
-                                            <svg class="w-3 h-3 text-gray-600 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        </th>
-                                        <th class="px-4 py-3">Parcela</th>
-                                        <th class="px-4 py-3">Tipo</th>
-                                        <th class="px-4 py-3">Vencimento</th>
-                                        <th class="px-4 py-3">Data de Pgto</th>
-                                        <th class="px-4 py-3">Forma</th>
-                                        <th class="px-4 py-3">Valor</th>
-                                        <th class="px-4 py-3">Juros/Mora</th>
-                                        <th class="px-4 py-3">Valor Pago</th>
-                                        <th class="px-4 py-3 text-right">Status</th>
-                                        <th class="px-4 py-3 text-right w-10">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-white/5">
-                                    <tr v-for="bill in group.items" :key="bill.id" class="text-[10px] hover:bg-white/[0.01] transition-colors group">
-                                        <td class="px-3 py-3 text-center">
-                                            <input 
-                                                v-if="['pending', 'overdue'].includes(bill.status)" 
-                                                type="checkbox" 
-                                                :value="bill.id" 
-                                                v-model="selectedBills" 
-                                                class="rounded bg-white dark:bg-black border-slate-300 dark:border-white/20 text-indigo-500 focus:ring-indigo-500/30 w-3.5 h-3.5 cursor-pointer"
-                                            >
-                                        </td>
-                                        <td class="px-4 py-3 font-bold text-gray-400">{{ bill.installment_number }}/{{ bill.total_installments }}</td>
-                                        <td class="px-4 py-3 font-bold text-slate-900 dark:text-white uppercase text-[9px]">
-                                            <div class="flex items-center gap-2">
-                                                <span>{{ group.label }}</span>
-                                                <!-- Ícone de Observação -->
-                                                <span v-if="bill.observations" title="Possui Observação" class="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 rounded text-[7px] font-black uppercase tracking-widest border border-yellow-500/20 flex items-center gap-1 cursor-help">
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                                                    OBS
+                            <!-- Tabela -->
+                            <div>
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-transparent">
+                                            <th class="px-6 py-4 w-10 text-center">
+                                                <span class="sr-only">Seleção</span>
+                                            </th>
+                                            <th class="px-4 py-4 text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Parcela</th>
+                                            <th class="px-4 py-4 text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Vencimento</th>
+                                            <th class="px-4 py-4 text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest hidden md:table-cell">Data Pagto</th>
+                                            <th class="px-4 py-4 text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest hidden lg:table-cell">Forma</th>
+                                            <th class="px-4 py-4 text-right text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Valor</th>
+                                            <th class="px-4 py-4 text-right text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest hidden xl:table-cell">Juros</th>
+                                            <th class="px-4 py-4 text-right text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Pago</th>
+                                            <th class="px-4 py-4 text-center text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Status</th>
+                                            <th class="px-6 py-4 text-center text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-white/[0.02]">
+                                        <tr v-for="bill in group.items" :key="bill.id"
+                                            class="hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors group/row">
+                                            <!-- Checkbox -->
+                                            <td class="px-6 py-4.5 text-center">
+                                                <input
+                                                    v-if="['pending', 'overdue'].includes(bill.status)"
+                                                    type="checkbox"
+                                                    :value="bill.id"
+                                                    v-model="selectedBills"
+                                                    class="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-transparent text-indigo-600 focus:ring-indigo-500/30 cursor-pointer transition-colors"
+                                                />
+                                            </td>
+
+                                            <!-- Parcela # -->
+                                            <td class="px-4 py-4.5">
+                                                <span class="text-sm font-medium text-slate-700 dark:text-gray-300">
+                                                    {{ bill.installment_number }} / {{ bill.total_installments }}
                                                 </span>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-400 font-mono">{{ formatDate(bill.due_date) }}</td>
-                                        <td class="px-4 py-3 text-gray-400 font-mono">{{ formatDate(bill.paid_at) }}</td>
-                                        <td class="px-4 py-3 font-medium text-slate-900 dark:text-white uppercase text-[9px]">{{ bill.payment_method }}</td>
-                                        <td class="px-4 py-3 font-bold text-slate-900 dark:text-white font-mono">{{ formatCurrency(bill.amount) }}</td>
-                                        <td class="px-4 py-3 font-bold text-slate-400 dark:text-gray-500 font-mono">{{ formatCurrency(bill.interest_amount) }}</td>
-                                        <td class="px-4 py-3 font-black text-indigo-600 dark:text-cyan-400 font-mono">{{ formatCurrency(bill.paid_amount || 0) }}</td>
-                                        <td class="px-4 py-3 text-right">
-                                            <div :class="getStatusColor(bill.status)" class="w-3 h-3 rounded-full inline-block shadow-[0_0_8px_rgba(34,197,94,0.2)]"></div>
-                                        </td>
-                                        <td class="px-4 py-3 text-right">
-                                            <!-- Kebab Menu for Actions -->
-                                            <div class="relative group/kebab">
-                                                <button class="p-2 text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors flex items-center justify-center relative overflow-hidden shadow-sm dark:shadow-none">
-                                                    <div class="absolute inset-0 bg-slate-200 dark:bg-white/5 opacity-0 group-hover/kebab:opacity-100 transition-opacity"></div>
-                                                    <svg class="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
-                                                </button>
-                                                
-                                                <!-- Dropdown Menu -->
-                                                <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl py-1 z-50 opacity-0 invisible group-hover/kebab:opacity-100 group-hover/kebab:visible transition-all duration-200 transform origin-top-right translate-y-2 group-hover/kebab:translate-y-0">
-                                                    <button @click="openViewModal(bill)" class="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-cyan-400 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                        Visualizar
+                                            </td>
+
+                                            <!-- Vencimento -->
+                                            <td class="px-4 py-4.5">
+                                                <span class="text-sm font-mono font-bold text-slate-700 dark:text-gray-300">{{ formatDate(bill.due_date) }}</span>
+                                            </td>
+
+                                            <!-- Data Pagamento -->
+                                            <td class="px-4 py-4.5 hidden md:table-cell">
+                                                <span class="text-sm font-mono font-medium text-slate-500 dark:text-gray-500">{{ formatDate(bill.paid_at) || '—' }}</span>
+                                            </td>
+
+                                            <!-- Forma Pgto -->
+                                            <td class="px-4 py-4.5 hidden lg:table-cell">
+                                                <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-gray-400">
+                                                    {{ bill.payment_method }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Valor -->
+                                            <td class="px-4 py-4.5 text-right">
+                                                <span class="text-[15px] font-black text-slate-900 dark:text-white font-mono">{{ formatCurrency(bill.amount) }}</span>
+                                            </td>
+
+                                            <!-- Juros -->
+                                            <td class="px-4 py-4.5 text-right hidden xl:table-cell">
+                                                <span class="text-sm font-mono font-bold" :class="bill.interest_amount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-gray-600'">
+                                                    {{ bill.interest_amount > 0 ? formatCurrency(bill.interest_amount) : '—' }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Valor Pago -->
+                                            <td class="px-4 py-4.5 text-right">
+                                                <span class="text-[15px] font-black font-mono" :class="bill.paid_amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-gray-600'">
+                                                    {{ bill.paid_amount > 0 ? formatCurrency(bill.paid_amount) : '—' }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Status Badge -->
+                                            <td class="px-4 py-4.5 text-center">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-[9px] font-black uppercase tracking-widest"
+                                                    :class="{
+                                                        'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20': bill.status === 'pending',
+                                                        'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20': bill.status === 'paid',
+                                                        'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20': bill.status === 'overdue',
+                                                        'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20': bill.status === 'cancelled',
+                                                    }">
+                                                    <span class="w-1.5 h-1.5 rounded-full"
+                                                        :class="{
+                                                            'bg-blue-500': bill.status === 'pending',
+                                                            'bg-emerald-500': bill.status === 'paid',
+                                                            'bg-orange-500': bill.status === 'overdue',
+                                                            'bg-red-500': bill.status === 'cancelled',
+                                                        }"></span>
+                                                    {{ bill.status === 'pending' ? 'A Receber' : bill.status === 'paid' ? 'Baixado' : bill.status === 'overdue' ? 'Atrasado' : 'Cancelado' }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Ações Kebab -->
+                                            <td class="px-6 py-4.5 text-center">
+                                                <div class="relative group/kebab flex justify-center">
+                                                    <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm text-slate-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                                                     </button>
-                                                    <button @click="openEditModal(bill)" class="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                        Editar Parcela
-                                                    </button>
-                                                    <button @click="deleteBill(bill)" class="w-full px-4 py-2.5 text-left text-[11px] font-bold text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-3 transition-colors">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                        Excluir
-                                                    </button>
+                                                    <div class="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl py-1.5 z-50 opacity-0 invisible group-hover/kebab:opacity-100 group-hover/kebab:visible transition-all duration-200 translate-y-1 group-hover/kebab:translate-y-0">
+                                                        <button @click="openViewModal(bill)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-cyan-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                            Visualizar
+                                                        </button>
+                                                        <button @click="openEditModal(bill)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border-t border-slate-100 dark:border-white/5">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                            Editar
+                                                        </button>
+                                                        <button @click="deleteBill(bill)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors border-t border-slate-100 dark:border-white/5">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                            Excluir
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div v-if="groupedBills.length === 0" class="py-24 text-center">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-slate-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <p class="text-[11px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Nenhum extrato gerado</p>
+                            <p class="text-xs text-slate-400 dark:text-gray-600 mt-2 font-medium">Crie a proposta para gerar as parcelas automaticamente</p>
                         </div>
                     </div>
-
-                    <div v-if="groupedBills.length === 0" class="py-20 text-center space-y-4 text-gray-600">
-                        <p class="text-[9px] font-black uppercase tracking-[0.3em]">Nenhum extrato gerado</p>
-                    </div>
                 </div>
+
             </div>
         </div>
 
