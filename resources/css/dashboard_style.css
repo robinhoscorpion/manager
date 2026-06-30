@@ -46,37 +46,37 @@ html.dark #nprogress .spinner-icon {
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap');
 
 :root {
-    --sidebar-width-full: 248px;
+    --sidebar-width-full: 260px;
     --sidebar-width-collapsed: 80px;
     --sidebar-width: var(--sidebar-width-full);
 
-    /* Light Mode — warm blue-gray, not pure white */
-    --sidebar-bg: #f0f4f8;           /* off-white azulado suave */
-    --content-bg: #e8edf4;           /* fundo principal: cinza-azulado */
-    --card-bg: #ffffff;              /* cards: branco puro para destaque */
-    --topbar-bg: #f0f4f8;
+    /* Light Mode — minimal */
+    --sidebar-bg: #f9f9f9;
+    --content-bg: #ffffff;
+    --card-bg: #ffffff;
+    --topbar-bg: #ffffff;
 
-    --primary: #6366f1;
-    --primary-light: rgba(99, 102, 241, 0.08);
-    --primary-border: rgba(99, 102, 241, 0.2);
+    --primary: #0f0f0f;
+    --primary-light: rgba(0, 0, 0, 0.05);
+    --primary-border: rgba(0, 0, 0, 0.1);
 
-    --nav-hover-bg: rgba(99, 102, 241, 0.05);
-    --nav-active-bg: rgba(99, 102, 241, 0.09);
-    --nav-active-color: #6366f1;
-    --nav-active-border: rgba(99, 102, 241, 0.2);
+    --nav-hover-bg: #ececec;
+    --nav-active-bg: #e5e5e5;
+    --nav-active-color: #0f0f0f;
+    --nav-active-border: transparent;
 
-    --text-main: #1e293b;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-main: #0f0f0f;
+    --text-secondary: #0f0f0f;
+    --text-muted: #666666;
 
-    --border-color: #d1dae6;         /* borda levemente azulada */
-    --border-light: #e0e7ef;
+    --border-color: #e5e5e5;
+    --border-light: #ececec;
 
-    --shadow-card: 0 1px 4px 0 rgba(30, 41, 59, 0.07), 0 1px 2px -1px rgba(30, 41, 59, 0.04);
-    --shadow-card-hover: 0 6px 20px -4px rgba(30, 41, 59, 0.12), 0 2px 8px -2px rgba(30, 41, 59, 0.06);
+    --shadow-card: 0 1px 4px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+    --shadow-card-hover: 0 6px 20px -4px rgba(0, 0, 0, 0.1), 0 2px 8px -2px rgba(0, 0, 0, 0.05);
 
-    --scroll-thumb: #c0cdd9;
-    --scroll-thumb-hover: #94a3b8;
+    --scroll-thumb: #d4d4d4;
+    --scroll-thumb-hover: #a3a3a3;
 
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -84,32 +84,32 @@ html.dark #nprogress .spinner-icon {
 
 /* Dark Mode Overrides */
 .dark {
-    --sidebar-bg: #0f1117;
-    --content-bg: #080c14;
-    --card-bg: #13192a;
-    --topbar-bg: #0f1117;
+    --sidebar-bg: #171717;
+    --content-bg: #212121;
+    --card-bg: #212121;
+    --topbar-bg: #212121;
 
-    --primary: #818cf8;
-    --primary-light: rgba(129, 140, 248, 0.08);
-    --primary-border: rgba(129, 140, 248, 0.2);
+    --primary: #ececec;
+    --primary-light: rgba(255, 255, 255, 0.08);
+    --primary-border: rgba(255, 255, 255, 0.15);
 
-    --nav-hover-bg: rgba(255, 255, 255, 0.03);
-    --nav-active-bg: rgba(129, 140, 248, 0.1);
-    --nav-active-color: #a5b4fc;
-    --nav-active-border: rgba(129, 140, 248, 0.2);
+    --nav-hover-bg: #2f2f2f;
+    --nav-active-bg: #3a3a3a;
+    --nav-active-color: #ececec;
+    --nav-active-border: transparent;
 
-    --text-main: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #475569;
+    --text-main: #ececec;
+    --text-secondary: #ececec;
+    --text-muted: #888888;
 
-    --border-color: rgba(255, 255, 255, 0.06);
-    --border-light: rgba(255, 255, 255, 0.03);
+    --border-color: #444444;
+    --border-light: #333333;
 
     --shadow-card: none;
     --shadow-card-hover: 0 4px 24px rgba(0, 0, 0, 0.4);
 
-    --scroll-thumb: rgba(255, 255, 255, 0.08);
-    --scroll-thumb-hover: rgba(255, 255, 255, 0.15);
+    --scroll-thumb: rgba(255, 255, 255, 0.15);
+    --scroll-thumb-hover: rgba(255, 255, 255, 0.25);
 }
 
 /* ============================================================
@@ -204,10 +204,7 @@ h1, h2, h3, h4, .font-heading {
     font-size: 17px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-main);
 }
 
 /* Nav */
@@ -260,14 +257,7 @@ h1, h2, h3, h4, .font-heading {
 }
 
 .nav-item.active::before {
-    content: '';
-    position: absolute;
-    left: -1px;
-    top: 25%;
-    bottom: 25%;
-    width: 3px;
-    background: var(--primary);
-    border-radius: 0 3px 3px 0;
+    display: none;
 }
 
 /* Sub-menu */

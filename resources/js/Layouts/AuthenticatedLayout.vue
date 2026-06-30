@@ -90,13 +90,19 @@ const toggleSidebar = () => {
         <!-- Sidebar -->
         <aside class="sidebar" :class="{ 'show': showingMobileMenu }">
             <div class="sidebar-content">
-                <div class="sidebar-header">
-                    <Link :href="route('dashboard')" class="flex items-center gap-3 group text-left">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-cyan-500 dark:to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 dark:shadow-cyan-500/20 group-hover:scale-110 transition-transform">
-                            <ApplicationLogo class="w-6 h-6 text-white" />
+                <div class="sidebar-header flex items-center justify-between">
+                    <Link :href="route('dashboard')" class="flex items-center gap-2 group text-left">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <ApplicationLogo class="w-6 h-6 text-slate-800 dark:text-slate-200" />
                         </div>
                         <span class="sidebar-logo">MANAGER</span>
                     </Link>
+                    <button v-if="!sidebarCollapsed" @click="toggleSidebar" class="menu-toggle hidden md:flex text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" title="Recolher menu">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2" />
+                            <line x1="9" y1="3" x2="9" y2="21" stroke-width="2" />
+                        </svg>
+                    </button>
                 </div>
 
                 <nav class="sidebar-nav">
@@ -287,9 +293,10 @@ const toggleSidebar = () => {
             <div class="topbar">
                 <!-- Page Header slot -->
                 <div class="topbar-left flex items-start sm:items-center gap-4">
-                    <button @click="toggleSidebar" class="menu-toggle hidden md:flex mt-1 sm:mt-0" title="Recolher menu">
+                    <button v-if="sidebarCollapsed" @click="toggleSidebar" class="menu-toggle hidden md:flex mt-1 sm:mt-0 text-slate-500 hover:text-slate-900 dark:hover:text-white" title="Expandir menu">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2" />
+                            <line x1="9" y1="3" x2="9" y2="21" stroke-width="2" />
                         </svg>
                     </button>
                     <div class="flex-1 min-w-0">
