@@ -414,23 +414,23 @@ const hasCortesia = (cortesia) => {
         </Transition>
 
         <div class="min-h-screen font-sans bg-slate-50 dark:bg-[#0f1219]">
-            <div class="w-full sm:px-6 lg:px-8 h-auto pt-8">
+            <div class="w-full sm:px-6 lg:px-8 h-auto pt-4">
                 
                 <!-- Premium Header & Toolbar -->
-                <div class="bg-white/50 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/60 dark:border-slate-800/50 rounded-[20px] mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-none flex flex-col relative z-20">
+                <div class="bg-white/50 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/60 dark:border-slate-800/50 rounded-[16px] mb-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-none flex flex-col relative z-20">
                     
                     <!-- Top Row: Title & Main Action -->
-                    <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
-                            <div class="w-12 h-12 rounded-[14px] bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="px-4 py-3 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
+                            <div class="w-10 h-10 rounded-[12px] bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
                             <div class="text-center sm:text-left">
-                                <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Atendimentos</h2>
-                                <p class="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-0.5">Atendimentos</h2>
+                                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1">
+                                    <span class="w-1 h-1 rounded-full bg-indigo-500 animate-pulse"></span>
                                     Sala de Vendas
                                 </p>
                             </div>
@@ -440,18 +440,18 @@ const hasCortesia = (cortesia) => {
                         <div class="w-full sm:w-auto">
                             <button 
                                 @click="selectedService = null; isNewServiceModalOpen = true"
-                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 px-4 py-2 rounded-[10px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span class="text-sm font-semibold text-white">Novo Atendimento</span>
+                                <span class="text-xs font-semibold text-white">Novo Atendimento</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Bottom Row: Filters Toolbar -->
-                    <div class="px-6 py-4 bg-slate-50/40 dark:bg-slate-800/20 rounded-b-[20px] flex flex-col md:flex-row items-center justify-end gap-3">
+                    <div class="px-4 py-2.5 bg-slate-50/40 dark:bg-slate-800/20 rounded-b-[16px] flex flex-col md:flex-row items-center justify-end gap-3">
                         <div class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
                             <div class="w-full sm:w-[280px]">
                                 <DateRangePicker v-model="selectedDateRange" class="w-full" />
@@ -467,24 +467,25 @@ const hasCortesia = (cortesia) => {
                 </div>
 
                 <!-- Data Table Wrapper -->
-                <div class="ledger-card flex flex-col overflow-hidden mb-12">
-                    
-                    <!-- Table Header -->
-                    <div class="ledger-header-row flex items-center gap-3 px-6 py-3">
-                        <div v-if="columnSettings.id" class="w-10 text-center ledger-th">#</div>
-                        <div v-if="columnSettings.date" class="w-24 text-center ledger-th">Data</div>
-                        <div v-if="columnSettings.time" class="w-20 text-center ledger-th">Horário</div>
-                        <div v-if="columnSettings.clients" class="flex-1 min-w-[150px] text-left ledger-th">Clientes</div>
-                        <div class="flex gap-4">
-                            <div v-if="columnSettings.mkt" class="w-14 text-center ledger-th hidden md:block">Mkt</div>
-                            <div v-if="columnSettings.opc" class="w-14 text-center ledger-th hidden lg:block">Promotor</div>
-                            <div v-if="columnSettings.liner" class="w-14 text-center ledger-th hidden lg:block">Liner</div>
-                            <div v-if="columnSettings.closer" class="w-14 text-center ledger-th hidden lg:block">Closer</div>
-                        </div>
-                        <div v-if="columnSettings.qualification" class="w-24 text-center ledger-th">Qualif.</div>
-                        <div v-if="columnSettings.status" class="w-36 text-center ledger-th">Status</div>
-                        <div v-if="columnSettings.actions" class="w-14 text-center ledger-th">Ações</div>
-                    </div>
+                <div class="ledger-card flex flex-col overflow-hidden mb-8">
+                    <div class="overflow-x-auto w-full no-scrollbar">
+                        <div class="min-w-[850px] w-full">
+                            <!-- Table Header -->
+                            <div class="ledger-header-row flex items-center gap-2 px-4 py-2.5">
+                                <div v-if="columnSettings.id" class="w-10 text-center ledger-th">#</div>
+                                <div v-if="columnSettings.date" class="w-24 text-center ledger-th">Data</div>
+                                <div v-if="columnSettings.time" class="w-20 text-center ledger-th">Horário</div>
+                                <div v-if="columnSettings.clients" class="flex-1 min-w-[150px] text-left ledger-th">Clientes</div>
+                                <div class="flex gap-2">
+                                    <div v-if="columnSettings.mkt" class="w-10 text-center ledger-th hidden md:block">Mkt</div>
+                                    <div v-if="columnSettings.opc" class="w-10 text-center ledger-th hidden lg:block">Opc</div>
+                                    <div v-if="columnSettings.liner" class="w-10 text-center ledger-th hidden lg:block">Liner</div>
+                                    <div v-if="columnSettings.closer" class="w-10 text-center ledger-th hidden lg:block">Closer</div>
+                                </div>
+                                <div v-if="columnSettings.qualification" class="w-24 text-center ledger-th">Qualif.</div>
+                                <div v-if="columnSettings.status" class="w-36 text-center ledger-th">Status</div>
+                                <div v-if="columnSettings.actions" class="w-14 text-center ledger-th">Ações</div>
+                            </div>
 
                     <!-- Table Body -->
                     <div class="w-full">
@@ -493,7 +494,7 @@ const hasCortesia = (cortesia) => {
                                 v-for="(item, index) in filteredServiceData" 
                                 :key="item.id"
                                 @click="openService(item)"
-                                class="ledger-row flex items-center gap-3 px-6 py-3 cursor-pointer group relative"
+                                class="ledger-row flex items-center gap-2 px-4 py-1.5 cursor-pointer group relative"
                             >
                                 <!-- Accent bar on hover -->
                                 <div class="ledger-row-accent"></div>
@@ -509,18 +510,18 @@ const hasCortesia = (cortesia) => {
                                 </div>
                                 
                                 <!-- Staff Avatars -->
-                                <div class="flex gap-4">
-                                    <div v-if="columnSettings.mkt" class="w-14 hidden md:flex justify-center relative">
+                                <div class="flex gap-2">
+                                    <div v-if="columnSettings.mkt" class="w-10 hidden md:flex justify-center relative">
                                         <div 
                                             @mouseenter="hoveredAvatar = { id: item.id, type: 'mkt' }"
                                             @mouseleave="hoveredAvatar = { id: null, type: null }"
                                             @click.stop="openPicker(index, 'avatar')"
-                                            class="w-9 h-9 rounded-full ring-2 ring-indigo-100 dark:ring-indigo-900/50 bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
+                                            class="w-7 h-7 rounded-full ring-1 ring-indigo-100 dark:ring-indigo-900/50 bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
                                             :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-indigo-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.mkt_user && item.mkt_user.profile_photo_path && !item.mkt_user.has_error" :src="item.mkt_user.profile_photo_url" @error="item.mkt_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="Seller">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
-                                                <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 translate-y-[2px]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                             
                                             <!-- Tooltip -->
@@ -534,18 +535,18 @@ const hasCortesia = (cortesia) => {
                                         </div>
                                     </div>
 
-                                    <div v-if="columnSettings.opc" class="w-14 hidden lg:flex justify-center relative">
+                                    <div v-if="columnSettings.opc" class="w-10 hidden lg:flex justify-center relative">
                                         <div 
                                             @mouseenter="hoveredAvatar = { id: item.id, type: 'opc' }"
                                             @mouseleave="hoveredAvatar = { id: null, type: null }"
                                             v-if="item.opc_id" 
                                             @click.stop="openPicker(index, 'opcAvatar')"
-                                            class="w-9 h-9 rounded-full ring-2 ring-cyan-100 dark:ring-cyan-900/50 bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
+                                            class="w-7 h-7 rounded-full ring-1 ring-cyan-100 dark:ring-cyan-900/50 bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
                                             :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-cyan-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.opc_user && item.opc_user.profile_photo_path && !item.opc_user.has_error" :src="item.opc_user.profile_photo_url" @error="item.opc_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="OPC">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
-                                                <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 translate-y-[2px]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                             
                                             <!-- Tooltip -->
@@ -560,24 +561,24 @@ const hasCortesia = (cortesia) => {
                                         <div 
                                             v-else 
                                             @click.stop="openPicker(index, 'opcAvatar')"
-                                            class="w-9 h-9 flex items-center justify-center group/add"
+                                            class="w-7 h-7 flex items-center justify-center group/add"
                                             :class="can('atendimentos.gerenciar') ? 'cursor-pointer' : 'cursor-default'"
                                         >
-                                            <div class="w-4 h-[2px] bg-slate-200 dark:bg-slate-700 group-hover/add:w-6 group-hover/add:bg-cyan-400 transition-all rounded-full"></div>
+                                            <div class="w-3 h-[2px] bg-slate-200 dark:bg-slate-700 group-hover/add:w-4 group-hover/add:bg-cyan-400 transition-all rounded-full"></div>
                                         </div>
                                     </div>
 
-                                    <div v-if="columnSettings.liner" class="w-14 hidden lg:flex justify-center relative">
+                                    <div v-if="columnSettings.liner" class="w-10 hidden lg:flex justify-center relative">
                                         <div 
                                             @mouseenter="hoveredAvatar = { id: item.id, type: 'liner' }"
                                             @mouseleave="hoveredAvatar = { id: null, type: null }"
                                             @click.stop="openPicker(index, 'linerAvatar')"
-                                            class="w-9 h-9 rounded-full ring-2 ring-emerald-100 dark:ring-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
+                                            class="w-7 h-7 rounded-full ring-1 ring-emerald-100 dark:ring-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
                                             :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-emerald-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.liner_user && item.liner_user.profile_photo_path && !item.liner_user.has_error" :src="item.liner_user.profile_photo_url" @error="item.liner_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="Liner">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
-                                                <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 translate-y-[2px]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                             
                                             <!-- Tooltip -->
@@ -591,18 +592,18 @@ const hasCortesia = (cortesia) => {
                                         </div>
                                     </div>
 
-                                    <div v-if="columnSettings.closer" class="w-14 hidden lg:flex justify-center relative">
+                                    <div v-if="columnSettings.closer" class="w-10 hidden lg:flex justify-center relative">
                                         <div 
                                             v-if="item.closer" 
                                             @mouseenter="hoveredAvatar = { id: item.id, type: 'closer' }"
                                             @mouseleave="hoveredAvatar = { id: null, type: null }"
                                             @click.stop="openPicker(index, 'closerAvatar')"
-                                            class="w-9 h-9 rounded-full ring-2 ring-pink-100 dark:ring-pink-900/50 bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
+                                            class="w-7 h-7 rounded-full ring-1 ring-pink-100 dark:ring-pink-900/50 bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
                                             :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-pink-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.closer_user && item.closer_user.profile_photo_path && !item.closer_user.has_error" :src="item.closer_user.profile_photo_url" @error="item.closer_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="Closer">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
-                                                <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 translate-y-[2px]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                             
                                             <!-- Tooltip -->
@@ -617,10 +618,10 @@ const hasCortesia = (cortesia) => {
                                         <div 
                                             v-else 
                                             @click.stop="openPicker(index, 'closerAvatar')"
-                                            class="w-9 h-9 flex items-center justify-center group/add"
+                                            class="w-7 h-7 flex items-center justify-center group/add"
                                             :class="can('atendimentos.gerenciar') ? 'cursor-pointer' : 'cursor-default'"
                                         >
-                                            <div class="w-4 h-[2px] bg-slate-200 dark:bg-slate-700 group-hover/add:w-6 group-hover/add:bg-pink-400 transition-all rounded-full"></div>
+                                            <div class="w-3 h-[2px] bg-slate-200 dark:bg-slate-700 group-hover/add:w-4 group-hover/add:bg-pink-400 transition-all rounded-full"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -631,7 +632,7 @@ const hasCortesia = (cortesia) => {
                                          @mouseenter="hoveredQualId = item.id"
                                          @mouseleave="hoveredQualId = null"
                                          @click.stop="openQualPicker(index)"
-                                         class="min-w-[56px] h-9 px-3 rounded-[10px] border flex items-center justify-center text-xs font-black uppercase tracking-wider transition-all shadow-sm"
+                                         class="min-w-[48px] h-6 px-2 rounded-[6px] border flex items-center justify-center text-[10px] font-black uppercase tracking-wider transition-all shadow-sm"
                                          :class="[
                                              getQualificationMetadata(item.qualification) 
                                                 ? getQualStyles(getQualificationMetadata(item.qualification).color)
@@ -659,7 +660,7 @@ const hasCortesia = (cortesia) => {
                                  <!-- Status -->
                                  <div v-if="columnSettings.status" class="w-36 flex justify-center relative">
                                     <div
-                                        class="inline-flex items-center gap-1.5 pl-2 pr-3 h-7 rounded-full cursor-default select-none border text-[10px] font-black uppercase tracking-[0.12em] whitespace-nowrap transition-none"
+                                        class="inline-flex items-center gap-1.5 pl-2 pr-2.5 h-6 rounded-full cursor-default select-none border text-[9px] font-black uppercase tracking-[0.12em] whitespace-nowrap transition-none"
                                         :class="{
                                             'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20 text-orange-600 dark:text-orange-400': item.status === 'queue' || item.status === 'fila',
                                             'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400': item.status === 'table' || item.status === 'mesa',
@@ -699,9 +700,9 @@ const hasCortesia = (cortesia) => {
                                  <div v-if="columnSettings.actions" class="w-14 flex justify-center">
                                     <button 
                                         @click.stop="openActions(item)"
-                                        class="w-8 h-8 rounded-[8px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white transition-all shadow-sm"
+                                        class="w-6 h-6 rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white transition-all shadow-sm"
                                     >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                         </svg>
                                     </button>
@@ -720,6 +721,8 @@ const hasCortesia = (cortesia) => {
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Avatar Picker Modal (Transparent Overlay) -->
         <div 
