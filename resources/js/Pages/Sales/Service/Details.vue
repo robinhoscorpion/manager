@@ -5,6 +5,7 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+import RichTextEditor from '@/Components/RichTextEditor.vue';
 
 const props = defineProps({
     service: Object
@@ -161,6 +162,30 @@ const submitCreate = () => {
         onSuccess: () => closeCreateModal(),
         preserveScroll: true,
     });
+};
+
+// --- Protocol Logic ---
+const isProtocolModalOpen = ref(false);
+const protocolForm = useForm({
+    subject: 'Dúvidas Gerais',
+    message: ''
+});
+
+const openProtocolModal = () => {
+    protocolForm.reset();
+    isProtocolModalOpen.value = true;
+};
+
+const closeProtocolModal = () => {
+    isProtocolModalOpen.value = false;
+    protocolForm.reset();
+};
+
+const submitProtocol = () => {
+    // Para onde postar? Exemplo de rota: sales.atendimentos.protocol.store
+    // protocolForm.post(route('sales.atendimentos.protocol.store', props.service.id), { ... });
+    closeProtocolModal();
+    console.log("Protocol submitted", protocolForm.data());
 };
 
 // --- Edit Installment Logic ---
@@ -387,12 +412,14 @@ const getStatusColor = (status) => {
                 <!-- =========================================================== -->
                 <!--  HERO HEADER                                                  -->
                 <!-- =========================================================== -->
-                <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-[#0d1117] dark:via-indigo-950/50 dark:to-[#0d1117] border border-indigo-500/20 shadow-2xl shadow-indigo-500/10">
+                <div class="relative rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-[#0d1117] dark:via-indigo-950/50 dark:to-[#0d1117] border border-indigo-500/20 shadow-2xl shadow-indigo-500/10">
                     <!-- Ambient glow -->
-                    <div class="absolute top-0 left-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-                    <div class="absolute bottom-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                    <div class="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+                        <div class="absolute top-0 left-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]"></div>
+                        <div class="absolute bottom-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px]"></div>
+                    </div>
                     
-                    <div class="relative z-10 p-8 lg:p-10">
+                    <div class="relative z-20 p-8 lg:p-10">
                         <!-- Breadcrumb -->
                         <nav class="flex items-center gap-2 text-[10px] font-bold text-indigo-300/60 uppercase tracking-widest mb-6">
                             <Link :href="route('sales.atendimentos')" class="hover:text-indigo-300 transition-colors">Sala de Vendas</Link>
@@ -427,6 +454,22 @@ const getStatusColor = (status) => {
 
                             <!-- Action Buttons -->
                             <div class="flex flex-wrap gap-3 shrink-0">
+                                <Dropdown align="right" width="48">
+                                    <template #trigger>
+                                        <button class="flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
+                                            Opções
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </template>
+                                    <template #content>
+                                        <button @click="openProtocolModal" class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                                            Gerar Protocolo
+                                        </button>
+                                    </template>
+                                </Dropdown>
+                                
                                 <button @click="printDocument('sales.atendimentos.contrato.pdf')"
                                     class="flex items-center gap-2.5 bg-white text-slate-900 hover:bg-indigo-500 hover:text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-black/20 active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -1193,6 +1236,50 @@ const getStatusColor = (status) => {
                             </button>
                             <button type="submit" :disabled="bulkPayForm.processing" class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-500/20 transition-all flex items-center gap-2">
                                 Confirmar Baixa em Lote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Protocol Modal -->
+        <Modal :show="isProtocolModalOpen" @close="closeProtocolModal" maxWidth="3xl">
+            <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 space-y-6 relative overflow-hidden rounded-2xl shadow-xl dark:shadow-none">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-6">
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                            <span class="w-1.5 h-4 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"></span>
+                            Gerar Novo Protocolo
+                        </h3>
+                        <button @click="closeProtocolModal" class="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white transition-colors">✕</button>
+                    </div>
+
+                    <form @submit.prevent="submitProtocol" class="space-y-6">
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Assunto do Protocolo</label>
+                            <select v-model="protocolForm.subject" class="w-full bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-indigo-500/20" required>
+                                <option value="Dúvidas Gerais" class="bg-white dark:bg-black">Dúvidas Gerais</option>
+                                <option value="Cancelamento" class="bg-white dark:bg-black">Cancelamento</option>
+                                <option value="Financeiro" class="bg-white dark:bg-black">Financeiro</option>
+                                <option value="Solicitação de Documentos" class="bg-white dark:bg-black">Solicitação de Documentos</option>
+                                <option value="Outros" class="bg-white dark:bg-black">Outros</option>
+                            </select>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Mensagem</label>
+                            <RichTextEditor v-model="protocolForm.message" placeholder="Escreva os detalhes do protocolo aqui..." />
+                        </div>
+
+                        <div class="pt-4 flex justify-end gap-3">
+                            <button type="button" @click="closeProtocolModal" class="px-5 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-gray-300 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" :disabled="protocolForm.processing" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2">
+                                Salvar Protocolo
                             </button>
                         </div>
                     </form>

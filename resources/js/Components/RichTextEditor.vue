@@ -1,5 +1,5 @@
 <script setup>
-import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/vue-3';
+import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import ImageResize from 'tiptap-extension-resize-image';
@@ -217,23 +217,23 @@ const addTable = () => editor.value.chain().focus().insertTable({ rows: 3, cols:
         </div>
 
         <!-- Bubble Menu (Selection-based) -->
-        <BubbleMenu v-if="editor" :editor="editor" :tippy-options="{ duration: 100 }">
+        <!-- <BubbleMenu v-if="editor" :editor="editor" :tippy-options="{ duration: 100 }">
             <div class="flex items-center gap-0.5 p-1 px-2 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-2xl">
                 <button type="button" @click="editor.chain().focus().toggleBold().run()" class="toolbar-btn-sm" :class="{ 'text-cyan-400': editor.isActive('bold') }">B</button>
                 <button type="button" @click="editor.chain().focus().toggleItalic().run()" class="toolbar-btn-sm" :class="{ 'text-cyan-400': editor.isActive('italic') }">I</button>
                 <button type="button" @click="editor.chain().focus().toggleUnderline().run()" class="toolbar-btn-sm" :class="{ 'text-cyan-400': editor.isActive('underline') }">U</button>
             </div>
-        </BubbleMenu>
+        </BubbleMenu> -->
 
         <!-- Floating Menu (Empty line-based) -->
-        <FloatingMenu v-if="editor" :editor="editor" :tippy-options="{ duration: 100 }">
+        <!-- <FloatingMenu v-if="editor" :editor="editor" :tippy-options="{ duration: 100 }">
             <div class="flex items-center gap-1 p-2 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-2xl">
                 <button type="button" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()" class="floating-btn">H1</button>
                 <button type="button" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" class="floating-btn">H2</button>
                 <button type="button" @click="editor.chain().focus().toggleBulletList().run()" class="floating-btn">Lista</button>
                 <button type="button" @click="addTable" class="floating-btn">Tabela</button>
             </div>
-        </FloatingMenu>
+        </FloatingMenu> -->
 
         <!-- Editor Content -->
         <EditorContent :editor="editor" class="editor-content" />

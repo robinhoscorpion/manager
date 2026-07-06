@@ -413,24 +413,24 @@ const hasCortesia = (cortesia) => {
             </div>
         </Transition>
 
-        <div class="min-h-screen font-sans bg-slate-50 dark:bg-[#0f1219]">
+        <div class="min-h-screen font-sans bg-[var(--content-bg)] dark:bg-[#0f1219]">
             <div class="w-full sm:px-6 lg:px-8 h-auto pt-8">
                 
                 <!-- Premium Header & Toolbar -->
-                <div class="bg-white/50 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/60 dark:border-slate-800/50 rounded-[20px] mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-none flex flex-col relative z-20">
+                <div class="bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] mb-6 shadow-sm dark:shadow-none flex flex-col relative z-20">
                     
                     <!-- Top Row: Title & Main Action -->
                     <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
-                            <div class="w-12 h-12 rounded-[14px] bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-12 h-12 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
                             <div class="text-center sm:text-left">
                                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Atendimentos</h2>
                                 <p class="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
                                     Sala de Vendas
                                 </p>
                             </div>
@@ -440,7 +440,7 @@ const hasCortesia = (cortesia) => {
                         <div class="w-full sm:w-auto">
                             <button 
                                 @click="selectedService = null; isNewServiceModalOpen = true"
-                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -467,23 +467,23 @@ const hasCortesia = (cortesia) => {
                 </div>
 
                 <!-- Data Table Wrapper -->
-                <div class="ledger-card flex flex-col overflow-hidden mb-12">
+                <div class="ledger-card flex flex-col overflow-hidden mb-12 bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] shadow-sm dark:shadow-none">
                     
                     <!-- Table Header -->
                     <div class="ledger-header-row flex items-center gap-3 px-6 py-3">
-                        <div v-if="columnSettings.id" class="w-10 text-center ledger-th">#</div>
-                        <div v-if="columnSettings.date" class="w-24 text-center ledger-th">Data</div>
-                        <div v-if="columnSettings.time" class="w-20 text-center ledger-th">Horário</div>
-                        <div v-if="columnSettings.clients" class="flex-1 min-w-[150px] text-left ledger-th">Clientes</div>
+                        <div v-if="columnSettings.id" class="w-10 text-center ledger-th !text-black">#</div>
+                        <div v-if="columnSettings.date" class="w-24 text-center ledger-th !text-black">Data</div>
+                        <div v-if="columnSettings.time" class="w-20 text-center ledger-th !text-black">Horário</div>
+                        <div v-if="columnSettings.clients" class="flex-1 min-w-[150px] text-left ledger-th !text-black">Clientes</div>
                         <div class="flex gap-4">
-                            <div v-if="columnSettings.mkt" class="w-14 text-center ledger-th hidden md:block">Mkt</div>
-                            <div v-if="columnSettings.opc" class="w-14 text-center ledger-th hidden lg:block">Promotor</div>
-                            <div v-if="columnSettings.liner" class="w-14 text-center ledger-th hidden lg:block">Liner</div>
-                            <div v-if="columnSettings.closer" class="w-14 text-center ledger-th hidden lg:block">Closer</div>
+                            <div v-if="columnSettings.mkt" class="w-14 text-center ledger-th !text-black hidden md:block">Mkt</div>
+                            <div v-if="columnSettings.opc" class="w-14 text-center ledger-th !text-black hidden lg:block">Promotor</div>
+                            <div v-if="columnSettings.liner" class="w-14 text-center ledger-th !text-black hidden lg:block">Liner</div>
+                            <div v-if="columnSettings.closer" class="w-14 text-center ledger-th !text-black hidden lg:block">Closer</div>
                         </div>
-                        <div v-if="columnSettings.qualification" class="w-24 text-center ledger-th">Qualif.</div>
-                        <div v-if="columnSettings.status" class="w-36 text-center ledger-th">Status</div>
-                        <div v-if="columnSettings.actions" class="w-14 text-center ledger-th">Ações</div>
+                        <div v-if="columnSettings.qualification" class="w-24 text-center ledger-th !text-black">Qualif.</div>
+                        <div v-if="columnSettings.status" class="w-36 text-center ledger-th !text-black">Status</div>
+                        <div v-if="columnSettings.actions" class="w-14 text-center ledger-th !text-black">Ações</div>
                     </div>
 
                     <!-- Table Body -->
@@ -505,7 +505,7 @@ const hasCortesia = (cortesia) => {
                                     <span class="ledger-time-tag">{{ item.time }}</span>
                                 </div>
                                 <div v-if="columnSettings.clients" class="flex-1 min-w-[150px] text-left truncate" :title="item.client?.nome + (item.nome_conjuge ? ' & ' + item.nome_conjuge : '')">
-                                    <span class="ledger-client-name group-hover:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors">{{ formatShortName(item.client?.nome || item.clients) }}</span><template v-if="item.nome_conjuge"><span class="ledger-ampersand">&amp;</span><span class="ledger-client-name group-hover:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors">{{ formatShortName(item.nome_conjuge) }}</span></template>
+                                    <span class="ledger-client-name group-hover:text-brand-green transition-colors">{{ formatShortName(item.client?.nome || item.clients) }}</span><template v-if="item.nome_conjuge"><span class="ledger-ampersand">&amp;</span><span class="ledger-client-name group-hover:text-brand-green transition-colors">{{ formatShortName(item.nome_conjuge) }}</span></template>
                                 </div>
                                 
                                 <!-- Staff Avatars -->
@@ -949,7 +949,6 @@ const hasCortesia = (cortesia) => {
 }
 
 /* ─── LEDGER TABLE (GeneralCommission style) ─── */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
 
 .ledger-card {
     background: #111827;

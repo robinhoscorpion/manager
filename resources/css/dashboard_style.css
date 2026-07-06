@@ -4,6 +4,7 @@
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap');
 
 /* Personalização do NProgress (Barra de Carregamento SPA) */
 #nprogress .bar {
@@ -43,34 +44,34 @@ html.dark #nprogress .spinner-icon {
     right: 25px !important;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap');
+
 
 :root {
     --sidebar-width-full: 248px;
     --sidebar-width-collapsed: 80px;
     --sidebar-width: var(--sidebar-width-full);
 
-    /* Light Mode — warm blue-gray, not pure white */
-    --sidebar-bg: #f0f4f8;           /* off-white azulado suave */
-    --content-bg: #e8edf4;           /* fundo principal: cinza-azulado */
-    --card-bg: #ffffff;              /* cards: branco puro para destaque */
-    --topbar-bg: #f0f4f8;
+    /* Light Mode — Itacaré Colors (Clean & High Contrast) */
+    --sidebar-bg: #ffffff;           /* Branco puro */
+    --content-bg: #f9f9f9;           /* Fundo levemente cinza, padrão clean */
+    --card-bg: #ffffff;              /* Cards em branco puro */
+    --topbar-bg: #ffffff;            /* Topo branco puro */
 
-    --primary: #6366f1;
-    --primary-light: rgba(99, 102, 241, 0.08);
-    --primary-border: rgba(99, 102, 241, 0.2);
+    --primary: #5A6B46;              /* brand-green (Verde Oliva) */
+    --primary-light: rgba(90, 107, 70, 0.08);
+    --primary-border: rgba(90, 107, 70, 0.2);
 
-    --nav-hover-bg: rgba(99, 102, 241, 0.05);
-    --nav-active-bg: rgba(99, 102, 241, 0.09);
-    --nav-active-color: #6366f1;
-    --nav-active-border: rgba(99, 102, 241, 0.2);
+    --nav-hover-bg: rgba(90, 107, 70, 0.05);
+    --nav-active-bg: rgba(90, 107, 70, 0.08);
+    --nav-active-color: #5A6B46;
+    --nav-active-border: rgba(90, 107, 70, 0.3);
 
-    --text-main: #1e293b;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-main: #1f2937;            /* Texto escuro (quase preto) */
+    --text-secondary: #4b5563;       /* Texto secundário (cinza escuro) */
+    --text-muted: #9ca3af;           /* Texto mutado */
 
-    --border-color: #d1dae6;         /* borda levemente azulada */
-    --border-light: #e0e7ef;
+    --border-color: #e5e7eb;         /* Borda clara para destacar do fundo */
+    --border-light: #f3f4f6;
 
     --shadow-card: 0 1px 4px 0 rgba(30, 41, 59, 0.07), 0 1px 2px -1px rgba(30, 41, 59, 0.04);
     --shadow-card-hover: 0 6px 20px -4px rgba(30, 41, 59, 0.12), 0 2px 8px -2px rgba(30, 41, 59, 0.06);
@@ -82,35 +83,7 @@ html.dark #nprogress .spinner-icon {
     --font-body: 'Inter', sans-serif;
 }
 
-/* Dark Mode Overrides */
-.dark {
-    --sidebar-bg: #0f1117;
-    --content-bg: #080c14;
-    --card-bg: #13192a;
-    --topbar-bg: #0f1117;
 
-    --primary: #818cf8;
-    --primary-light: rgba(129, 140, 248, 0.08);
-    --primary-border: rgba(129, 140, 248, 0.2);
-
-    --nav-hover-bg: rgba(255, 255, 255, 0.03);
-    --nav-active-bg: rgba(129, 140, 248, 0.1);
-    --nav-active-color: #a5b4fc;
-    --nav-active-border: rgba(129, 140, 248, 0.2);
-
-    --text-main: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #475569;
-
-    --border-color: rgba(255, 255, 255, 0.06);
-    --border-light: rgba(255, 255, 255, 0.03);
-
-    --shadow-card: none;
-    --shadow-card-hover: 0 4px 24px rgba(0, 0, 0, 0.4);
-
-    --scroll-thumb: rgba(255, 255, 255, 0.08);
-    --scroll-thumb-hover: rgba(255, 255, 255, 0.15);
-}
 
 /* ============================================================
    Global Reset & Scrollbar

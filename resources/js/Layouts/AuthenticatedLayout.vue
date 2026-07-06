@@ -57,25 +57,6 @@ const can = (permission) => {
     return permissions.includes(permission);
 };
 
-// Theme Management
-const theme = ref(localStorage.getItem('theme') || 'light');
-
-const toggleTheme = () => {
-    theme.value = theme.value === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('theme', theme.value);
-    updateTheme();
-};
-
-const updateTheme = () => {
-    if (theme.value === 'dark') {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-};
-
-// Initialize theme
-updateTheme();
 // Sidebar Collapsed State
 const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true');
 
@@ -90,12 +71,9 @@ const toggleSidebar = () => {
         <!-- Sidebar -->
         <aside class="sidebar" :class="{ 'show': showingMobileMenu }">
             <div class="sidebar-content">
-                <div class="sidebar-header">
-                    <Link :href="route('dashboard')" class="flex items-center gap-3 group text-left">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-cyan-500 dark:to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 dark:shadow-cyan-500/20 group-hover:scale-110 transition-transform">
-                            <ApplicationLogo class="w-6 h-6 text-white" />
-                        </div>
-                        <span class="sidebar-logo">MANAGER</span>
+                <div class="sidebar-header px-2 py-4">
+                    <Link :href="route('dashboard')" class="flex items-center justify-center w-full group transition-transform hover:scale-105">
+                        <ApplicationLogo class="w-auto h-12" />
                     </Link>
                 </div>
 
@@ -130,10 +108,6 @@ const toggleSidebar = () => {
                             <Link :href="route('sales.atendimentos')" class="nav-sub-item" :class="{ 'active': route().current('sales.atendimentos') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.atendimentos') ? 'opacity-100' : 'opacity-30'"></div>
                                 Atendimentos
-                            </Link>
-                            <Link :href="route('sales.linha')" class="nav-sub-item" :class="{ 'active': route().current('sales.linha') }">
-                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.linha') ? 'opacity-100' : 'opacity-30'"></div>
-                                Linha de atendimento
                             </Link>
                         </div>
                     </div>
@@ -268,9 +242,8 @@ const toggleSidebar = () => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <Link :href="route('dashboard')" class="flex items-center gap-2">
-                <ApplicationLogo class="w-6 h-6" />
-                <span class="sidebar-logo text-lg">MANAGER</span>
+            <Link :href="route('dashboard')" class="flex items-center transition-transform hover:scale-105">
+                <ApplicationLogo class="w-auto h-8" />
             </Link>
         </header>
 
@@ -299,21 +272,7 @@ const toggleSidebar = () => {
 
                 <!-- Actions -->
                 <div class="topbar-right">
-                    <!-- Theme Toggle -->
-                    <button
-                        @click="toggleTheme"
-                        class="theme-toggle-btn"
-                        :title="theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'"
-                    >
-                        <!-- Sun (dark → light) -->
-                        <svg v-if="theme === 'dark'" class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <!-- Moon (light → dark) -->
-                        <svg v-else class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                    </button>
+                    <!-- Theme Toggle Removed -->
 
                     <GlobalSearch />
                 </div>

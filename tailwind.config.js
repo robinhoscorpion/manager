@@ -14,10 +14,16 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                'brand-green': '#5A6B46',
+                'brand-blue': '#2C5160',
+                'brand-copper': '#A26B45',
+                'brand-sand': '#D5C2A4',
+                'brand-cream': '#F5F2EB',
             }
         },
     },
 
     plugins: [forms],
-    darkMode: 'class',
 };
