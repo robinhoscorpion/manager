@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import '@/../css/login_style.css';
 
 defineProps({
@@ -27,7 +28,7 @@ const submit = () => {
         <div class="login-container">
             <div class="login-card">
                 <div class="login-header">
-                    <div class="login-logo">MANAGER</div>
+                    <ApplicationLogo class="w-72 mx-auto mb-4" />
                     <p class="login-subtitle">Esqueceu sua senha?</p>
                 </div>
 

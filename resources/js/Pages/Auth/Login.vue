@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import '@/../css/login_style.css';
 
 defineProps({
@@ -34,7 +35,7 @@ const submit = () => {
         <div class="login-container">
             <div class="login-card">
                 <div class="login-header">
-                    <div class="login-logo">MANAGER</div>
+                    <ApplicationLogo class="w-72 mx-auto mb-4" />
                     <p class="login-subtitle">Bem-vindo ao futuro do gerenciamento.</p>
                 </div>
 
@@ -105,10 +106,6 @@ const submit = () => {
                     </button>
                 </form>
 
-                <div class="login-footer">
-                    Ainda não tem uma conta? 
-                    <Link :href="route('register')" class="login-link">Criar conta</Link>
-                </div>
             </div>
         </div>
     </div>
