@@ -701,6 +701,102 @@ const getStatusColor = (status) => {
                 </div>
 
                 <!-- =========================================================== -->
+                <!--  HISTÓRICO DE PROTOCOLOS (ACCORDION)                          -->
+                <!-- =========================================================== -->
+                <div v-if="service.protocols && service.protocols.length > 0" class="bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/5 rounded-2xl hover:shadow-lg transition-all duration-300 mb-6">
+                    <!-- Header -->
+                    <div class="px-6 py-5 border-b border-slate-200/80 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.01] rounded-t-2xl">
+                        <div class="flex items-center gap-4">
+                            <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                Histórico de Protocolos
+                            </h3>
+                            <span class="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest">
+                                {{ service.protocols.length }} Registros
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Accordion List -->
+                    <div class="divide-y divide-slate-100 dark:divide-white/[0.02]">
+                        <div v-for="protocol in [...service.protocols].sort((a,b) => new Date(b.created_at) - new Date(a.created_at))" :key="protocol.id" class="group/protocol transition-colors">
+                            
+                            <!-- Accordion Header (Clickable) -->
+                            <button @click="toggleProtocol(protocol.id)" class="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors focus:outline-none text-left">
+                                <div class="flex items-center gap-6">
+                                    <!-- Status Dot & Protocol Number -->
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-mono font-black text-slate-900 dark:text-white">{{ protocol.protocol_number }}</span>
+                                            <span class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">{{ formatDateTime(protocol.created_at) }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Priority Badge -->
+                                    <div class="hidden sm:block">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest" :class="getPriorityColor(protocol.priority)">
+                                            {{ getPriorityLabel(protocol.priority) }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Subject line (truncated) -->
+                                    <div class="hidden md:block w-64 lg:w-96">
+                                        <p class="text-sm font-medium text-slate-700 dark:text-gray-300 truncate">{{ protocol.subject }}</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expand icon -->
+                                <div class="text-slate-400 dark:text-gray-500 transition-transform duration-300" :class="{ 'rotate-180': expandedProtocols.includes(protocol.id) }">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </div>
+                            </button>
+
+                            <!-- Accordion Content -->
+                            <div v-show="expandedProtocols.includes(protocol.id)" class="px-6 pb-6 pt-2 border-t border-slate-50 dark:border-white/[0.02]">
+                                <div class="bg-slate-50 dark:bg-black/20 rounded-xl p-5 border border-slate-100 dark:border-white/[0.05]">
+                                    
+                                    <!-- Metadata Row -->
+                                    <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-200 dark:border-white/5">
+                                        <div class="flex items-center gap-2">
+                                            <img v-if="protocol.user?.profile_photo_url" :src="protocol.user.profile_photo_url" class="w-6 h-6 rounded-full object-cover">
+                                            <div v-else class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center text-[9px] font-black uppercase">
+                                                {{ protocol.user?.name?.substring(0, 2) || 'S' }}
+                                            </div>
+                                            <span class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">
+                                                Por: <span class="text-slate-900 dark:text-white">{{ protocol.user?.name || 'Sistema' }}</span>
+                                            </span>
+                                        </div>
+                                        <div class="sm:hidden">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest" :class="getPriorityColor(protocol.priority)">
+                                                {{ getPriorityLabel(protocol.priority) }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Full Message -->
+                                    <div class="space-y-2">
+                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ protocol.subject }}</h4>
+                                        <p class="text-sm text-slate-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">{{ protocol.message }}</p>
+                                    </div>
+
+                                    <!-- Attachments (if any) -->
+                                    <div v-if="protocol.attachments && protocol.attachments.length > 0" class="mt-6 pt-4 border-t border-slate-200 dark:border-white/5">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Anexos</p>
+                                        <div class="flex flex-wrap gap-3">
+                                            <a v-for="(attachment, index) in protocol.attachments" :key="index" :href="attachment.url || attachment" target="_blank" class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors group/attach">
+                                                <svg class="w-4 h-4 text-indigo-400 group-hover/attach:text-indigo-600 dark:group-hover/attach:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                <span class="text-[10px] font-bold text-slate-600 dark:text-gray-300 truncate max-w-[150px]">Anexo {{ index + 1 }}</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =========================================================== -->
                 <!--  EXTRATO FINANCEIRO — Tabela Principal                        -->
                 <!-- =========================================================== -->
                 <div class="bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/5 rounded-2xl hover:shadow-lg transition-all duration-300">
@@ -871,6 +967,7 @@ const getStatusColor = (status) => {
                 </div>
 
             </div>
+
         </div>
 
         <!-- Create Installment Modal -->
