@@ -62,6 +62,11 @@ class SalesService extends Model
         return $this->hasMany(Bill::class, 'sales_service_id');
     }
 
+    public function protocols()
+    {
+        return $this->hasMany(Protocol::class, 'sales_service_id');
+    }
+
     public function opcUser()
     {
         return $this->belongsTo(User::class, 'opc_id');

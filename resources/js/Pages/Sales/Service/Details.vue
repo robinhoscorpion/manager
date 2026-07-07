@@ -166,26 +166,78 @@ const submitCreate = () => {
 
 // --- Protocol Logic ---
 const isProtocolModalOpen = ref(false);
+const activeProtocolTab = ref('edit');
+const protocolAttachments = ref([]);
+
 const protocolForm = useForm({
     subject: 'Dúvidas Gerais',
-    message: ''
+    priority: 'media',
+    message: '',
+    attachments: []
 });
+
+const handleProtocolFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    // Append instead of replace to allow multiple selections
+    protocolAttachments.value = [...protocolAttachments.value, ...files];
+    protocolForm.attachments = protocolAttachments.value;
+};
+
+const removeProtocolAttachment = (index) => {
+    protocolAttachments.value.splice(index, 1);
+    protocolForm.attachments = protocolAttachments.value;
+};
 
 const openProtocolModal = () => {
     protocolForm.reset();
+    protocolAttachments.value = [];
+    protocolForm.attachments = [];
+    activeProtocolTab.value = 'edit';
     isProtocolModalOpen.value = true;
 };
 
 const closeProtocolModal = () => {
     isProtocolModalOpen.value = false;
     protocolForm.reset();
+    protocolAttachments.value = [];
+    protocolForm.attachments = [];
+    activeProtocolTab.value = 'edit';
+};
+
+const generatedProtocolNumber = ref(null);
+const copied = ref(false);
+
+const copyProtocol = () => {
+    if (generatedProtocolNumber.value) {
+        navigator.clipboard.writeText(generatedProtocolNumber.value);
+        copied.value = true;
+        setTimeout(() => {
+            copied.value = false;
+        }, 2000);
+    }
 };
 
 const submitProtocol = () => {
-    // Para onde postar? Exemplo de rota: sales.atendimentos.protocol.store
-    // protocolForm.post(route('sales.atendimentos.protocol.store', props.service.id), { ... });
-    closeProtocolModal();
-    console.log("Protocol submitted", protocolForm.data());
+    // Muda para a tela de carregamento animada
+    activeProtocolTab.value = 'loading';
+    protocolForm.attachments = protocolAttachments.value;
+    
+    protocolForm.post(route('sales.atendimentos.protocols.store', props.service.id), {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            if (page.props.flash && page.props.flash.generated_protocol_number) {
+                generatedProtocolNumber.value = page.props.flash.generated_protocol_number;
+            }
+            // Delay intencional de 1.5s para exibir a animação premium de "Gerando..."
+            setTimeout(() => {
+                activeProtocolTab.value = 'success';
+            }, 1500);
+        },
+        onError: (errors) => {
+            console.error("Errors when saving protocol:", errors);
+            activeProtocolTab.value = 'edit'; // Volta se houver erro
+        }
+    });
 };
 
 // --- Edit Installment Logic ---
@@ -1244,45 +1296,183 @@ const getStatusColor = (status) => {
         </Modal>
 
         <!-- Protocol Modal -->
-        <Modal :show="isProtocolModalOpen" @close="closeProtocolModal" maxWidth="3xl">
+        <Modal :show="isProtocolModalOpen" @close="closeProtocolModal" :maxWidth="(activeProtocolTab === 'loading' || activeProtocolTab === 'success') ? 'sm' : '3xl'">
             <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 space-y-6 relative overflow-hidden rounded-2xl shadow-xl dark:shadow-none">
                 <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none"></div>
 
                 <div class="relative z-10">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-6">
-                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                            <span class="w-1.5 h-4 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"></span>
-                            Gerar Novo Protocolo
-                        </h3>
+                        <div>
+                            <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-1.5 h-4 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"></span>
+                                Gerar Novo Protocolo
+                            </h3>
+                            <p class="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
+                                Cliente: <span class="font-bold text-indigo-500">{{ service.client?.name || 'Cliente' }}</span> • Contrato: <span class="font-bold text-indigo-500">#{{ service.proposal?.contract_number || service.proposal?.id || 'N/A' }}</span>
+                            </p>
+                        </div>
                         <button @click="closeProtocolModal" class="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white transition-colors">✕</button>
                     </div>
 
-                    <form @submit.prevent="submitProtocol" class="space-y-6">
-                        <div class="space-y-1">
-                            <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Assunto do Protocolo</label>
-                            <select v-model="protocolForm.subject" class="w-full bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-indigo-500/20" required>
-                                <option value="Dúvidas Gerais" class="bg-white dark:bg-black">Dúvidas Gerais</option>
-                                <option value="Cancelamento" class="bg-white dark:bg-black">Cancelamento</option>
-                                <option value="Financeiro" class="bg-white dark:bg-black">Financeiro</option>
-                                <option value="Solicitação de Documentos" class="bg-white dark:bg-black">Solicitação de Documentos</option>
-                                <option value="Outros" class="bg-white dark:bg-black">Outros</option>
-                            </select>
+                    <!-- Success View -->
+                    <div v-if="activeProtocolTab === 'success'" class="flex flex-col items-center justify-center py-10 space-y-6 text-center animate-in fade-in zoom-in duration-300">
+                        <div class="w-24 h-24 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mb-2 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
                         </div>
-                        
-                        <div class="space-y-1">
-                            <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Mensagem</label>
-                            <RichTextEditor v-model="protocolForm.message" placeholder="Escreva os detalhes do protocolo aqui..." />
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest">Protocolo Gerado com Sucesso!</h3>
+                        <p class="text-sm text-slate-500 dark:text-gray-400">O número do seu protocolo único é:</p>
+                        <div class="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 px-6 py-3 rounded-xl shadow-inner flex items-center gap-4 justify-center">
+                            <span class="text-xl font-medium text-indigo-700 dark:text-indigo-400 tracking-[0.1em]">{{ generatedProtocolNumber || '...' }}</span>
+                            <button @click="copyProtocol" class="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors p-1.5 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 focus:outline-none flex items-center justify-center" :title="copied ? 'Copiado!' : 'Copiar Número'">
+                                <svg v-if="copied" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="pt-6">
+                            <button type="button" @click="closeProtocolModal" class="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 dark:hover:bg-gray-200 transition-all shadow-lg">
+                                Concluir e Fechar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading View -->
+                    <div v-else-if="activeProtocolTab === 'loading'" class="flex flex-col items-center justify-center py-16 space-y-6 text-center animate-in fade-in duration-300">
+                        <div class="relative w-24 h-24 flex items-center justify-center">
+                            <!-- Outer spinner -->
+                            <svg class="animate-spin absolute w-full h-full text-indigo-500/20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-100" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+                            </svg>
+                            <!-- Inner spinner -->
+                            <svg class="animate-spin absolute w-16 h-16 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="animation-duration: 0.8s;">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest animate-pulse">Gerando Protocolo...</h3>
+                            <p class="text-sm text-slate-500 dark:text-gray-400">Por favor aguarde, sincronizando dados no sistema.</p>
+                        </div>
+                    </div>
+
+                    <!-- Existing Form View -->
+                    <div v-else>
+                        <!-- Tabs -->
+                        <div class="flex gap-2 mb-6 border-b border-slate-100 dark:border-white/5 pb-2">
+                            <button type="button" @click="activeProtocolTab = 'edit'" :class="activeProtocolTab === 'edit' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-slate-500 dark:text-gray-500 hover:text-slate-700 dark:hover:text-gray-300'" class="px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition-all">
+                                Edição
+                            </button>
+                            <button type="button" @click="activeProtocolTab = 'preview'" :class="activeProtocolTab === 'preview' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-slate-500 dark:text-gray-500 hover:text-slate-700 dark:hover:text-gray-300'" class="px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition-all">
+                                Preview
+                            </button>
                         </div>
 
-                        <div class="pt-4 flex justify-end gap-3">
-                            <button type="button" @click="closeProtocolModal" class="px-5 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-gray-300 transition-all">
-                                Cancelar
-                            </button>
-                            <button type="submit" :disabled="protocolForm.processing" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2">
-                                Salvar Protocolo
-                            </button>
+                        <form @submit.prevent="submitProtocol" class="space-y-6" v-if="activeProtocolTab === 'edit'">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Assunto do Protocolo</label>
+                                    <select v-model="protocolForm.subject" class="w-full bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-indigo-500/20" required>
+                                        <option value="Dúvidas Gerais" class="bg-white dark:bg-black">Dúvidas Gerais</option>
+                                        <option value="Cancelamento" class="bg-white dark:bg-black">Cancelamento</option>
+                                        <option value="Financeiro" class="bg-white dark:bg-black">Financeiro</option>
+                                        <option value="Solicitação de Documentos" class="bg-white dark:bg-black">Solicitação de Documentos</option>
+                                        <option value="Outros" class="bg-white dark:bg-black">Outros</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Prioridade</label>
+                                    <select v-model="protocolForm.priority" class="w-full bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-indigo-500/20" required>
+                                        <option value="baixa" class="bg-white dark:bg-black text-green-500">🟢 Baixa</option>
+                                        <option value="media" class="bg-white dark:bg-black text-blue-500">🔵 Média</option>
+                                        <option value="alta" class="bg-white dark:bg-black text-orange-500">🟠 Alta</option>
+                                        <option value="urgente" class="bg-white dark:bg-black text-red-500">🔴 Urgente</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Mensagem</label>
+                                <RichTextEditor v-model="protocolForm.message" placeholder="Escreva os detalhes do protocolo aqui..." />
+                            </div>
+                            
+                            <div class="space-y-1">
+                                <label class="text-[8px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest">Anexos</label>
+                                <div class="flex items-center gap-3">
+                                    <label class="cursor-pointer px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-[10px] font-bold text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                        Escolher Arquivos
+                                        <input type="file" multiple class="hidden" @change="handleProtocolFileChange">
+                                    </label>
+                                    <div class="flex-1 flex flex-wrap gap-2">
+                                        <div v-for="(file, index) in protocolAttachments" :key="index" class="px-2 py-1 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded text-[9px] text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+                                            <span class="truncate max-w-[100px]">{{ file.name }}</span>
+                                            <button type="button" @click="removeProtocolAttachment(index)" class="hover:text-indigo-900 dark:hover:text-indigo-100 font-bold">×</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 flex justify-end gap-3">
+                                <button type="button" @click="closeProtocolModal" class="px-5 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-gray-300 transition-all">
+                                    Cancelar
+                                </button>
+                                <button type="submit" :disabled="protocolForm.processing" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2">
+                                    <span v-if="protocolForm.processing" class="flex items-center gap-2">
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Salvando...
+                                    </span>
+                                    <span v-else>Salvar Protocolo</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Preview View -->
+                        <div v-else class="space-y-6">
+                            <div class="bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-inner relative">
+                                <!-- Premium Header for preview -->
+                                <div class="flex justify-between items-start border-b border-slate-200 dark:border-white/10 pb-4 mb-4">
+                                    <div>
+                                        <h4 class="text-sm font-black text-slate-900 dark:text-white uppercase">{{ protocolForm.subject }}</h4>
+                                        <p class="text-[9px] text-slate-500 dark:text-gray-400 mt-1">Gerado para {{ service.client?.name }} • Prioridade: <span class="uppercase font-bold" :class="{'text-green-500': protocolForm.priority === 'baixa', 'text-blue-500': protocolForm.priority === 'media', 'text-orange-500': protocolForm.priority === 'alta', 'text-red-500': protocolForm.priority === 'urgente'}">{{ protocolForm.priority }}</span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[9px] text-slate-400 dark:text-gray-500 uppercase">{{ new Date().toLocaleDateString('pt-BR') }}</p>
+                                    </div>
+                                </div>
+                                <!-- Message Content -->
+                                <div class="prose prose-sm dark:prose-invert max-w-none text-sm text-slate-700 dark:text-gray-300 min-h-[200px]" v-html="protocolForm.message || '<p class=\'text-slate-400 dark:text-gray-600 italic\'>Nenhuma mensagem preenchida ainda...</p>'"></div>
+                                
+                                <!-- Attachments Preview -->
+                                <div v-if="protocolAttachments.length > 0" class="mt-8 pt-4 border-t border-slate-200 dark:border-white/10">
+                                    <p class="text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest mb-3">Anexos Vinculados ({{ protocolAttachments.length }})</p>
+                                    <div class="flex flex-wrap gap-3">
+                                        <div v-for="(file, index) in protocolAttachments" :key="index" class="px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-xs text-slate-600 dark:text-gray-400 flex items-center gap-2 shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                            {{ file.name }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 flex justify-between gap-3">
+                                <button type="button" @click="activeProtocolTab = 'edit'" class="px-5 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-gray-300 transition-all">
+                                    Voltar para Edição
+                                </button>
+                                <button type="button" @click="submitProtocol" :disabled="protocolForm.processing" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2">
+                                    <span v-if="protocolForm.processing" class="flex items-center gap-2">
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Salvando...
+                                    </span>
+                                    <span v-else>Confirmar e Salvar</span>
+                                </button>
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </Modal>
