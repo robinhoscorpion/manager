@@ -95,76 +95,92 @@ const closeModal = () => {
     <Head title="Modelos de Proposta" />
 
     <AuthenticatedLayout>
-        <div class="py-12 bg-[#020617] min-h-screen">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+        <div class="min-h-screen font-sans bg-[var(--content-bg)] dark:bg-[#0f1219]">
+            <div class="w-full sm:px-6 lg:px-8 h-auto pt-8">
                 
-                <!-- Header -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-black text-white uppercase tracking-tighter">Modelos de Proposta</h1>
-                        <p class="text-xs text-gray-500 font-bold uppercase tracking-[0.3em] mt-1">Configuração de Layouts HTML para Propostas</p>
+                <!-- Premium Header & Toolbar -->
+                <div class="bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] mb-6 shadow-sm dark:shadow-none flex flex-col relative z-20">
+                    <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
+                            <div class="w-12 h-12 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div class="text-center sm:text-left">
+                                <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Modelos de Proposta</h2>
+                                <p class="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
+                                    Configuração de Layouts HTML
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                            <button 
+                                @click="openCreateModal"
+                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                            >
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span class="text-sm font-semibold text-white">Novo Modelo</span>
+                            </button>
+                        </div>
                     </div>
-                    <button 
-                        @click="openCreateModal"
-                        class="bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase text-[10px] tracking-widest px-6 py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-95 flex items-center gap-2"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Novo Modelo
-                    </button>
                 </div>
 
                 <!-- Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
                     <div 
                         v-for="item in items" 
                         :key="item.id"
-                        class="bg-[#0d1117] border border-white/5 rounded-2xl group hover:border-cyan-500/30 transition-all overflow-hidden flex flex-col shadow-2xl relative"
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl group hover:border-brand-green/30 dark:hover:border-brand-green/30 transition-all overflow-hidden flex flex-col shadow-sm hover:shadow-md relative"
                     >
                         <div class="p-6 space-y-4 flex-1">
                             <div class="flex justify-between items-start">
                                 <div class="flex flex-col gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center text-xs font-black text-white shadow-lg bg-gradient-to-br from-blue-600 to-cyan-700 uppercase">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center text-xs font-black text-brand-green bg-brand-green/10 border border-brand-green/20 uppercase shadow-sm group-hover:scale-105 transition-transform">
                                             DOC
                                         </div>
                                         <div class="flex flex-col gap-1">
-                                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 w-fit">Template</span>
-                                            <span class="text-[9px] font-bold text-gray-500 line-clamp-1 uppercase tracking-widest">Layout HTML</span>
+                                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 w-fit">Template</span>
+                                            <span class="text-[9px] font-bold text-slate-400 line-clamp-1 uppercase tracking-widest">Layout HTML</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="flex gap-1">
-                                    <button v-if="item.content" @click="openPreview(item)" class="text-gray-600 hover:text-cyan-400 p-1 transition-colors" title="Visualizar">
+                                    <button v-if="item.content" @click="openPreview(item)" class="text-slate-400 hover:text-brand-green p-1.5 transition-colors rounded-md hover:bg-brand-green/10" title="Visualizar">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
-                                    <button @click="openEditModal(item)" class="text-gray-600 hover:text-cyan-400 p-1 transition-colors" title="Editar">
+                                    <button @click="openEditModal(item)" class="text-slate-400 hover:text-brand-green p-1.5 transition-colors rounded-md hover:bg-brand-green/10" title="Editar">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
-                                    <button @click="deleteItem(item.id)" class="text-gray-600 hover:text-red-400 p-1 transition-colors" title="Remover">
+                                    <button @click="deleteItem(item.id)" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-500/10" title="Remover">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
                                 </div>
                             </div>
                             
                             <div>
-                                <h3 class="text-white font-black text-lg uppercase tracking-tighter group-hover:text-cyan-400 transition-colors">{{ item.name }}</h3>
+                                <h3 class="text-slate-900 dark:text-white font-bold text-lg tracking-tight group-hover:text-brand-green transition-colors">{{ item.name }}</h3>
                             </div>
 
-                            <div v-if="item.content" class="flex items-center gap-2 px-3 py-2 bg-cyan-500/5 border border-cyan-500/10 rounded-lg text-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                <span class="text-[9px] font-black text-cyan-500 uppercase tracking-widest">Modelo configurado</span>
+                            <div v-if="item.content" class="flex items-center gap-2 px-3 py-2 bg-brand-green/5 border border-brand-green/10 rounded-lg text-center justify-center">
+                                <svg class="w-3.5 h-3.5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <span class="text-[9px] font-black text-brand-green uppercase tracking-widest">Modelo configurado</span>
                             </div>
                         </div>
 
                         <div class="px-6 pb-6 mt-auto">
-                            <div class="pt-4 border-t border-white/5 space-y-3">
+                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[9px] font-black uppercase tracking-widest text-gray-600">Status</span>
+                                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-500">Status</span>
                                     <div 
                                         class="px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border"
-                                        :class="item.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'"
+                                        :class="item.is_active ? 'bg-brand-green/10 border-brand-green/20 text-brand-green' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'"
                                     >
                                         {{ item.is_active ? 'Ativo' : 'Inativo' }}
                                     </div>
@@ -176,85 +192,94 @@ const closeModal = () => {
                     <!-- Placeholder -->
                     <button 
                         @click="openCreateModal"
-                        class="border-2 border-dashed border-white/5 rounded-2xl h-full min-h-[200px] flex flex-col items-center justify-center p-8 group hover:border-cyan-500/30 transition-all hover:bg-white/[0.01]"
+                        class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl h-full min-h-[200px] flex flex-col items-center justify-center p-8 group hover:border-brand-green/30 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30"
                     >
-                        <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors mb-3">
-                            <svg class="w-5 h-5 text-gray-600 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-brand-green/10 transition-colors mb-3">
+                            <svg class="w-6 h-6 text-slate-400 group-hover:text-brand-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
-                        <p class="text-[9px] font-black text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">Novo Modelo</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-brand-green transition-colors">Novo Modelo</p>
                     </button>
                 </div>
-
             </div>
         </div>
 
         <!-- Create/Edit Modal -->
         <Modal :show="showEditModal" @close="closeModal" maxWidth="7xl">
-            <div class="bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                <div class="p-6 border-b border-white/5 bg-gradient-to-r from-cyan-600/20 to-transparent flex items-center justify-between flex-shrink-0">
-                    <h2 class="text-xl font-black text-white uppercase tracking-tighter">{{ editingItem ? 'Editar Modelo' : 'Novo Modelo' }}</h2>
-                    <button @click="closeModal" class="text-gray-500 hover:text-white transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-brand-green/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ editingItem ? 'Editar Modelo' : 'Novo Modelo' }}</h2>
+                    </div>
+                    <button @click="closeModal" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
 
-                <form @submit.prevent="submit" class="p-6 space-y-6 overflow-y-auto flex-1">
+                <form @submit.prevent="submit" class="p-6 space-y-6 overflow-y-auto flex-1 bg-slate-50 dark:bg-transparent">
                     <!-- Basic Info -->
                     <div class="grid grid-cols-4 gap-4">
-                        <div class="col-span-3 space-y-1">
-                            <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Nome do Modelo</label>
-                            <input v-model="form.name" type="text" required class="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-cyan-500/50" placeholder="Ex: Contrato de Compra e Venda Padrão">
+                        <div class="col-span-3 space-y-1.5">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Nome do Modelo</label>
+                            <input v-model="form.name" type="text" required class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: Contrato de Compra e Venda Padrão">
                         </div>
                         <div class="flex items-end">
-                            <div class="w-full flex items-center gap-3 bg-white/[0.02] p-2.5 px-4 rounded-xl border border-white/5 h-[42px]">
+                            <div class="w-full flex items-center gap-3 bg-white dark:bg-slate-800/50 p-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 h-[42px] shadow-sm">
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" v-model="form.is_active" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                    <span class="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Ativo</span>
+                                    <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-green"></div>
+                                    <span class="ml-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Ativo</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Rich Text Editor -->
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         <div class="flex items-center justify-between px-1">
-                            <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Layout da Proposta (HTML)</label>
-                            <span class="text-[9px] text-gray-600 uppercase tracking-widest">Editor Visual</span>
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Layout da Proposta (HTML)</label>
+                            <span class="text-[9px] text-brand-green uppercase tracking-widest font-bold">Editor Visual</span>
                         </div>
-                        <HtmlCodeEditor 
-                            v-model="form.content" 
-                            :height="600" 
-                        />
+                        <div class="rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                            <HtmlCodeEditor 
+                                v-model="form.content" 
+                                :height="600" 
+                            />
+                        </div>
                     </div>
 
                     <!-- Magic Tags Cheatsheet -->
-                    <div class="bg-[#1a1f2e]/50 border border-white/5 rounded-xl p-4">
+                    <div class="bg-brand-green/5 border border-brand-green/10 rounded-xl p-5 shadow-sm">
                         <div class="flex items-center gap-2 mb-2">
-                            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <h4 class="text-[10px] font-black uppercase text-white tracking-widest">Variáveis Dinâmicas (Mágicas)</h4>
+                            <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h4 class="text-xs font-bold uppercase text-slate-900 dark:text-white tracking-wider">Variáveis Dinâmicas (Mágicas)</h4>
                         </div>
-                        <p class="text-[11px] text-gray-400 mb-3">Copie as tags abaixo e cole no seu template. Elas serão preenchidas automaticamente ao gerar a proposta.</p>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-cyan-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[NOME_TITULAR]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-cyan-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[DATA_NASCIMENTO]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-cyan-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[CPF]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-cyan-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[EMAIL]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-cyan-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[CELULAR]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-pink-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[NOME_CONJUGE]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-orange-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[ID_ATENDIMENTO]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-orange-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[DATA]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-orange-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[LOCAL]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-blue-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[CEP]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-blue-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[RUA]</code>
-                            <code class="px-2 py-1.5 bg-[#0d1117] text-blue-400 border border-white/10 rounded-lg text-[10px] select-all text-center">[NUMERO]</code>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">Copie as tags abaixo e cole no seu template. Elas serão preenchidas automaticamente ao gerar a proposta.</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[NOME_TITULAR]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[DATA_NASCIMENTO]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[CPF]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[EMAIL]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[CELULAR]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[NOME_CONJUGE]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[ID_ATENDIMENTO]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[DATA]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[LOCAL]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[CEP]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[RUA]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm select-all text-center">[NUMERO]</code>
                         </div>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex gap-3 pt-2">
-                        <button type="button" @click="closeModal" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all">Cancelar</button>
-                        <button type="submit" :disabled="form.processing" class="flex-[2] py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-cyan-500/20">{{ form.processing ? 'Salvando...' : 'Salvar Modelo' }}</button>
+                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <button type="button" @click="closeModal" class="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-[12px] font-semibold text-sm transition-all shadow-sm">Cancelar</button>
+                        <button type="submit" :disabled="form.processing" class="flex-[2] py-3 bg-brand-green hover:bg-[#485638] text-white rounded-[12px] font-semibold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-2">
+                            <svg v-if="!form.processing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            {{ form.processing ? 'Salvando...' : 'Salvar Modelo' }}
+                        </button>
                     </div>
                 </form>
             </div>
@@ -262,18 +287,23 @@ const closeModal = () => {
 
         <!-- Preview Modal -->
         <Modal :show="showPreviewModal" @close="showPreviewModal = false" maxWidth="7xl">
-            <div v-if="previewItem" class="bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                <div class="p-6 border-b border-white/5 bg-gradient-to-r from-cyan-600/20 to-transparent flex items-center justify-between flex-shrink-0">
-                    <div>
-                        <h2 class="text-xl font-black text-white uppercase tracking-tighter">{{ previewItem.name }}</h2>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Pré-visualização do Modelo</p>
+            <div v-if="previewItem" class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-brand-green/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ previewItem.name }}</h2>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Pré-visualização do Modelo</p>
+                        </div>
                     </div>
-                    <button @click="showPreviewModal = false" class="text-gray-500 hover:text-white transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <button @click="showPreviewModal = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
                 <!-- Browser Shell -->
-                <div class="p-8 overflow-y-auto flex-1 preview-content bg-white" v-html="parsedPreviewContent"></div>
+                <div class="p-8 overflow-y-auto flex-1 preview-content bg-white dark:bg-slate-50 text-slate-900" v-html="parsedPreviewContent"></div>
             </div>
         </Modal>
     </AuthenticatedLayout>

@@ -40,4 +40,19 @@ class ProtocolController extends Controller
             'generated_protocol_number' => $protocol->protocol_number
         ]);
     }
+
+    public function updateStatus(Request $request, Protocol $protocol)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:aberto,em_andamento,fechado',
+        ]);
+
+        $protocol->update([
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->back()->with([
+            'success' => 'Status do protocolo atualizado com sucesso!',
+        ]);
+    }
 }

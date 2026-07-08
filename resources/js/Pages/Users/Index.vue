@@ -218,190 +218,200 @@ const formatDate = (dateStr) => {
     <AuthenticatedLayout>
 
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Premium Header Aligned with Table -->
-                <div class="relative bg-white/[0.02] backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-xl mb-6 shadow-2xl group transition-all duration-500 z-20">
-                    <!-- Decorative background glow container (Nested to allow dropdowns to escape) -->
-                    <div class="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
-                        <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] group-hover:bg-blue-500/15 transition-all duration-700"></div>
-                        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] group-hover:bg-indigo-500/15 transition-all duration-700"></div>
-                    </div>
-
-                    <div class="relative flex flex-col lg:flex-row items-center lg:items-center justify-between gap-4 sm:gap-6">
-                        <!-- Title Section -->
-                        <div class="flex items-center gap-3 shrink-0 w-full lg:w-auto justify-center lg:justify-start">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center shadow-lg">
-                                <svg class="w-4.5 h-4.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="min-h-screen font-sans bg-[var(--content-bg)] dark:bg-[#0f1219]">
+            <div class="w-full sm:px-6 lg:px-8 h-auto pt-8">
+                
+                <!-- Premium Header & Toolbar -->
+                <div class="bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] mb-6 shadow-sm dark:shadow-none flex flex-col relative z-20">
+                    
+                    <!-- Top Row: Title & Main Action -->
+                    <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
+                            <div class="w-12 h-12 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
                             </div>
-                            <div class="text-center lg:text-left">
-                                <h2 class="text-lg font-black text-white uppercase tracking-tighter leading-none">Usuários</h2>
-                                <p class="text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-1 flex items-center justify-center lg:justify-start gap-2">
-                                    <span class="w-1 h-1 rounded-full bg-blue-500 animate-pulse"></span>
+                            <div class="text-center sm:text-left">
+                                <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Usuários</h2>
+                                <p class="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
                                     Controle de Acessos
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Actions & Search Hub -->
+                        <!-- Actions -->
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                             <!-- Search Bar -->
                             <div class="relative group/search flex-1 sm:w-64">
-                                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within/search:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/search:text-brand-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                                 <input 
                                     type="text" 
                                     placeholder="BUSCAR USUÁRIO..." 
-                                    class="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-[9px] font-bold text-white uppercase tracking-widest placeholder:text-gray-600 focus:outline-none focus:border-blue-500/40 focus:bg-white/[0.05] transition-all"
+                                    class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl pl-11 pr-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all"
                                 >
                             </div>
 
-                            <!-- Deluxe Separator -->
-                            <div class="hidden lg:block w-[1px] h-6 bg-white/10 mx-1"></div>
-
-                            <!-- Add Button -->
                             <button 
                                 v-if="can('usuarios.criar')"
                                 @click="openModal()"
-                                class="group relative px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-black uppercase text-[9px] tracking-[0.2em] transition-all duration-300 shadow-xl shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-3 shrink-0"
+                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                                 </svg>
-                                Novo Usuário
+                                <span class="text-sm font-semibold text-white">Novo Usuário</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- User Table -->
-                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px] sm:min-w-0">
-                        <thead>
-                            <tr class="bg-white/[0.03] border-b border-white/5">
-                                <th class="px-5 py-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Usuário</th>
-                                <th class="px-5 py-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] hidden sm:table-cell">Cargo</th>
-                                <th class="px-5 py-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] hidden md:table-cell">Email</th>
-                                <th class="px-5 py-3 text-[9px] font-black text-center text-gray-400 uppercase tracking-[0.2em] hidden lg:table-cell">Vínculo</th>
-                                <th class="px-5 py-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] hidden xl:table-cell">Criado em</th>
-                                <th class="px-5 py-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Status</th>
-                                <th class="px-5 py-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-                            <tr v-for="user in users" :key="user.id" 
-                                class="group transition-all duration-300"
-                                :class="user.status ? 'hover:bg-white/[0.02]' : 'opacity-40 grayscale-[50%] hover:opacity-60 bg-black/20'"
+                <!-- Data Table Wrapper -->
+                <div class="ledger-card flex flex-col overflow-hidden mb-12 bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] shadow-sm dark:shadow-none">
+                    
+                    <!-- Table Header -->
+                    <div class="ledger-header-row flex items-center gap-3 px-6 py-3">
+                        <div class="flex-1 min-w-[200px] text-left ledger-th !text-black">Usuário</div>
+                        <div class="w-48 text-left ledger-th !text-black hidden sm:block">Cargo</div>
+                        <div class="w-48 text-left ledger-th !text-black hidden md:block">Email</div>
+                        <div class="w-32 text-center ledger-th !text-black hidden lg:block">Vínculo</div>
+                        <div class="w-32 text-center ledger-th !text-black hidden xl:block">Criado em</div>
+                        <div class="w-24 text-center ledger-th !text-black">Status</div>
+                        <div class="w-32 text-right ledger-th !text-black">Ações</div>
+                    </div>
+
+                    <!-- Table Body -->
+                    <div class="w-full">
+                        <template v-if="users && users.length > 0">
+                            <div 
+                                v-for="user in users" :key="user.id"
+                                class="ledger-row flex items-center gap-3 px-6 py-3 group relative transition-colors duration-200"
+                                :class="user.status ? '' : 'opacity-60 grayscale-[30%] bg-slate-50 dark:bg-slate-800/30'"
                             >
-                                <td class="px-5 py-2.5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden shadow-lg group-hover:scale-110 transition-transform bg-white/5">
-                                            <img v-if="user.profile_photo_url" :src="user.profile_photo_url" :alt="user.name" class="w-full h-full object-cover">
-                                            <div v-else class="w-full h-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center text-blue-400 font-bold text-xs">
-                                                {{ user.name.charAt(0).toUpperCase() }}
-                                            </div>
-                                        </div>
-                                        <span class="text-white font-bold tracking-tight uppercase text-xs group-hover:text-blue-400 transition-colors line-clamp-1">{{ user.name }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-2.5 hidden sm:table-cell">
-                                    <div class="flex flex-wrap gap-1">
-                                        <span v-for="role in user.roles" :key="role.id" 
-                                            class="px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[8px] font-black text-blue-400 uppercase tracking-widest whitespace-nowrap"
-                                        >
-                                            {{ role.name }}
-                                        </span>
-                                        <span v-if="user.roles.length === 0" class="text-gray-600 text-[8px] font-black uppercase tracking-widest">Nenhum</span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-2.5 hidden md:table-cell">
-                                    <span class="text-gray-400 font-medium tracking-tight text-xs">{{ user.email }}</span>
-                                </td>
-                                <td class="px-5 py-2.5 hidden lg:table-cell">
-                                    <div class="flex justify-center">
-                                        <div v-if="user.is_employee" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 group/badge hover:bg-cyan-500/20 transition-all cursor-default shadow-[0_0_15px_-5px_rgba(6,182,212,0.3)]">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></div>
-                                            <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest">Funcionário</span>
-                                        </div>
-                                        <div v-else class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-500/5 border border-white/5 opacity-40 grayscale group/badge">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-gray-500"></div>
-                                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Apenas Usuário</span>
+                                <!-- Accent bar on hover -->
+                                <div class="ledger-row-accent" v-if="user.status"></div>
+
+                                <!-- 1. Usuário -->
+                                <div class="flex-1 min-w-[200px] flex items-center gap-3 truncate">
+                                    <div class="w-8 h-8 rounded-lg bg-brand-green/10 border border-brand-green/20 flex items-center justify-center overflow-hidden shadow-sm group-hover:scale-110 transition-transform shrink-0">
+                                        <img v-if="user.profile_photo_url" :src="user.profile_photo_url" :alt="user.name" class="w-full h-full object-cover">
+                                        <div v-else class="w-full h-full bg-brand-green/10 flex items-center justify-center text-brand-green font-bold text-xs">
+                                            {{ user.name.charAt(0).toUpperCase() }}
                                         </div>
                                     </div>
-                                </td>
-                                <td class="px-5 py-2.5">
-                                    <div v-if="can('usuarios.status')" class="flex items-center justify-center gap-3">
+                                    <span class="ledger-client-name group-hover:text-brand-green transition-colors truncate" :title="user.name">
+                                        {{ user.name }}
+                                    </span>
+                                </div>
+                                
+                                <!-- 2. Cargo -->
+                                <div class="w-48 hidden sm:flex flex-wrap gap-1 items-center">
+                                    <span v-for="role in user.roles" :key="role.id" 
+                                        class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700 rounded-md whitespace-nowrap"
+                                    >
+                                        {{ role.name }}
+                                    </span>
+                                    <span v-if="user.roles.length === 0" class="text-slate-400 text-[9px] font-black uppercase tracking-widest">Nenhum</span>
+                                </div>
+
+                                <!-- 3. Email -->
+                                <div class="w-48 hidden md:flex items-center">
+                                    <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate" :title="user.email">{{ user.email }}</span>
+                                </div>
+
+                                <!-- 4. Vínculo -->
+                                <div class="w-32 hidden lg:flex justify-center items-center">
+                                    <div v-if="user.is_employee" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-green/10 border border-brand-green/20 shadow-sm cursor-default">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></div>
+                                        <span class="text-[9px] font-black text-brand-green uppercase tracking-widest">Funcionário</span>
+                                    </div>
+                                    <div v-else class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></div>
+                                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Apenas Usuário</span>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Criado em -->
+                                <div class="w-32 hidden xl:flex justify-center items-center">
+                                    <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wide">
+                                        {{ formatDate(user.created_at) }}
+                                    </span>
+                                </div>
+
+                                <!-- 6. Status -->
+                                <div class="w-24 flex justify-center items-center">
+                                    <div v-if="can('usuarios.status')" class="flex items-center justify-center gap-2">
                                         <button 
                                             @click="toggleStatus(user)"
                                             :disabled="updatingStatusId === user.id || user.id === authUser.id"
                                             class="relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-300 focus:outline-none"
                                             :class="[
-                                                user.status ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-gray-600',
+                                                user.status ? 'bg-brand-green shadow-sm shadow-brand-green/30' : 'bg-slate-300 dark:bg-slate-600',
                                                 (updatingStatusId === user.id || user.id === authUser.id) ? 'opacity-50 cursor-not-allowed' : '',
                                                 updatingStatusId === user.id ? 'cursor-wait' : ''
                                             ]"
                                             :title="user.id === authUser.id ? 'Você não pode desativar seu próprio acesso' : ''"
                                         >
                                             <span 
-                                                class="inline-flex h-3 w-3 transform rounded-full bg-white transition-transform duration-300 items-center justify-center"
+                                                class="inline-flex h-3 w-3 transform rounded-full bg-white transition-transform duration-300 items-center justify-center shadow-sm"
                                                 :class="user.status ? 'translate-x-6' : 'translate-x-1'"
                                             >
-                                                <svg v-if="updatingStatusId === user.id" class="animate-spin h-2 w-2 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                <svg v-if="updatingStatusId === user.id" class="animate-spin h-2 w-2 text-brand-green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                             </span>
                                         </button>
                                         <span 
                                             class="text-[9px] font-black uppercase tracking-widest w-12 text-left transition-colors duration-300"
-                                            :class="user.status ? 'text-green-400' : 'text-gray-500'"
+                                            :class="user.status ? 'text-brand-green' : 'text-slate-500'"
                                         >
                                             {{ user.status ? 'Ativo' : 'Inativo' }}
                                         </span>
                                     </div>
-                                </td>
-                                <td class="px-5 py-2.5 text-gray-500 font-medium text-xs hidden xl:table-cell">
-                                    {{ formatDate(user.created_at) }}
-                                </td>
-                                <td class="px-5 py-2.5 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button 
-                                            v-if="can('usuarios.editar')"
-                                            @click="openModal(user)"
-                                            class="p-1.5 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-all"
-                                            title="Editar Usuário"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </button>
-                                        <button 
-                                            v-if="can('usuarios.editar') && !user.is_employee"
-                                            @click="openConvertModal(user)"
-                                            class="p-1.5 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md transition-all"
-                                            title="Tornar Funcionário"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h3m10 0v-3a2 2 0 012-2h3" />
-                                            </svg>
-                                        </button>
-                                        <button 
-                                            v-if="can('usuarios.deletar')"
-                                            @click="deleteUser(user)"
-                                            :disabled="user.id === authUser.id"
-                                            class="p-1.5 rounded-md transition-all"
-                                            :class="user.id === authUser.id ? 'opacity-20 cursor-not-allowed text-gray-600' : 'text-gray-500 hover:text-red-400 hover:bg-red-500/10'"
-                                            :title="user.id === authUser.id ? 'Você não pode remover seu próprio acesso' : 'Remover Usuário'"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+
+                                <!-- 7. Ações -->
+                                <div class="w-32 flex items-center justify-end gap-1.5">
+                                    <button 
+                                        v-if="can('usuarios.editar')"
+                                        @click="openModal(user)"
+                                        class="p-1.5 text-slate-400 hover:text-brand-green hover:bg-brand-green/10 rounded-md transition-all"
+                                        title="Editar Usuário"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        v-if="can('usuarios.editar') && !user.is_employee"
+                                        @click="openConvertModal(user)"
+                                        class="p-1.5 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 rounded-md transition-all"
+                                        title="Tornar Funcionário"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h3m10 0v-3a2 2 0 012-2h3" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        v-if="can('usuarios.deletar')"
+                                        @click="deleteUser(user)"
+                                        :disabled="user.id === authUser.id"
+                                        class="p-1.5 rounded-md transition-all"
+                                        :class="user.id === authUser.id ? 'opacity-20 cursor-not-allowed text-slate-400' : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'"
+                                        :title="user.id === authUser.id ? 'Você não pode remover seu próprio acesso' : 'Remover Usuário'"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                        <div v-else class="px-8 py-20 text-center text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-sm">
+                            Nenhum usuário encontrado no momento.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

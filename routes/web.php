@@ -50,6 +50,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/atendimentos/{service}/rci/pdf', [\App\Http\Controllers\SalesServiceController::class, 'pdfRci'])->name('sales.atendimentos.rci.pdf');
     Route::get('/atendimentos/{service}/checklist/pdf', [\App\Http\Controllers\SalesServiceController::class, 'pdfChecklist'])->name('sales.atendimentos.checklist.pdf');
     Route::post('/atendimentos/{service}/protocols', [\App\Http\Controllers\ProtocolController::class, 'store'])->name('sales.atendimentos.protocols.store');
+    Route::patch('/protocols/{protocol}/status', [\App\Http\Controllers\ProtocolController::class, 'updateStatus'])->name('sales.protocols.status.update');
+    Route::post('/protocols/{protocol}/replies', [\App\Http\Controllers\ProtocolReplyController::class, 'store'])->name('sales.protocols.replies.store');
     Route::get('/linha-atendimento', [ServiceLineController::class, 'index'])->name('sales.linha');
 
     // Configurações de Dashboard

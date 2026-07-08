@@ -11,6 +11,7 @@ class Protocol extends Model
         'user_id',
         'subject',
         'priority',
+        'status',
         'message',
         'attachments',
         'protocol_number',
@@ -51,5 +52,10 @@ class Protocol extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(ProtocolReply::class);
     }
 }

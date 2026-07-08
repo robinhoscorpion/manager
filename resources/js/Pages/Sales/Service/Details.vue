@@ -445,8 +445,102 @@ const getStatusColor = (status) => {
         case 'pending': return 'bg-blue-500';
         case 'overdue': return 'bg-yellow-500';
         case 'cancelled': return 'bg-red-500';
-        default: return 'bg-gray-500';
     }
+};
+
+// --- Protocol Accordion Logic ---
+const expandedProtocols = ref([]);
+const isTimelineExpanded = ref(false); // Controls the main Timeline visibility
+
+// --- Protocol Replies Logic ---
+const activeReplyProtocolId = ref(null);
+const protocolReplyForm = useForm({
+    message: '',
+    attachments: [],
+    status: ''
+});
+
+const openReplyForm = (protocolId) => {
+    activeReplyProtocolId.value = activeReplyProtocolId.value === protocolId ? null : protocolId;
+    protocolReplyForm.reset();
+};
+
+const handleReplyAttachmentChange = (e) => {
+    protocolReplyForm.attachments = Array.from(e.target.files);
+};
+
+const submitProtocolReply = (protocolId) => {
+    protocolReplyForm.post(route('sales.protocols.replies.store', protocolId), {
+        preserveScroll: true,
+        onSuccess: () => {
+            activeReplyProtocolId.value = null;
+            protocolReplyForm.reset();
+        }
+    });
+};
+
+const toggleProtocol = (id) => {
+    const index = expandedProtocols.value.indexOf(id);
+    if (index === -1) {
+        expandedProtocols.value.push(id);
+    } else {
+        expandedProtocols.value.splice(index, 1);
+    }
+};
+
+const formatDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    }).format(date);
+};
+
+const getPriorityLabel = (priority) => {
+    const labels = {
+        'baixa': 'Baixa',
+        'media': 'Média',
+        'alta': 'Alta',
+        'urgente': 'Urgente'
+    };
+    return labels[priority] || priority;
+};
+
+const getPriorityColor = (priority) => {
+    const colors = {
+        'baixa': 'border-green-200 text-green-600 bg-green-50 dark:border-green-500/30 dark:text-green-400 dark:bg-green-500/10',
+        'media': 'border-blue-200 text-blue-600 bg-blue-50 dark:border-blue-500/30 dark:text-blue-400 dark:bg-blue-500/10',
+        'alta': 'border-orange-200 text-orange-600 bg-orange-50 dark:border-orange-500/30 dark:text-orange-400 dark:bg-orange-500/10',
+        'urgente': 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30'
+    };
+    return colors[priority] || 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10';
+};
+
+const getProtocolStatusLabel = (status) => {
+    const labels = {
+        'aberto': 'Aberto',
+        'em_andamento': 'Em Andamento',
+        'fechado': 'Fechado'
+    };
+    return labels[status] || status;
+};
+
+const getProtocolStatusColor = (status) => {
+    const colors = {
+        'aberto': 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30',
+        'em_andamento': 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30',
+        'fechado': 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+    };
+    return colors[status] || 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10';
+};
+
+const updateProtocolStatus = (protocolId, status) => {
+    router.patch(route('sales.protocols.status.update', protocolId), {
+        status: status
+    }, {
+        preserveScroll: true
+    });
 };
 
 </script>
@@ -516,8 +610,20 @@ const getStatusColor = (status) => {
                                         </button>
                                     </template>
                                     <template #content>
+                                        <button class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                                            Visualizar Dados
+                                        </button>
                                         <button @click="openProtocolModal" class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800">
                                             Gerar Protocolo
+                                        </button>
+                                        <button class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                                            Renegociar Contrato
+                                        </button>
+                                        <button class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800">
+                                            Mudar Vencimento
+                                        </button>
+                                        <button class="block w-full px-4 py-2 text-start text-sm leading-5 text-red-600 transition duration-150 ease-in-out hover:bg-red-50 focus:bg-red-50 focus:outline-none dark:text-red-400 dark:hover:bg-red-900/20 dark:focus:bg-red-900/20 border-t border-gray-100 dark:border-gray-700">
+                                            Cancelar Contrato
                                         </button>
                                     </template>
                                 </Dropdown>
@@ -705,7 +811,7 @@ const getStatusColor = (status) => {
                 <!-- =========================================================== -->
                 <div v-if="service.protocols && service.protocols.length > 0" class="bg-white dark:bg-[#141925] border border-slate-200 dark:border-white/5 rounded-2xl hover:shadow-lg transition-all duration-300 mb-6">
                     <!-- Header -->
-                    <div class="px-6 py-5 border-b border-slate-200/80 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.01] rounded-t-2xl">
+                    <button @click="isTimelineExpanded = !isTimelineExpanded" class="w-full px-6 py-5 border-b border-slate-200/80 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-100 dark:hover:bg-white/[0.02] rounded-t-2xl transition-colors focus:outline-none">
                         <div class="flex items-center gap-4">
                             <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -715,81 +821,162 @@ const getStatusColor = (status) => {
                                 {{ service.protocols.length }} Registros
                             </span>
                         </div>
-                    </div>
+                        <div class="text-slate-400 dark:text-gray-500 transition-transform duration-300" :class="{ 'rotate-180': isTimelineExpanded }">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
 
-                    <!-- Accordion List -->
-                    <div class="divide-y divide-slate-100 dark:divide-white/[0.02]">
-                        <div v-for="protocol in [...service.protocols].sort((a,b) => new Date(b.created_at) - new Date(a.created_at))" :key="protocol.id" class="group/protocol transition-colors">
-                            
-                            <!-- Accordion Header (Clickable) -->
-                            <button @click="toggleProtocol(protocol.id)" class="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors focus:outline-none text-left">
-                                <div class="flex items-center gap-6">
-                                    <!-- Status Dot & Protocol Number -->
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex flex-col">
-                                            <span class="text-xs font-mono font-black text-slate-900 dark:text-white">{{ protocol.protocol_number }}</span>
-                                            <span class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">{{ formatDateTime(protocol.created_at) }}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Priority Badge -->
-                                    <div class="hidden sm:block">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest" :class="getPriorityColor(protocol.priority)">
-                                            {{ getPriorityLabel(protocol.priority) }}
-                                        </span>
-                                    </div>
-
-                                    <!-- Subject line (truncated) -->
-                                    <div class="hidden md:block w-64 lg:w-96">
-                                        <p class="text-sm font-medium text-slate-700 dark:text-gray-300 truncate">{{ protocol.subject }}</p>
-                                    </div>
-                                </div>
+                    <!-- Protocol Timeline -->
+                    <div v-show="isTimelineExpanded" class="p-6">
+                        <div class="relative border-l-2 border-slate-100 dark:border-white/5 ml-4 sm:ml-6 py-2 space-y-10">
+                            <div v-for="protocol in [...service.protocols].sort((a,b) => new Date(b.created_at) - new Date(a.created_at))" :key="protocol.id" class="relative pl-8 sm:pl-10 group/timeline">
                                 
-                                <!-- Expand icon -->
-                                <div class="text-slate-400 dark:text-gray-500 transition-transform duration-300" :class="{ 'rotate-180': expandedProtocols.includes(protocol.id) }">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                </div>
-                            </button>
-
-                            <!-- Accordion Content -->
-                            <div v-show="expandedProtocols.includes(protocol.id)" class="px-6 pb-6 pt-2 border-t border-slate-50 dark:border-white/[0.02]">
-                                <div class="bg-slate-50 dark:bg-black/20 rounded-xl p-5 border border-slate-100 dark:border-white/[0.05]">
-                                    
-                                    <!-- Metadata Row -->
-                                    <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-200 dark:border-white/5">
-                                        <div class="flex items-center gap-2">
-                                            <img v-if="protocol.user?.profile_photo_url" :src="protocol.user.profile_photo_url" class="w-6 h-6 rounded-full object-cover">
-                                            <div v-else class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center text-[9px] font-black uppercase">
-                                                {{ protocol.user?.name?.substring(0, 2) || 'S' }}
-                                            </div>
-                                            <span class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">
-                                                Por: <span class="text-slate-900 dark:text-white">{{ protocol.user?.name || 'Sistema' }}</span>
-                                            </span>
+                                <!-- Timeline Node (Avatar) -->
+                                <div class="absolute -left-[17px] top-1">
+                                    <div class="w-8 h-8 rounded-full bg-white dark:bg-[#141925] border-4 border-white dark:border-[#141925] shadow-sm flex items-center justify-center ring-1 ring-slate-200 dark:ring-white/10 z-10 overflow-hidden group-hover/timeline:scale-110 transition-transform duration-300">
+                                        <img v-if="protocol.user?.profile_photo_url" :src="protocol.user.profile_photo_url" class="w-full h-full object-cover">
+                                        <div v-else class="w-full h-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[10px] font-black uppercase">
+                                            {{ protocol.user?.name?.substring(0, 2) || 'S' }}
                                         </div>
-                                        <div class="sm:hidden">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest" :class="getPriorityColor(protocol.priority)">
+                                    </div>
+                                </div>
+
+                                <!-- Card Content -->
+                                <div class="bg-white dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-300">
+                                    <!-- Header -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                                        <div class="space-y-1">
+                                            <div class="flex items-center gap-3">
+                                                <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                                    {{ protocol.subject }}
+                                                </h4>
+                                                <span class="text-xs font-mono font-black text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md">
+                                                    {{ protocol.protocol_number }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] font-medium text-slate-500 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                                <span>Adicionado por <strong class="text-slate-700 dark:text-gray-300">{{ protocol.user?.name || 'Sistema' }}</strong></span>
+                                                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-gray-600"></span>
+                                                <span>{{ formatDateTime(protocol.created_at) }}</span>
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest shadow-sm" :class="getPriorityColor(protocol.priority)">
                                                 {{ getPriorityLabel(protocol.priority) }}
                                             </span>
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest shadow-sm" :class="getProtocolStatusColor(protocol.status || 'aberto')">
+                                                {{ getProtocolStatusLabel(protocol.status || 'aberto') }}
+                                            </span>
+
+                                            <!-- Ações do Protocolo -->
+                                            <Dropdown v-if="protocol.status !== 'fechado'" align="right" width="48">
+                                                <template #trigger>
+                                                    <button class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-gray-300 dark:hover:bg-white/5 transition-colors focus:outline-none">
+                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                                                    </button>
+                                                </template>
+                                                <template #content>
+                                                    <div class="block px-4 py-2 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-white/5">
+                                                        Alterar Status
+                                                    </div>
+                                                    <button @click="updateProtocolStatus(protocol.id, 'aberto')" class="w-full text-left block px-4 py-2 text-sm leading-5 text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 focus:outline-none transition duration-150 ease-in-out font-medium">
+                                                        <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span> Aberto
+                                                    </button>
+                                                    <button @click="updateProtocolStatus(protocol.id, 'em_andamento')" class="w-full text-left block px-4 py-2 text-sm leading-5 text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 focus:outline-none transition duration-150 ease-in-out font-medium">
+                                                        <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span> Em Andamento
+                                                    </button>
+                                                    <button @click="updateProtocolStatus(protocol.id, 'fechado')" class="w-full text-left block px-4 py-2 text-sm leading-5 text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 focus:outline-none transition duration-150 ease-in-out font-medium">
+                                                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> Fechado
+                                                    </button>
+                                                </template>
+                                            </Dropdown>
                                         </div>
                                     </div>
 
-                                    <!-- Full Message -->
-                                    <div class="space-y-2">
-                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ protocol.subject }}</h4>
-                                        <p class="text-sm text-slate-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">{{ protocol.message }}</p>
+                                    <!-- Message Body -->
+                                    <div class="prose prose-sm dark:prose-invert max-w-none text-sm text-slate-600 dark:text-gray-400 leading-relaxed mb-5" v-html="protocol.message || '<p class=\'italic opacity-50\'>Nenhum detalhe adicional informado.</p>'">
                                     </div>
 
-                                    <!-- Attachments (if any) -->
-                                    <div v-if="protocol.attachments && protocol.attachments.length > 0" class="mt-6 pt-4 border-t border-slate-200 dark:border-white/5">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Anexos</p>
-                                        <div class="flex flex-wrap gap-3">
-                                            <a v-for="(attachment, index) in protocol.attachments" :key="index" :href="attachment.url || attachment" target="_blank" class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors group/attach">
-                                                <svg class="w-4 h-4 text-indigo-400 group-hover/attach:text-indigo-600 dark:group-hover/attach:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                    <!-- Attachments -->
+                                    <div v-if="protocol.attachments && protocol.attachments.length > 0" class="pt-4 border-t border-slate-100 dark:border-white/5">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                            Anexos ({{ protocol.attachments.length }})
+                                        </p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <a v-for="(attachment, index) in protocol.attachments" :key="index" :href="attachment.url || attachment" target="_blank" class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors group/attach">
+                                                <svg class="w-3.5 h-3.5 text-indigo-400 group-hover/attach:text-indigo-600 dark:group-hover/attach:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                                 <span class="text-[10px] font-bold text-slate-600 dark:text-gray-300 truncate max-w-[150px]">Anexo {{ index + 1 }}</span>
                                             </a>
                                         </div>
                                     </div>
 
+                                    <!-- Nested Replies Section -->
+                                    <div v-if="protocol.replies && protocol.replies.length > 0" class="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                            Interações ({{ protocol.replies.length }})
+                                        </p>
+                                        <div class="space-y-4">
+                                            <div v-for="reply in protocol.replies" :key="reply.id" class="flex gap-3 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                                                <!-- Reply Avatar -->
+                                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase overflow-hidden">
+                                                    <img v-if="reply.user?.profile_photo_url" :src="reply.user.profile_photo_url" class="w-full h-full object-cover">
+                                                    <span v-else>{{ reply.user?.name?.substring(0, 2) || 'S' }}</span>
+                                                </div>
+                                                <!-- Reply Content -->
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white">{{ reply.user?.name || 'Sistema' }}</span>
+                                                        <span class="text-[9px] font-medium text-slate-500 uppercase tracking-widest">{{ formatDateTime(reply.created_at) }}</span>
+                                                    </div>
+                                                    <div class="text-xs text-slate-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed" v-html="reply.message"></div>
+                                                    <!-- Reply Attachments -->
+                                                    <div v-if="reply.attachments && reply.attachments.length > 0" class="mt-2 flex flex-wrap gap-2">
+                                                        <a v-for="(att, i) in reply.attachments" :key="i" :href="att" target="_blank" class="flex items-center gap-1 text-[9px] font-bold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                            Anexo {{ i + 1 }}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reply Actions -->
+                                    <div v-if="protocol.status !== 'fechado'" class="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+                                        <button v-if="activeReplyProtocolId !== protocol.id" @click="openReplyForm(protocol.id)" class="text-xs font-bold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            Responder Solicitação
+                                        </button>
+
+                                        <!-- Reply Form -->
+                                        <form v-if="activeReplyProtocolId === protocol.id" @submit.prevent="submitProtocolReply(protocol.id)" class="space-y-3 bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
+                                            <textarea v-model="protocolReplyForm.message" rows="3" class="w-full text-sm border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#141925] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" placeholder="Escreva sua resposta ou resolução aqui..." required></textarea>
+                                            
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                <div class="flex items-center gap-3">
+                                                    <input type="file" multiple @change="handleReplyAttachmentChange" class="block w-full text-xs text-slate-500 dark:text-gray-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 dark:file:bg-white/10 dark:file:text-white dark:hover:file:bg-white/20 transition-colors" />
+                                                    
+                                                    <select v-model="protocolReplyForm.status" class="text-xs border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#141925] text-slate-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                                                        <option value="">Manter Status</option>
+                                                        <option value="em_andamento">Em Andamento</option>
+                                                        <option value="fechado">Resolver (Fechado)</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button" @click="activeReplyProtocolId = null" class="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition-colors">
+                                                        Cancelar
+                                                    </button>
+                                                    <button type="submit" :disabled="protocolReplyForm.processing" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50">
+                                                        <svg v-if="protocolReplyForm.processing" class="animate-spin w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                        Enviar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>

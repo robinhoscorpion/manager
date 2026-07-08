@@ -337,7 +337,8 @@ class SalesServiceController extends Controller
             'proposal.bills',
             'proposal.product.proposalTemplate',
             'proposal.product.contractTemplate',
-            'protocols.user'
+            'protocols.user',
+            'protocols.replies.user'
         ]);
 
         return Inertia::render('Sales/Service/Details', [

@@ -322,27 +322,27 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
 
 <template>
     <Modal :show="show" @close="close" :closeable="false" max-width="80%">
-        <div class="h-[90vh] flex flex-col bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden relative shadow-2xl">
+        <div class="h-[90vh] flex flex-col bg-white dark:bg-[#0f1219] rounded-[20px] shadow-2xl relative flex flex-col">
             <!-- Header (Fixed) -->
-            <div class="p-5 sm:px-8 sm:py-6 border-b border-slate-100 dark:border-white/5 relative z-20 shrink-0">
-                <div class="absolute top-0 right-0 w-64 h-32 bg-cyan-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+            <div class="p-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 relative z-20 shrink-0">
+                
                 <div class="relative flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 dark:bg-cyan-500/20 border border-indigo-500/30 dark:border-cyan-500/30 flex items-center justify-center shadow-lg">
-                            <svg class="w-5 h-5 text-indigo-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-sm">
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
                                 {{ !isEdit ? 'Novo Atendimento Prime' : (isReadOnly ? 'Atendimento (Visualização)' : 'Atendimento (Edição)') }}
                             </h2>
-                            <p class="text-[9px] text-indigo-600 dark:text-cyan-400/60 font-bold uppercase tracking-widest mt-0.5">
+                            <p class="text-[9px] text-brand-green/60 font-bold uppercase tracking-widest mt-0.5">
                                 {{ !isEdit ? 'Ficha de Qualificação Completa' : (isReadOnly ? 'Detalhamento do Registro' : 'Edição de Dados cadastrados') }}
                             </p>
                         </div>
                     </div>
-                    <button @click="close" class="text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-white transition-colors">
+                    <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -355,10 +355,10 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                 
                 <!-- Bloco 1: Identificação & Documentos -->
                 <section class="space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                         <div class="flex items-center gap-3">
-                            <span class="w-1.5 h-6 bg-indigo-500 dark:bg-cyan-500 rounded-full"></span>
-                            <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">1. Identificação & Documentos</h3>
+                            <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">1. Identificação & Documentos</h3>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer scale-90">
                             <input type="checkbox" v-model="form.isEstrangeiro" :disabled="isReadOnly" class="sr-only peer">
@@ -369,20 +369,20 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
 
                     <div class="grid grid-cols-12 gap-x-4 gap-y-2">
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nome Completo</label>
-                            <input v-model="form.nome" type="text" placeholder="NOME DO TITULAR" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border rounded-xl px-4 text-slate-900 dark:text-white text-[13px] transition-all uppercase" :class="errors.nome ? 'border-red-500/50' : 'border-slate-200 dark:border-white/10'">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome Completo</label>
+                            <input v-model="form.nome" type="text" placeholder="NOME DO TITULAR" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.nome ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.nome">{{ errors.nome[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">{{ form.isEstrangeiro ? 'Documento / Passaporte' : 'CPF (Opcional)' }}</label>
-                            <input :value="form.cpf" @input="onInputMask($event, 'cpf', 'cpf')" type="text" :placeholder="form.isEstrangeiro ? 'DOCUMENTO' : '000.000.000-00'" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border rounded-xl px-4 text-slate-900 dark:text-white text-[13px] transition-all uppercase" :class="errors.cpf ? 'border-red-500/50' : 'border-slate-200 dark:border-white/10'">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{{ form.isEstrangeiro ? 'Documento / Passaporte' : 'CPF (Opcional)' }}</label>
+                            <input :value="form.cpf" @input="onInputMask($event, 'cpf', 'cpf')" type="text" :placeholder="form.isEstrangeiro ? 'DOCUMENTO' : '000.000.000-00'" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.cpf ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.cpf">{{ errors.cpf[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">RG (Opcional)</label>
-                            <input v-model="form.rg" type="text" placeholder="RG" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border rounded-xl px-4 text-slate-900 dark:text-white text-[13px] transition-all uppercase" :class="errors.rg ? 'border-red-500/50' : 'border-slate-200 dark:border-white/10'">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">RG (Opcional)</label>
+                            <input v-model="form.rg" type="text" placeholder="RG" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.rg ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.rg">{{ errors.rg[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
@@ -391,14 +391,14 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-if="!errors.nacionalidade"></div>
                         </div>
                         <div class="col-span-6 sm:col-span-4 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nascimento</label>
-                            <input v-model="form.dataNascimento" @change="calculateAge(form.dataNascimento, 'idade')" type="date" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border rounded-xl px-4 text-slate-900 dark:text-white text-[13px]" :class="errors.dataNascimento ? 'border-red-500/50' : 'border-slate-200 dark:border-white/10'">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento</label>
+                            <input v-model="form.dataNascimento" @change="calculateAge(form.dataNascimento, 'idade')" type="date" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.dataNascimento ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.dataNascimento">{{ errors.dataNascimento[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-6 sm:col-span-4 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Idade</label>
-                            <input v-model="form.idade" type="number" readonly :disabled="isReadOnly" class="w-full h-[38px] bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl px-4 text-indigo-600 dark:text-cyan-400 font-bold text-[13px]">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Idade</label>
+                            <input v-model="form.idade" type="number" readonly :disabled="isReadOnly" class="w-full h-[38px] bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl px-4 text-brand-green font-bold text-[13px]">
                             <div class="h-[14px]"></div>
                         </div>
                     </div>
@@ -406,25 +406,25 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
 
                 <!-- Bloco 2: Contato & Profissional -->
                 <section class="space-y-4">
-                    <div class="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-2">
-                        <span class="w-1.5 h-6 bg-emerald-500 dark:bg-emerald-400 rounded-full"></span>
-                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">2. Contato & Profissional</h3>
+                    <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">2. Contato & Profissional</h3>
                     </div>
                     <div class="grid grid-cols-12 gap-x-4 gap-y-2">
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Celular Principal</label>
-                            <input :value="form.celular1" @input="onInputMask($event, 'celular1', 'phone')" type="text" placeholder="(00) 00000-0000" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border rounded-xl px-4 text-slate-900 dark:text-white text-[13px]" :class="errors.celular1 ? 'border-red-500/50' : 'border-slate-200 dark:border-white/10'">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Celular Principal</label>
+                            <input :value="form.celular1" @input="onInputMask($event, 'celular1', 'phone')" type="text" placeholder="(00) 00000-0000" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.celular1 ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.celular1">{{ errors.celular1[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Celular 2 (Recado)</label>
-                            <input :value="form.celular2" @input="onInputMask($event, 'celular2', 'phone')" type="text" placeholder="(00) 00000-0000" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px]">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Celular 2 (Recado)</label>
+                            <input :value="form.celular2" @input="onInputMask($event, 'celular2', 'phone')" type="text" placeholder="(00) 00000-0000" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">E-mail</label>
-                            <input v-model="form.email" type="email" placeholder="exemplo@email.com" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border rounded-xl px-4 text-slate-900 dark:text-white text-[13px]" :class="errors.email ? 'border-red-500/50' : 'border-slate-200 dark:border-white/10'">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">E-mail</label>
+                            <input v-model="form.email" type="email" placeholder="exemplo@email.com" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.email ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.email">{{ errors.email[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
@@ -444,7 +444,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                 </section>
 
                 <!-- Bloco 3: Composição Familiar & Renda -->
-                <section class="bg-slate-50/50 dark:bg-white/[0.02] p-6 rounded-2xl border border-slate-100 dark:border-white/5 relative group/conjuge space-y-6">
+                <section class="bg-slate-50/50 dark:bg-slate-900/50 p-6 rounded-[20px] border border-slate-200 dark:border-slate-700 relative group/conjuge space-y-6 shadow-sm">
                     <div class="absolute top-0 right-0 p-4">
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" v-model="form.temConjuge" :disabled="isReadOnly" class="sr-only peer">
@@ -453,27 +453,27 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </label>
                     </div>
 
-                    <div class="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-2">
-                        <span class="w-1.5 h-6 bg-pink-500 rounded-full"></span>
-                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">3. Composição Familiar & Renda</h3>
+                    <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">3. Composição Familiar & Renda</h3>
                     </div>
 
                     <div class="grid grid-cols-12 gap-x-4 gap-y-6">
                         <!-- Dados do Cônjuge (Condicional) -->
-                        <div v-if="form.temConjuge" class="col-span-12 grid grid-cols-12 gap-x-4 gap-y-2 p-4 bg-white dark:bg-white/5 rounded-xl border border-pink-500/10 animate-in fade-in slide-in-from-top-2">
+                        <div v-if="form.temConjuge" class="col-span-12 grid grid-cols-12 gap-x-4 gap-y-2 p-4 bg-white dark:bg-slate-900 rounded-[16px] border border-brand-green/20 dark:border-brand-green/20 animate-in fade-in slide-in-from-top-2">
                             <div class="col-span-12 sm:col-span-6 flex flex-col">
-                                <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nome do 2º Titular / Cônjuge</label>
-                                <input v-model="form.nomeConjuge" type="text" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-transparent border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px] uppercase">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome do 2º Titular / Cônjuge</label>
+                                <input v-model="form.nomeConjuge" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-6 sm:col-span-3 flex flex-col">
-                                <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nascimento</label>
-                                <input v-model="form.dataNascimentoConjuge" @change="calculateAge(form.dataNascimentoConjuge, 'idadeConjuge')" type="date" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-transparent border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px]">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento</label>
+                                <input v-model="form.dataNascimentoConjuge" @change="calculateAge(form.dataNascimentoConjuge, 'idadeConjuge')" type="date" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-6 sm:col-span-3 flex flex-col">
-                                <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Idade</label>
-                                <input v-model="form.idadeConjuge" type="number" readonly class="w-full h-[38px] bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl px-4 text-pink-500 font-bold text-[13px]">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Idade</label>
+                                <input v-model="form.idadeConjuge" type="number" readonly class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-brand-green font-bold text-sm shadow-sm opacity-80 cursor-not-allowed">
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
@@ -483,8 +483,8 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
 
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Quantidade de Filhos</label>
-                            <input v-model="form.quantidadeFilhos" type="number" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px]">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Quantidade de Filhos</label>
+                            <input v-model="form.quantidadeFilhos" type="number" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-8 flex flex-col">
@@ -496,16 +496,16 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
 
                 <!-- Bloco 4: Origem, Endereço & Logística -->
                 <section class="space-y-4">
-                    <div class="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-2">
-                        <span class="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">4. Origem, Endereço & Logística</h3>
+                    <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">4. Origem, Endereço & Logística</h3>
                     </div>
                     
                     <div class="grid grid-cols-12 gap-x-4 gap-y-2">
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">CEP</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">CEP</label>
                             <div class="relative h-[38px]">
-                                <input :value="form.cep" @input="onInputMask($event, 'cep', 'cep')" @blur="lookupCEP" type="text" placeholder="00000-000" :disabled="isReadOnly" class="w-full h-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 pr-9 text-slate-900 dark:text-white text-[13px]">
+                                <input :value="form.cep" @input="onInputMask($event, 'cep', 'cep')" @blur="lookupCEP" type="text" placeholder="00000-000" :disabled="isReadOnly" class="w-full h-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-9 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                                 <div class="absolute right-3 top-1/2 -translate-y-1/2">
                                     <!-- Spinner de carregamento -->
                                     <svg v-if="isLoadingCEP" class="w-3.5 h-3.5 text-orange-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -524,23 +524,23 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             </div>
                         </div>
                         <div class="col-span-12 sm:col-span-7 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Logradouro (Rua/Av)</label>
-                            <input v-model="form.rua" type="text" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px] uppercase">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Logradouro (Rua/Av)</label>
+                            <input v-model="form.rua" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-2 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Nº</label>
-                            <input v-model="form.numero" type="text" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px] uppercase">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nº</label>
+                            <input v-model="form.numero" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Bairro</label>
-                            <input v-model="form.bairro" type="text" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px] uppercase">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Bairro</label>
+                            <input v-model="form.bairro" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Cidade</label>
-                            <input v-model="form.cidade" type="text" :disabled="isReadOnly" class="w-full h-[38px] bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-4 text-slate-900 dark:text-white text-[13px] uppercase">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Cidade</label>
+                            <input v-model="form.cidade" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-2 flex flex-col">
@@ -569,30 +569,30 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
 
                 <!-- Bloco 5: Observações -->
                 <section class="space-y-3">
-                    <div class="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-2">
-                        <span class="w-1.5 h-6 bg-amber-500 rounded-full"></span>
-                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">5. Observações do Atendimento</h3>
+                    <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">5. Observações do Atendimento</h3>
                     </div>
                     <div class="flex flex-col">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">Detalhes Adicionais</label>
-                        <textarea v-model="form.observacoes" rows="3" :disabled="isReadOnly" placeholder="DETALHES RELEVANTES SOBRE O PERFIL, NEGOCIAÇÃO OS LOGÍSTICA..." class="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3 text-slate-900 dark:text-white text-[13px] focus:border-cyan-500/40 transition-all uppercase placeholder:text-slate-300 dark:placeholder:text-white/10 resize-none disabled:opacity-50"></textarea>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Detalhes Adicionais</label>
+                        <textarea v-model="form.observacoes" rows="3" :disabled="isReadOnly" placeholder="DETALHES RELEVANTES SOBRE O PERFIL, NEGOCIAÇÃO OS LOGÍSTICA..." class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none disabled:opacity-50"></textarea>
                     </div>
                 </section>
             </div>
 
             <!-- Footer (Fixed) -->
-            <div class="p-5 sm:px-8 sm:py-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-[#0d1117] relative z-20 shrink-0">
+            <div class="p-5 sm:px-8 sm:py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1219] relative z-20 shrink-0 rounded-b-[20px]">
                 <!-- Modo Edição de Registro Existente -->
                 <div v-if="isEdit" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <button 
                         @click="isReadOnly ? close() : (isReadOnly = true)"
-                        class="order-2 sm:order-1 flex-1 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-gray-500 hover:text-slate-700 dark:hover:text-white rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all"
+                        class="order-2 sm:order-1 flex-1 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest transition-all shadow-sm flex items-center justify-center"
                     >
                         {{ isReadOnly ? 'Fechar' : 'Cancelar Edição' }}
                     </button>
                     <button 
                         @click="isReadOnly ? (isReadOnly = false) : submit()"
-                        class="order-1 sm:order-2 flex-[2] py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-cyan-600 dark:to-blue-600 hover:from-indigo-500 hover:to-blue-500 dark:hover:from-cyan-500 dark:hover:to-blue-500 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-indigo-500/10 dark:shadow-cyan-500/10 active:scale-95 transition-all"
+                        class="order-1 sm:order-2 flex-[2] py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
                     >
                         {{ isReadOnly ? 'Editar Atendimento' : 'Salvar Alterações' }}
                     </button>
@@ -600,7 +600,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     <button 
                         v-if="isReadOnly"
                         @click="showProposalModal = true"
-                        class="order-0 sm:order-last flex-[3] py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+                        class="order-0 sm:order-last flex-[3] py-3 rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
                         :class="initialData.proposal ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20'"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -613,13 +613,13 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                 <div v-else class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <button 
                         @click="close"
-                        class="order-2 sm:order-1 flex-1 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-gray-500 hover:text-slate-700 dark:hover:text-white rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all"
+                        class="order-2 sm:order-1 flex-1 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest transition-all shadow-sm flex items-center justify-center"
                     >
                         Descartar
                     </button>
                     <button 
                         @click="submit"
-                        class="order-1 sm:order-2 flex-[2] py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-cyan-600 dark:to-blue-600 hover:from-indigo-500 hover:to-blue-500 dark:hover:from-cyan-500 dark:hover:to-blue-500 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-indigo-500/10 dark:shadow-cyan-500/10 active:scale-95 transition-all"
+                        class="order-1 sm:order-2 flex-[2] py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
                     >
                         Cadastrar Atendimento
                     </button>
