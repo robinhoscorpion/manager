@@ -70,6 +70,10 @@ class BillController extends Controller
             'observations' => 'nullable|string',
         ]);
 
+        if (isset($validated['paid_amount']) && $validated['paid_amount'] > $validated['amount']) {
+            $validated['interest_amount'] = $validated['paid_amount'] - $validated['amount'];
+        }
+
         $bill->update($validated);
 
         return redirect()->back()->with('success', 'Parcela atualizada com sucesso!');

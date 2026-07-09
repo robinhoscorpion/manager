@@ -194,8 +194,8 @@ const formatJson = (json) => {
             <div class="relative w-full max-w-2xl bg-white dark:bg-[#0f1219] rounded-[20px] shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
                 <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1219] flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
-                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-sm">
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
@@ -211,7 +211,7 @@ const formatJson = (json) => {
                     </button>
                 </div>
 
-                <div class="p-6 md:p-8 flex-1 overflow-y-auto bg-slate-50 dark:bg-transparent">
+                <div class="p-6 md:p-8 flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0f1219] custom-scrollbar">
                     <div class="grid grid-cols-2 gap-4 md:gap-8 mb-8">
                         <div>
                             <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Responsável</span>
@@ -223,7 +223,7 @@ const formatJson = (json) => {
                         <div>
                             <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Data e Hora</span>
                             <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm h-[58px]">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{{ formatDate(selectedLog.created_at) }}</span>
                             </div>
                         </div>
@@ -231,7 +231,10 @@ const formatJson = (json) => {
 
                     <!-- Value Diff Section -->
                     <div v-if="selectedLog.event === 'updated'" class="space-y-4">
-                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Diferencial de Alterações</span>
+                        <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                            <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                            <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Diferencial de Alterações</span>
+                        </div>
                         <div class="grid gap-3">
                             <div v-for="(value, key) in formatJson(selectedLog.new_values)" :key="key" class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
                                 <div class="flex items-center justify-between mb-3">
@@ -258,7 +261,10 @@ const formatJson = (json) => {
 
                     <!-- Creation Details -->
                     <div v-else-if="selectedLog.event === 'created'" class="space-y-3">
-                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Dados do Registro</span>
+                        <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                            <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                            <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Dados do Registro</span>
+                        </div>
                         <div class="bg-slate-50 dark:bg-slate-800/50 rounded-[14px] border border-slate-200 dark:border-slate-700 p-6 overflow-x-auto shadow-inner">
                             <pre class="text-[11px] text-slate-700 dark:text-slate-400 font-mono">{{ JSON.stringify(formatJson(selectedLog.new_values), null, 4) }}</pre>
                         </div>
@@ -266,7 +272,10 @@ const formatJson = (json) => {
 
                     <!-- Deletion Details -->
                     <div v-else-if="selectedLog.event === 'deleted'" class="space-y-3">
-                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Dados do Registro Excluído</span>
+                        <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+                            <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                            <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Dados do Registro Excluído</span>
+                        </div>
                         <div class="bg-red-50 dark:bg-red-500/5 rounded-[14px] border border-red-100 dark:border-red-500/10 p-6 overflow-x-auto shadow-inner">
                             <pre class="text-[11px] text-red-600 dark:text-red-400/80 font-mono">{{ JSON.stringify(formatJson(selectedLog.old_values), null, 4) }}</pre>
                         </div>

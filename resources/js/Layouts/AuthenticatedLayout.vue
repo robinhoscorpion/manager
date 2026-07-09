@@ -34,16 +34,22 @@ const toggleMobileMenu = () => {
 };
 
 const salesRoomOpen = ref(false);
+const financeiroOpen = ref(false);
 const _configOpen = ref(false);
 
 // Watch for route changes to auto-expand menus
 watch(() => usePage().url, () => {
     if (route().current('sales.*')) salesRoomOpen.value = true;
+    if (route().current('finance.*')) financeiroOpen.value = true;
     if (route().current('admin.*')) _configOpen.value = true;
 }, { immediate: true });
 
 const toggleSalesRoom = () => {
     salesRoomOpen.value = !salesRoomOpen.value;
+};
+
+const toggleFinanceiro = () => {
+    financeiroOpen.value = !financeiroOpen.value;
 };
 
 const configOpen = computed(() => _configOpen.value);
@@ -111,6 +117,29 @@ const toggleSidebar = () => {
                             </Link>
                         </div>
                     </div>
+
+                    <!-- Financeiro Group -->
+                    <div class="nav-group" :class="{ 'open': financeiroOpen }">
+                        <div class="nav-item nav-item-toggle" @click="toggleFinanceiro">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Financeiro</span>
+                            </div>
+                            <svg class="nav-item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                        
+                        <div class="nav-sub-menu">
+                            <Link :href="route('finance.receivables.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.receivables.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.receivables.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Recebíveis
+                            </Link>
+                        </div>
+                    </div>
+
 
                     <Link 
                         v-if="can('funcionarios.ver')"

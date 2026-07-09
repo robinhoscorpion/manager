@@ -169,16 +169,16 @@ const closeModal = () => {
 
         <!-- Modal -->
         <Modal :show="showEditModal" @close="closeModal" maxWidth="md">
-            <div class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden">
-                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-brand-green/10 flex items-center justify-center">
+            <div class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1219] flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-sm">
                             <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 {{ editingQualification ? 'Editar Qualificação' : 'Nova Qualificação' }}
                             </h3>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Gestão de Tipos</p>
@@ -189,20 +189,20 @@ const closeModal = () => {
                     </button>
                 </div>
 
-                <form @submit.prevent="submit" class="p-6 space-y-5 bg-slate-50 dark:bg-transparent">
+                <form @submit.prevent="submit" class="p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-transparent flex-1 overflow-y-auto">
                     <div class="grid grid-cols-4 gap-4">
                         <div class="col-span-3 space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Nome</label>
-                            <input v-model="form.name" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all" placeholder="Ex: Qualificado">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">Nome</label>
+                            <input v-model="form.name" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 shadow-sm transition-all" placeholder="Ex: Qualificado">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1 text-center block">Código</label>
-                            <input v-model="form.code" type="text" maxlength="5" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-3 text-slate-900 dark:text-white text-sm text-center font-bold outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all uppercase" placeholder="Q">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1 mb-2 text-center">Código</label>
+                            <input v-model="form.code" type="text" maxlength="5" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-3 text-sm text-slate-900 dark:text-white text-center font-bold outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 shadow-sm transition-all uppercase" placeholder="Q">
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Cor Associada</label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">Cor Associada</label>
                         <div class="grid grid-cols-9 gap-2">
                             <button 
                                 v-for="color in colors" 
@@ -217,8 +217,8 @@ const closeModal = () => {
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Descrição</label>
-                        <textarea v-model="form.description" rows="2" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all resize-none" placeholder="Ex: Cliente atende aos requisitos básicos..."></textarea>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">Descrição</label>
+                        <textarea v-model="form.description" rows="2" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 shadow-sm transition-all resize-none" placeholder="Ex: Cliente atende aos requisitos básicos..."></textarea>
                     </div>
 
                     <div class="flex items-center gap-3 bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
@@ -231,8 +231,8 @@ const closeModal = () => {
 
                     <!-- Actions -->
                     <div class="flex gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
-                        <button type="button" @click="closeModal" class="flex-1 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold uppercase text-xs tracking-wider rounded-[12px] transition-all shadow-sm">Cancelar</button>
-                        <button type="submit" :disabled="form.processing" class="flex-[2] py-3.5 bg-brand-green hover:bg-[#485638] text-white font-bold uppercase text-xs tracking-wider rounded-[12px] shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                        <button type="button" @click="closeModal" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold uppercase text-[10px] tracking-widest rounded-[12px] transition-all shadow-sm">Cancelar</button>
+                        <button type="submit" :disabled="form.processing" class="flex-[2] py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold uppercase text-[10px] tracking-widest rounded-[12px] shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]">
                             <svg v-if="!form.processing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
                         </button>

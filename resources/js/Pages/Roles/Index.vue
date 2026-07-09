@@ -213,53 +213,71 @@ const deleteRole = (role) => {
 
         <!-- Role Modal -->
         <div v-if="isModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="isModalOpen = false"></div>
-            <div class="relative w-full max-w-md bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-                <div class="px-8 py-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                    <h3 class="text-xl font-black text-white uppercase tracking-tight leading-none">
-                        {{ editingRole ? 'Editar Cargo' : 'Novo Cargo' }}
-                    </h3>
-                    <button @click="isModalOpen = false" class="text-gray-500 hover:text-white transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" @click="isModalOpen = false"></div>
+            <div class="relative w-full max-w-md bg-white dark:bg-[#0f1219] rounded-[20px] shadow-2xl overflow-hidden animate-slide-up flex flex-col">
+                <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1219] flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-sm">
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
+                                {{ editingRole ? 'Editar Cargo' : 'Novo Cargo' }}
+                            </h3>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Definição de Papel</p>
+                        </div>
+                    </div>
+                    <button @click="isModalOpen = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <form @submit.prevent="submitRole" class="p-8 space-y-6">
+                <form @submit.prevent="submitRole" class="p-6 md:p-8 space-y-6 flex-1 bg-slate-50 dark:bg-transparent overflow-y-auto">
                     <div>
-                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Nome do Cargo</label>
-                        <input v-model="form.name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-purple-500/50 transition-all font-bold text-sm" placeholder="Ex: Supervisor de Vendas" required>
-                        <div v-if="form.errors.name" class="text-red-400 text-xs mt-1">{{ form.errors.name }}</div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Nome do Cargo</label>
+                        <input v-model="form.name" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" placeholder="Ex: Supervisor de Vendas" required>
+                        <div v-if="form.errors.name" class="text-red-500 text-[10px] font-bold uppercase mt-1 px-1">{{ form.errors.name }}</div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Descrição</label>
-                        <textarea v-model="form.description" class="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-purple-500/50 transition-all text-xs min-h-[100px]" placeholder="O que este cargo pode fazer?"></textarea>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Descrição</label>
+                        <textarea v-model="form.description" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all min-h-[100px] shadow-sm resize-none" placeholder="O que este cargo pode fazer?"></textarea>
                     </div>
-                    <button type="submit" :disabled="form.processing" class="w-full py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-black uppercase text-xs tracking-[0.25em] shadow-xl shadow-purple-500/20 transition-all active:scale-95 disabled:opacity-50">
-                        {{ form.processing ? 'Salvando...' : 'Confirmar Alterações' }}
-                    </button>
+                    
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <button type="submit" :disabled="form.processing" class="w-full py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center">
+                            {{ form.processing ? 'Salvando...' : 'Confirmar Alterações' }}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
 
         <!-- Permissions Matrix Modal -->
         <div v-if="isPermissionsModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="isPermissionsModalOpen = false"></div>
-            <div class="relative w-full max-w-4xl max-h-[85vh] bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
-                <div class="px-8 py-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between shrink-0">
-                    <div>
-                        <h3 class="text-xl font-black text-white uppercase tracking-tight leading-none">Matriz de Permissões</h3>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
-                            Cargo Selecionado: 
-                            <span class="text-purple-400">{{ editingRole?.name }}</span>
-                        </p>
+            <div class="absolute inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm" @click="isPermissionsModalOpen = false"></div>
+            <div class="relative w-full max-w-4xl max-h-[85vh] bg-white dark:bg-[#0f1219] rounded-[20px] shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+                <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1219] flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shadow-sm">
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">Matriz de Permissões</h3>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                                Cargo Selecionado: 
+                                <span class="text-brand-green">{{ editingRole?.name }}</span>
+                            </p>
+                        </div>
                     </div>
-                    <button @click="isPermissionsModalOpen = false" class="p-2 rounded-full hove:bg-white/5 text-gray-500 hover:text-white transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                    <button @click="isPermissionsModalOpen = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
                 
-                <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-black/20">
+                <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-slate-50 dark:bg-transparent">
                     <PermissionsMatrix 
                         :all-permissions="all_permissions"
                         v-model:selected-permissions="permissionsForm.permissions"
@@ -267,11 +285,11 @@ const deleteRole = (role) => {
                     />
                 </div>
 
-                <div class="p-8 border-t border-white/5 bg-white/[0.01] shrink-0">
+                <div class="p-6 bg-white dark:bg-[#0f1219] border-t border-slate-200 dark:border-slate-800 shrink-0 flex justify-end">
                     <button 
                         @click="submitPermissions"
                         :disabled="permissionsForm.processing || editingRole?.slug === 'admin'"
-                        class="w-full py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.25em] shadow-xl shadow-purple-500/20 disabled:opacity-50 active:scale-[0.98] transition-all"
+                        class="px-8 py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm disabled:opacity-50 active:scale-[0.98] transition-all flex items-center justify-center"
                     >
                         {{ permissionsForm.processing ? 'Salvando...' : 'Salvar Configurações de Acesso' }}
                     </button>

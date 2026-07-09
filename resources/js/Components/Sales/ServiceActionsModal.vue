@@ -82,23 +82,23 @@ const hasCortesia = (cortesia) => {
 <template>
     <Modal :show="show" @close="emit('close')" max-width="md">
         <!-- Actions Grid View -->
-        <div v-if="viewMode === 'actions'" class="p-6 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/5 rounded-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl">
+        <div v-if="viewMode === 'actions'" class="p-6 md:p-8 bg-white dark:bg-[#0f1219] border border-slate-200 dark:border-slate-800 rounded-[20px] relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl">
             <!-- Background Glow -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 dark:bg-cyan-500/5 rounded-full blur-[60px] pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 dark:bg-brand-green/10 rounded-full blur-[60px] pointer-events-none"></div>
             
             <div class="relative">
                 <div class="flex items-center justify-between mb-8">
-                    <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                        <span class="w-1.5 h-5 bg-indigo-500 dark:bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)] dark:shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                        <span class="w-1.5 h-5 bg-brand-green rounded-full shadow-sm"></span>
                         Central de Documentos
                     </h3>
-                    <button @click="emit('close')" class="text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white transition-colors uppercase text-[10px] font-black tracking-widest">
-                        Fechar
+                    <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-xl p-4 mb-6">
-                    <p class="text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest mb-1">Cliente Selecionado</p>
+                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cliente Selecionado</p>
                     <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{{ service?.client?.nome }}</p>
                 </div>
 
@@ -112,7 +112,7 @@ const hasCortesia = (cortesia) => {
                                    (['proposal', 'contract', 'rci', 'checklist'].includes(action.id) && !service?.proposal)"
                         class="group relative p-4 rounded-xl border transition-all flex flex-col items-center gap-3 text-center disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
                         :class="[
-                            ((action.route || action.id === 'delete') && !(['proposal', 'contract', 'rci', 'checklist'].includes(action.id) && !service?.proposal)) ? (action.color + ' ' + action.hover + ' hover:scale-[1.02]') : 'border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.01] text-slate-400 dark:text-gray-600'
+                            ((action.route || action.id === 'delete') && !(['proposal', 'contract', 'rci', 'checklist'].includes(action.id) && !service?.proposal)) ? (action.color + ' ' + action.hover + ' hover:scale-[1.02]') : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-600'
                         ]"
                     >
                         <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">
@@ -123,7 +123,7 @@ const hasCortesia = (cortesia) => {
                         </span>
                         
                         <!-- Status Badge -->
-                        <span v-if="!action.route && action.id !== 'delete'" class="absolute top-1.5 right-1.5 text-[6px] font-black bg-black/40 text-gray-600 px-1.5 py-0.5 rounded border border-white/5 uppercase">
+                        <span v-if="!action.route && action.id !== 'delete'" class="absolute top-1.5 right-1.5 text-[6px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 uppercase tracking-widest">
                             Bloqueado
                         </span>
 
@@ -134,7 +134,7 @@ const hasCortesia = (cortesia) => {
         </div>
 
         <!-- Premium Delete Confirmation View -->
-        <div v-else-if="viewMode === 'delete_confirm'" class="bg-white dark:bg-[#161b22] border border-red-500/30 p-8 text-center relative overflow-hidden shadow-2xl rounded-2xl animate-in slide-in-from-right-4 duration-300">
+        <div v-else-if="viewMode === 'delete_confirm'" class="bg-white dark:bg-[#0f1219] border border-red-500/30 p-8 text-center relative overflow-hidden shadow-2xl rounded-[20px] animate-in slide-in-from-right-4 duration-300">
             <!-- Decorative background glow -->
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-red-500/10 blur-[80px] pointer-events-none"></div>
 
@@ -150,12 +150,12 @@ const hasCortesia = (cortesia) => {
             </p>
 
             <div class="relative z-10 mb-6 text-left">
-                <label class="block text-[10px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest mb-2 text-center">Digite <span class="text-red-500">EXCLUIR</span> para confirmar</label>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 text-center">Digite <span class="text-red-500">EXCLUIR</span> para confirmar</label>
                 <input 
                     v-model="deleteInput" 
                     type="text" 
                     placeholder="EXCLUIR" 
-                    class="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl py-4 text-center text-sm font-black text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-700/50 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:bg-white dark:focus:bg-black uppercase tracking-[0.3em] transition-all"
+                    class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-4 text-center text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 uppercase tracking-[0.3em] transition-all shadow-sm"
                 >
             </div>
 
@@ -169,7 +169,7 @@ const hasCortesia = (cortesia) => {
                     <span>{{ isDeleting ? 'Excluindo...' : 'SIM, EXCLUIR AGORA' }}</span>
                 </button>
                 
-                <button @click="viewMode = 'actions'" :disabled="isDeleting" class="w-full py-4 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-2xl font-bold uppercase text-[10px] tracking-widest transition-all">
+                <button @click="viewMode = 'actions'" :disabled="isDeleting" class="w-full py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest transition-all">
                     Voltar para Central
                 </button>
             </div>

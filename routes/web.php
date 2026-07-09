@@ -102,6 +102,12 @@ Route::middleware('auth')->group(function () {
     Route::post('admin/contract-templates/upload-image', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'uploadImage'])->name('admin.contract_templates.upload_image');
     Route::resource('admin/contract-templates', \App\Http\Controllers\Admin\ContractTemplateController::class)->names('admin.contract_templates');
 
+    // Módulo Financeiro
+    Route::prefix('financeiro')->name('finance.')->group(function () {
+        Route::get('/recebiveis', [\App\Http\Controllers\Finance\ReceivableController::class, 'index'])->name('receivables.index');
+        Route::post('/recebiveis/bulk-pay', [\App\Http\Controllers\Finance\ReceivableController::class, 'bulkPayGlobal'])->name('receivables.bulk-pay');
+    });
+
     // Busca Global
     Route::get('/api/search/global', [SalesServiceController::class, 'globalSearch'])->name('api.search.global');
 
