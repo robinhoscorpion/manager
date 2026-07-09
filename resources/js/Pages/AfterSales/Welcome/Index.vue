@@ -1,68 +1,37 @@
 <script setup>
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 
-// Mock Data para a interface visual
-const welcomeMetrics = ref({
-    new_clients: 15,
-    pending: 8,
-    sent: 7
+const props = defineProps({
+    clients: Array,
+    welcomeMetrics: Object,
 });
 
-const clients = ref([
-    {
-        id: 1,
-        name: 'Maria Silva',
-        phone: '5511999999999',
-        formatted_phone: '(11) 99999-9999',
-        email: 'maria.silva@exemplo.com',
-        product: 'Consultoria Premium',
-        date: '2026-07-08',
-        status: 'pending'
-    },
-    {
-        id: 2,
-        name: 'João Pedro Alves',
-        phone: '5511888888888',
-        formatted_phone: '(11) 88888-8888',
-        email: 'joao.alves@exemplo.com',
-        product: 'Plano Básico Anual',
-        date: '2026-07-08',
-        status: 'pending'
-    },
-    {
-        id: 3,
-        name: 'Ana Carolina',
-        phone: '5511777777777',
-        formatted_phone: '(11) 77777-7777',
-        email: 'ana.carolina@exemplo.com',
-        product: 'Mentoria Vip',
-        date: '2026-07-07',
-        status: 'sent_whatsapp'
-    },
-    {
-        id: 4,
-        name: 'Carlos Mendes',
-        phone: '5511666666666',
-        formatted_phone: '(11) 66666-6666',
-        email: 'carlos.mendes@exemplo.com',
-        product: 'Consultoria Premium',
-        date: '2026-07-06',
-        status: 'sent_email'
-    }
-]);
+const welcomeMetrics = computed(() => props.welcomeMetrics || { new_clients: 0, pending: 0, sent: 0 });
+const clients = computed(() => props.clients || []);
 
 const search = ref('');
 const statusFilter = ref('');
+const startDate = ref('');
+const endDate = ref('');
 
 const filteredClients = computed(() => {
     return clients.value.filter(client => {
         const matchSearch = client.name.toLowerCase().includes(search.value.toLowerCase()) || 
                             client.email.toLowerCase().includes(search.value.toLowerCase());
         const matchStatus = statusFilter.value === '' || client.status === statusFilter.value;
-        return matchSearch && matchStatus;
+        
+        let matchDate = true;
+        if (startDate.value && client.date) {
+            matchDate = matchDate && client.date >= startDate.value;
+        }
+        if (endDate.value && client.date) {
+            matchDate = matchDate && client.date <= endDate.value;
+        }
+
+        return matchSearch && matchStatus && matchDate;
     });
 });
 
@@ -77,7 +46,12 @@ const emailBody = ref('');
 
 // Helper Functions
 const formatDate = (dateStr) => {
-    return new Intl.DateTimeFormat('pt-BR').format(new Date(dateStr));
+    if (!dateStr) return '-';
+    try {
+        return new Intl.DateTimeFormat('pt-BR').format(new Date(dateStr));
+    } catch (e) {
+        return '-';
+    }
 };
 
 const getStatusBadge = (status) => {
@@ -101,9 +75,14 @@ const sendWhatsapp = () => {
     const url = `https://wa.me/${selectedClient.value.phone}?text=${encodedMessage}`;
     window.open(url, '_blank');
     
-    // Simula a marcação como enviado
-    selectedClient.value.status = 'sent_whatsapp';
-    showWhatsappModal.value = false;
+    router.patch(route('after-sales.welcome.status.update', selectedClient.value.id), {
+        status: 'sent_whatsapp'
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showWhatsappModal.value = false;
+        }
+    });
 };
 
 const openEmail = (client) => {
@@ -114,10 +93,15 @@ const openEmail = (client) => {
 };
 
 const sendEmail = () => {
-    // Aqui implementaremos a requisição real para o backend no futuro
-    alert('E-mail enviado com sucesso (Simulação)');
-    selectedClient.value.status = 'sent_email';
-    showEmailModal.value = false;
+    // Por enquanto, apenas atualiza o status via API. No futuro, integrará disparo real via Mail.
+    router.patch(route('after-sales.welcome.status.update', selectedClient.value.id), {
+        status: 'sent_email'
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showEmailModal.value = false;
+        }
+    });
 };
 </script>
 
@@ -178,13 +162,23 @@ const sendEmail = () => {
             <div class="bg-white dark:bg-[#0f1219] rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 
                 <!-- Filter Bar -->
-                <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-2 items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
-                    <div class="relative w-full sm:w-96 flex gap-2">
-                        <div class="relative w-full">
+                <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex flex-col xl:flex-row gap-3 xl:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
+                    <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
+                        <div class="relative w-full sm:w-64">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
                             <input v-model="search" type="text" placeholder="Buscar cliente..." class="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400">
+                        </div>
+                        
+                        <!-- Date Filter -->
+                        <div class="flex items-center gap-1 shrink-0 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2">
+                            <input v-model="startDate" type="date" class="bg-transparent border-none text-[10px] text-slate-900 dark:text-white py-1.5 pl-1 pr-0 focus:ring-0 w-[100px]">
+                            <span class="text-slate-400 text-[9px] uppercase font-bold">até</span>
+                            <input v-model="endDate" type="date" class="bg-transparent border-none text-[10px] text-slate-900 dark:text-white py-1.5 pl-1 pr-0 focus:ring-0 w-[100px]">
+                            <button v-if="startDate || endDate" @click="startDate = ''; endDate = ''" class="ml-1 text-slate-400 hover:text-red-500" title="Limpar Datas">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                         </div>
                     </div>
                     

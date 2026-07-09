@@ -111,6 +111,7 @@ Route::middleware('auth')->group(function () {
     // Módulo Pós-venda
     Route::prefix('pos-venda')->name('after-sales.')->group(function () {
         Route::get('/boas-vindas', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'index'])->name('welcome.index');
+        Route::patch('/boas-vindas/{salesService}/status', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'updateStatus'])->name('welcome.status.update');
     });
 
     // Busca Global
