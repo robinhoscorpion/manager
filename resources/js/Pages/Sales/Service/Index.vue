@@ -405,16 +405,16 @@ const hasCortesia = (cortesia) => {
             leave-from-class="transform translate-y-0 opacity-100"
             leave-to-class="transform translate-y-4 opacity-0"
         >
-            <div v-if="notification" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300]">
+            <div v-if="notification.show" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300]">
                 <div class="bg-indigo-950/90 dark:bg-[#1a1f2e] border border-indigo-500/30 backdrop-blur-xl px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-                    <span class="text-xs font-bold text-white uppercase tracking-widest">{{ notification }}</span>
+                    <span class="text-xs font-bold text-white uppercase tracking-widest">{{ notification.message }}</span>
                 </div>
             </div>
         </Transition>
 
         <div class="min-h-screen font-sans bg-[var(--content-bg)] dark:bg-[#0f1219]">
-            <div class="w-full sm:px-6 lg:px-8 h-auto pt-8">
+            <div class="w-full h-auto pt-8">
                 
                 <!-- Premium Header & Toolbar -->
                 <div class="bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] mb-6 shadow-sm dark:shadow-none flex flex-col relative z-20">
@@ -468,8 +468,9 @@ const hasCortesia = (cortesia) => {
 
                 <!-- Data Table Wrapper -->
                 <div class="ledger-card flex flex-col overflow-hidden mb-12 bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] shadow-sm dark:shadow-none">
-                    
-                    <!-- Table Header -->
+                    <div class="w-full overflow-x-auto">
+                        <div class="min-w-[1024px]">
+                            <!-- Table Header -->
                     <div class="ledger-header-row flex items-center gap-3 px-6 py-3">
                         <div v-if="columnSettings.id" class="w-10 text-center ledger-th !text-black">#</div>
                         <div v-if="columnSettings.date" class="w-24 text-center ledger-th !text-black">Data</div>
@@ -715,6 +716,8 @@ const hasCortesia = (cortesia) => {
                             </div>
                             <h3 class="ledger-empty-title">Nenhum atendimento</h3>
                             <p class="ledger-empty-sub">Não há registros para os filtros selecionados.</p>
+                        </div>
+                    </div>
                         </div>
                     </div>
                 </div>

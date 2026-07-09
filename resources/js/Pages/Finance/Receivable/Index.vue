@@ -362,36 +362,36 @@ const getStatusBadge = (status) => {
 
             <!-- Tabela e Filtros -->
             <div class="bg-white dark:bg-[#0f1219] rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
+                <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-2 items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
                     
                     <div class="relative w-full flex-1 max-w-3xl flex gap-2">
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
-                            <input v-model="search" type="text" placeholder="Buscar por cliente ou descrição..." class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400">
+                            <input v-model="search" type="text" placeholder="Buscar por cliente ou descrição..." class="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400">
                         </div>
                         <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg shrink-0">
-                            <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'" class="px-3 py-1.5 text-xs font-bold rounded-md transition-all uppercase tracking-widest">Lista</button>
-                            <button @click="viewMode = 'grouped'" :class="viewMode === 'grouped' ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'" class="px-3 py-1.5 text-xs font-bold rounded-md transition-all uppercase tracking-widest">Clientes</button>
+                            <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'" class="px-2.5 py-1 text-[9px] font-bold rounded-md transition-all uppercase tracking-widest">Lista</button>
+                            <button @click="viewMode = 'grouped'" :class="viewMode === 'grouped' ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'" class="px-2.5 py-1 text-[9px] font-bold rounded-md transition-all uppercase tracking-widest">Clientes</button>
                         </div>
-                        <button @click="showFilters = !showFilters" :class="hasActiveFilters ? 'bg-brand-green text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors whitespace-nowrap">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                            Filtros <span v-if="hasActiveFilters" class="w-2 h-2 rounded-full bg-white ml-1"></span>
+                        <button @click="showFilters = !showFilters" :class="hasActiveFilters ? 'bg-brand-green text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-2.5 py-1 rounded-md text-[9px] font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                            Filtros <span v-if="hasActiveFilters" class="w-1.5 h-1.5 rounded-full bg-white ml-1"></span>
                         </button>
                     </div>
                     
                     <div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-                        <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Todos
                         </button>
-                        <button @click="statusFilter = 'pending'" :class="statusFilter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = 'pending'" :class="statusFilter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             A Receber
                         </button>
-                        <button @click="statusFilter = 'paid'" :class="statusFilter === 'paid' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = 'paid'" :class="statusFilter === 'paid' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Pagos
                         </button>
-                        <button @click="statusFilter = 'overdue'" :class="statusFilter === 'overdue' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = 'overdue'" :class="statusFilter === 'overdue' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Atrasados
                         </button>
                     </div>
@@ -494,87 +494,87 @@ const getStatusBadge = (status) => {
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800">
-                                <th class="px-6 py-4 w-12 text-center">
+                                <th class="px-2 py-2 w-12 text-center">
                                     <input type="checkbox" class="rounded border-slate-300 text-brand-green focus:ring-brand-green bg-white dark:bg-slate-900" @change="toggleSelectAll" :checked="selectedBills.length === receivables.data.filter(b => b.status !== 'paid' && b.status !== 'cancelled').length && receivables.data.length > 0">
                                 </th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Cliente</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Descrição</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Vencimento</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Forma</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Valor Bruto</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Juros/Mora</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Pago</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">Ações</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Cliente</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Descrição</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Vencimento</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Forma</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Valor</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Juros/Mora</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Pago</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
+                                <th class="px-2 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">Ações</th>
                             </tr>
                         </thead>
                         
                         <tbody v-if="viewMode === 'list'" class="divide-y divide-slate-200 dark:divide-slate-800/50">
                             
                             <tr v-for="bill in receivables.data" :key="bill.id" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-2 py-2 text-center">
                                     <input v-if="bill.status !== 'paid' && bill.status !== 'cancelled'" type="checkbox" :value="bill.id" v-model="selectedBills" class="rounded border-slate-300 text-brand-green focus:ring-brand-green bg-white dark:bg-slate-900">
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
+                                        <div class="w-6 h-6 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
                                             {{ bill.client?.nome?.charAt(0) || 'C' }}
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ bill.client?.nome || 'Cliente Removido' }}</p>
+                                            <p class="text-xs font-bold text-slate-900 dark:text-white">{{ bill.client?.nome || 'Cliente Removido' }}</p>
                                             <p class="text-[10px] text-slate-500">{{ bill.client?.cpf || 'Sem documento' }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ bill.description }}</span>
+                                        <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ bill.description }}</span>
                                         <span v-if="bill.installment_number" class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500">{{ bill.installment_number }}/{{ bill.total_installments }}</span>
                                     </div>
                                     <p class="text-[10px] text-slate-500 mt-1">Serviço #{{ bill.sales_service_id || '-' }}</p>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ formatDate(bill.due_date) }}</span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ formatDate(bill.due_date) }}</span>
                                         <span v-if="bill.paid_at" class="text-[10px] text-emerald-500 flex items-center gap-1">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                             Pago em {{ formatDate(bill.paid_at) }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-xs font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
+                                <td class="px-2 py-2">
+                                    <span class="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-sm text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
+                                <td class="px-2 py-2">
+                                    <span class="text-xs text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <span class="text-xs text-red-500">{{ formatCurrency(bill.interest_amount) }}</span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-sm text-emerald-500">{{ bill.paid_amount ? formatCurrency(bill.paid_amount) : '-' }}</span>
+                                <td class="px-2 py-2">
+                                    <span class="text-xs text-emerald-500">{{ bill.paid_amount ? formatCurrency(bill.paid_amount) : '-' }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-2 py-2 text-center">
                                     <span :class="getStatusBadge(bill.status).color" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest">
                                         <span class="w-1.5 h-1.5 rounded-full" :class="getStatusBadge(bill.status).color.replace('bg-', 'bg-opacity-100 bg-').split(' ')[0]"></span>
                                         {{ getStatusBadge(bill.status).label }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-2 py-2 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <Link v-if="bill.sales_service_id" :href="route('sales.atendimentos.show', bill.sales_service_id)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Ver Contrato">
+                                        <Link v-if="bill.sales_service_id" :href="route('sales.atendimentos.show', bill.sales_service_id)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Ver Contrato">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                         </Link>
                                         <Dropdown align="right" width="48" v-if="bill.status !== 'paid' && bill.status !== 'cancelled'">
                                             <template #trigger>
-                                                <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
+                                                <button class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                                                 </button>
                                             </template>
                                             <template #content>
-                                                <button @click="openPayModal(bill)" class="block w-full text-left px-4 py-2 text-sm leading-5 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Baixar Parcela</button>
-                                                <button @click="openRenegotiateModal(bill)" class="block w-full text-left px-4 py-2 text-sm leading-5 text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Renegociar</button>
-                                                <button @click="openCancelModal(bill)" class="block w-full text-left px-4 py-2 text-sm leading-5 text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Cancelar</button>
+                                                <button @click="openPayModal(bill)" class="block w-full text-left px-4 py-2 text-xs leading-5 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Baixar Parcela</button>
+                                                <button @click="openRenegotiateModal(bill)" class="block w-full text-left px-4 py-2 text-xs leading-5 text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Renegociar</button>
+                                                <button @click="openCancelModal(bill)" class="block w-full text-left px-4 py-2 text-xs leading-5 text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Cancelar</button>
                                             </template>
                                         </Dropdown>
                                     </div>
@@ -592,27 +592,27 @@ const getStatusBadge = (status) => {
                         <tbody v-else-if="viewMode === 'grouped'" class="divide-y divide-slate-200 dark:divide-slate-800/50">
                             <template v-for="group in groupedReceivables" :key="group.client?.id || 'unknown'">
                                 <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors bg-slate-50/50 dark:bg-slate-800/30 cursor-pointer" @click="toggleClientExpanded(group.client?.id || 'unknown')">
-                                    <td class="px-6 py-4 text-center" @click.stop>
+                                    <td class="px-2 py-2 text-center" @click.stop>
                                         <input v-if="group.pendingCount > 0" type="checkbox" :checked="isClientFullySelected(group)" @change="toggleClientSelection(group, $event)" class="rounded border-slate-300 text-brand-green focus:ring-brand-green bg-white dark:bg-slate-900">
                                     </td>
-                                    <td class="px-6 py-4" colspan="2">
+                                    <td class="px-2 py-2" colspan="2">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center font-black text-sm shadow-sm">
+                                            <div class="w-6 h-6 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center font-black text-xs shadow-sm">
                                                 {{ group.client?.nome?.charAt(0) || 'C' }}
                                             </div>
                                             <div>
-                                                <p class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">{{ group.client?.nome || 'Cliente Removido' }}</p>
+                                                <p class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">{{ group.client?.nome || 'Cliente Removido' }}</p>
                                                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{{ group.bills.length }} faturas / {{ group.pendingCount }} em aberto</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4" colspan="3">
+                                    <td class="px-2 py-2" colspan="3">
                                         <div class="flex flex-col">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Total Consolidado</span>
                                             <span class="text-base font-black text-slate-900 dark:text-white">{{ formatCurrency(group.total_amount) }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-right" colspan="4">
+                                    <td class="px-2 py-2 text-right" colspan="4">
                                         <button class="p-2 text-slate-400 hover:text-brand-green transition-colors">
                                             <svg :class="expandedClients.includes(group.client?.id || 'unknown') ? 'rotate-180' : ''" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                         </button>
@@ -622,69 +622,69 @@ const getStatusBadge = (status) => {
                                 <template v-if="expandedClients.includes(group.client?.id || 'unknown')">
                                     
                             <tr v-for="bill in group.bills" :key="bill.id" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-2 py-2 text-center">
                                     <input v-if="bill.status !== 'paid' && bill.status !== 'cancelled'" type="checkbox" :value="bill.id" v-model="selectedBills" class="rounded border-slate-300 text-brand-green focus:ring-brand-green bg-white dark:bg-slate-900">
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
+                                        <div class="w-6 h-6 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
                                             {{ bill.client?.nome?.charAt(0) || 'C' }}
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ bill.client?.nome || 'Cliente Removido' }}</p>
+                                            <p class="text-xs font-bold text-slate-900 dark:text-white">{{ bill.client?.nome || 'Cliente Removido' }}</p>
                                             <p class="text-[10px] text-slate-500">{{ bill.client?.cpf || 'Sem documento' }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ bill.description }}</span>
+                                        <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ bill.description }}</span>
                                         <span v-if="bill.installment_number" class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500">{{ bill.installment_number }}/{{ bill.total_installments }}</span>
                                     </div>
                                     <p class="text-[10px] text-slate-500 mt-1">Serviço #{{ bill.sales_service_id || '-' }}</p>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ formatDate(bill.due_date) }}</span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ formatDate(bill.due_date) }}</span>
                                         <span v-if="bill.paid_at" class="text-[10px] text-emerald-500 flex items-center gap-1">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                             Pago em {{ formatDate(bill.paid_at) }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-xs font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
+                                <td class="px-2 py-2">
+                                    <span class="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-sm text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
+                                <td class="px-2 py-2">
+                                    <span class="text-xs text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-2 py-2">
                                     <span class="text-xs text-red-500">{{ formatCurrency(bill.interest_amount) }}</span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-sm text-emerald-500">{{ bill.paid_amount ? formatCurrency(bill.paid_amount) : '-' }}</span>
+                                <td class="px-2 py-2">
+                                    <span class="text-xs text-emerald-500">{{ bill.paid_amount ? formatCurrency(bill.paid_amount) : '-' }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-2 py-2 text-center">
                                     <span :class="getStatusBadge(bill.status).color" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest">
                                         <span class="w-1.5 h-1.5 rounded-full" :class="getStatusBadge(bill.status).color.replace('bg-', 'bg-opacity-100 bg-').split(' ')[0]"></span>
                                         {{ getStatusBadge(bill.status).label }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-2 py-2 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <Link v-if="bill.sales_service_id" :href="route('sales.atendimentos.show', bill.sales_service_id)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Ver Contrato">
+                                        <Link v-if="bill.sales_service_id" :href="route('sales.atendimentos.show', bill.sales_service_id)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Ver Contrato">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                         </Link>
                                         <Dropdown align="right" width="48" v-if="bill.status !== 'paid' && bill.status !== 'cancelled'">
                                             <template #trigger>
-                                                <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
+                                                <button class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                                                 </button>
                                             </template>
                                             <template #content>
-                                                <button @click="openPayModal(bill)" class="block w-full text-left px-4 py-2 text-sm leading-5 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Baixar Parcela</button>
-                                                <button @click="openRenegotiateModal(bill)" class="block w-full text-left px-4 py-2 text-sm leading-5 text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Renegociar</button>
-                                                <button @click="openCancelModal(bill)" class="block w-full text-left px-4 py-2 text-sm leading-5 text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Cancelar</button>
+                                                <button @click="openPayModal(bill)" class="block w-full text-left px-4 py-2 text-xs leading-5 text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Baixar Parcela</button>
+                                                <button @click="openRenegotiateModal(bill)" class="block w-full text-left px-4 py-2 text-xs leading-5 text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Renegociar</button>
+                                                <button @click="openCancelModal(bill)" class="block w-full text-left px-4 py-2 text-xs leading-5 text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition duration-150 ease-in-out font-medium">Cancelar</button>
                                             </template>
                                         </Dropdown>
                                     </div>

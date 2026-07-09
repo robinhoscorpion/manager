@@ -108,6 +108,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/recebiveis/bulk-pay', [\App\Http\Controllers\Finance\ReceivableController::class, 'bulkPayGlobal'])->name('receivables.bulk-pay');
     });
 
+    // Módulo Pós-venda
+    Route::prefix('pos-venda')->name('after-sales.')->group(function () {
+        Route::get('/boas-vindas', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'index'])->name('welcome.index');
+    });
+
     // Busca Global
     Route::get('/api/search/global', [SalesServiceController::class, 'globalSearch'])->name('api.search.global');
 

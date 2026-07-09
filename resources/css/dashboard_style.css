@@ -398,6 +398,7 @@ h1, h2, h3, h4, .font-heading {
 
 .main-content {
     flex: 1;
+    min-width: 0;
     margin-left: var(--sidebar-width);
     min-height: 100vh;
     padding: 28px 32px;
