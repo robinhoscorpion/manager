@@ -37,6 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/roles/{role}/permissions', [RoleController::class, 'updatePermissions'])->name('roles.permissions.update');
 
     // Sala de Vendas
+    Route::get('/agendamentos', [\App\Http\Controllers\Sales\ScheduleController::class, 'index'])->name('sales.agendamentos.index');
+    Route::post('/agendamentos', [\App\Http\Controllers\Sales\ScheduleController::class, 'store'])->name('sales.agendamentos.store');
+    Route::patch('/agendamentos/{schedule}/status', [\App\Http\Controllers\Sales\ScheduleController::class, 'updateStatus'])->name('sales.agendamentos.status.update');
+    
     Route::get('/atendimentos', [SalesServiceController::class, 'index'])->name('sales.atendimentos');
     Route::post('/atendimentos', [SalesServiceController::class, 'store'])->name('sales.atendimentos.store');
     Route::put('/atendimentos/{service}', [SalesServiceController::class, 'update'])->name('sales.atendimentos.update');

@@ -8,13 +8,26 @@ use Inertia\Inertia;
 
 class WelcomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sales = \App\Models\SalesService::with('client')
-            ->where('status', \App\Models\SalesService::STATUS_APROVADO)
-            ->orderBy('date', 'desc')
+        $query = \App\Models\SalesService::with(['client', 'proposal.product'])
+            ->where('status', \App\Models\SalesService::STATUS_APROVADO);
+
+        if ($request->filled('start_date')) {
+            $query->whereRaw("STR_TO_DATE(date, '%d/%m/%Y') >= ?", [$request->start_date]);
+        } else {
+            $query->whereRaw("STR_TO_DATE(date, '%d/%m/%Y') >= ?", [now()->toDateString()]);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereRaw("STR_TO_DATE(date, '%d/%m/%Y') <= ?", [$request->end_date]);
+        } else {
+            $query->whereRaw("STR_TO_DATE(date, '%d/%m/%Y') <= ?", [now()->toDateString()]);
+        }
+
+        $sales = $query->orderByRaw("STR_TO_DATE(date, '%d/%m/%Y') desc")
             ->orderBy('time', 'desc')
-            ->take(100)
+            ->take(500)
             ->get()
             ->map(function ($sale) {
                 return [
@@ -23,7 +36,8 @@ class WelcomeController extends Controller
                     'phone' => $sale->client ? preg_replace('/[^0-9]/', '', $sale->client->celular1) : '',
                     'formatted_phone' => $sale->client ? $sale->client->celular1 : '',
                     'email' => $sale->client ? $sale->client->email : '',
-                    'product' => 'Atendimento #'.$sale->id, // Mocked product for now as there's no direct product field in SalesService
+                    'contract' => $sale->proposal ? $sale->proposal->contract_number : 'S/N',
+                    'product' => ($sale->proposal && $sale->proposal->product) ? $sale->proposal->product->name : 'Atendimento #' . $sale->id,
                     'date' => $sale->date,
                     'status' => $sale->welcome_status ?? 'pending',
                 ];
@@ -38,6 +52,10 @@ class WelcomeController extends Controller
         return Inertia::render('AfterSales/Welcome/Index', [
             'clients' => $sales->values(),
             'welcomeMetrics' => $metrics,
+            'filters' => [
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]
         ]);
     }
 

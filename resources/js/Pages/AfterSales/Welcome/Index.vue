@@ -7,6 +7,7 @@ import Modal from '@/Components/Modal.vue';
 const props = defineProps({
     clients: Array,
     welcomeMetrics: Object,
+    filters: Object,
 });
 
 const welcomeMetrics = computed(() => props.welcomeMetrics || { new_clients: 0, pending: 0, sent: 0 });
@@ -14,24 +15,32 @@ const clients = computed(() => props.clients || []);
 
 const search = ref('');
 const statusFilter = ref('');
-const startDate = ref('');
-const endDate = ref('');
+const today = new Date().toISOString().split('T')[0];
+const startDate = ref(props.filters?.start_date || today);
+const endDate = ref(props.filters?.end_date || today);
+
+const fetchFilteredData = () => {
+    router.get(route('after-sales.welcome.index'), {
+        start_date: startDate.value,
+        end_date: endDate.value
+    }, {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
+
+const clearDates = () => {
+    startDate.value = '';
+    endDate.value = '';
+    fetchFilteredData();
+};
 
 const filteredClients = computed(() => {
     return clients.value.filter(client => {
         const matchSearch = client.name.toLowerCase().includes(search.value.toLowerCase()) || 
                             client.email.toLowerCase().includes(search.value.toLowerCase());
         const matchStatus = statusFilter.value === '' || client.status === statusFilter.value;
-        
-        let matchDate = true;
-        if (startDate.value && client.date) {
-            matchDate = matchDate && client.date >= startDate.value;
-        }
-        if (endDate.value && client.date) {
-            matchDate = matchDate && client.date <= endDate.value;
-        }
-
-        return matchSearch && matchStatus && matchDate;
+        return matchSearch && matchStatus;
     });
 });
 
@@ -47,6 +56,10 @@ const emailBody = ref('');
 // Helper Functions
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
+    // Se a data já estiver no formato dd/mm/yyyy
+    if (dateStr.includes('/')) {
+        return dateStr;
+    }
     try {
         return new Intl.DateTimeFormat('pt-BR').format(new Date(dateStr));
     } catch (e) {
@@ -162,37 +175,45 @@ const sendEmail = () => {
             <div class="bg-white dark:bg-[#0f1219] rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 
                 <!-- Filter Bar -->
-                <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex flex-col xl:flex-row gap-3 xl:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
-                    <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
-                        <div class="relative w-full sm:w-64">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-3 items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
+                    <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                        <!-- Search -->
+                        <div class="relative w-full sm:w-56">
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                                 <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
-                            <input v-model="search" type="text" placeholder="Buscar cliente..." class="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400">
+                            <input v-model="search" type="text" placeholder="Buscar cliente..." class="w-full pl-7 pr-2 h-8 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400">
                         </div>
                         
                         <!-- Date Filter -->
-                        <div class="flex items-center gap-1 shrink-0 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2">
-                            <input v-model="startDate" type="date" class="bg-transparent border-none text-[10px] text-slate-900 dark:text-white py-1.5 pl-1 pr-0 focus:ring-0 w-[100px]">
+                        <div class="flex items-center h-8 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 gap-1 shrink-0">
+                            <input v-model="startDate" type="date" class="bg-transparent border-none text-[10px] text-slate-900 dark:text-white p-0 focus:ring-0 w-[95px] h-full">
                             <span class="text-slate-400 text-[9px] uppercase font-bold">até</span>
-                            <input v-model="endDate" type="date" class="bg-transparent border-none text-[10px] text-slate-900 dark:text-white py-1.5 pl-1 pr-0 focus:ring-0 w-[100px]">
-                            <button v-if="startDate || endDate" @click="startDate = ''; endDate = ''" class="ml-1 text-slate-400 hover:text-red-500" title="Limpar Datas">
+                            <input v-model="endDate" type="date" class="bg-transparent border-none text-[10px] text-slate-900 dark:text-white p-0 focus:ring-0 w-[95px] h-full">
+                            <button v-if="startDate || endDate" @click="clearDates" class="ml-1 text-slate-400 hover:text-red-500 flex items-center" title="Limpar Datas">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
+                        
+                        <!-- Search Button -->
+                        <button @click="fetchFilteredData" class="h-8 shrink-0 bg-brand-green text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-brand-green/90 transition-colors flex items-center gap-1.5 shadow-sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            Buscar
+                        </button>
                     </div>
                     
-                    <div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-                        <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                    <!-- Status Filters -->
+                    <div class="flex flex-wrap items-center gap-1.5 w-full xl:w-auto">
+                        <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="h-7 px-3 rounded-md text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Todos
                         </button>
-                        <button @click="statusFilter = 'pending'" :class="statusFilter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = 'pending'" :class="statusFilter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="h-7 px-3 rounded-md text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Pendentes
                         </button>
-                        <button @click="statusFilter = 'sent_whatsapp'" :class="statusFilter === 'sent_whatsapp' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = 'sent_whatsapp'" :class="statusFilter === 'sent_whatsapp' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="h-7 px-3 rounded-md text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Enviado Zap
                         </button>
-                        <button @click="statusFilter = 'sent_email'" :class="statusFilter === 'sent_email' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                        <button @click="statusFilter = 'sent_email'" :class="statusFilter === 'sent_email' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="h-7 px-3 rounded-md text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Enviado E-mail
                         </button>
                     </div>
@@ -228,7 +249,10 @@ const sendEmail = () => {
                                     </div>
                                 </td>
                                 <td class="px-3 py-2">
-                                    <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ client.product }}</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ client.product }}</span>
+                                        <span class="text-[9px] font-bold text-slate-400 mt-0.5">Contrato: {{ client.contract }}</span>
+                                    </div>
                                 </td>
                                 <td class="px-3 py-2">
                                     <span class="text-xs text-slate-700 dark:text-slate-300">{{ formatDate(client.date) }}</span>

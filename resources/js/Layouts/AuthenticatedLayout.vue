@@ -116,6 +116,10 @@ const toggleSidebar = () => {
                         </div>
                         
                         <div class="nav-sub-menu">
+                            <Link :href="route('sales.agendamentos.index')" class="nav-sub-item" :class="{ 'active': route().current('sales.agendamentos.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.agendamentos.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Agendamentos
+                            </Link>
                             <Link :href="route('sales.atendimentos')" class="nav-sub-item" :class="{ 'active': route().current('sales.atendimentos') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.atendimentos') ? 'opacity-100' : 'opacity-30'"></div>
                                 Atendimentos
