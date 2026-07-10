@@ -64,6 +64,7 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
             'observations' => 'nullable|string',
@@ -84,6 +85,38 @@ class ScheduleController extends Controller
         ]);
 
         $schedule->update(['status' => $validated['status']]);
+
+        if ($validated['status'] === 'show') {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($schedule) {
+                $client = \App\Models\Client::create([
+                    'nome' => $schedule->name,
+                    'celular1' => $schedule->phone ?: '00000000000',
+                    'email' => $schedule->email,
+                ]);
+
+                // Create associated address to prevent errors in Atendimentos queries
+                $client->address()->create([
+                    'cep' => '',
+                    'rua' => '',
+                    'bairro' => '',
+                    'numero' => '',
+                    'cidade' => '',
+                    'estado' => '',
+                ]);
+
+                $client->services()->create([
+                    'date' => $schedule->date,
+                    'time' => $schedule->time ?? '00:00',
+                    'clients' => $schedule->name,
+                    'local' => 'SALA',
+                    'status' => 'fila', // Using 'fila' instead of 'queue' to align with UI labels
+                    'qualification' => 'Q',
+                    'observacoes' => $schedule->observations,
+                ]);
+            });
+
+            return back()->with('success', 'Status atualizado e Ficha de Atendimento gerada na Fila!');
+        }
 
         return back()->with('success', 'Status atualizado com sucesso!');
     }

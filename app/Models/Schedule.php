@@ -9,6 +9,7 @@ class Schedule extends Model
     protected $fillable = [
         'name',
         'phone',
+        'email',
         'date',
         'time',
         'status',

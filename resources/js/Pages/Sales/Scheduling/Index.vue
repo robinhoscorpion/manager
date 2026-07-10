@@ -63,11 +63,36 @@ const getStatusBadge = (status) => {
     return badges[status] || badges['scheduled'];
 };
 
+const applyPhoneMask = (event) => {
+    let value = event.target.value.replace(/\D/g, ''); // Remove all non-digits
+    
+    if (value.length > 11) {
+        value = value.slice(0, 11);
+    }
+    
+    if (value.length > 10) {
+        // (XX) XXXXX-XXXX
+        value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 6) {
+        // (XX) XXXX-XXXX
+        value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+        // (XX) XXXX
+        value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+    } else if (value.length > 0) {
+        // (XX
+        value = value.replace(/^(\d{0,2})/, '($1');
+    }
+    
+    form.value.phone = value;
+};
+
 // Modal State
 const showNewModal = ref(false);
 const form = ref({
     name: '',
     phone: '',
+    email: '',
     date: today,
     time: '',
     observations: ''
@@ -75,7 +100,7 @@ const form = ref({
 const isSubmitting = ref(false);
 
 const openNewModal = () => {
-    form.value = { name: '', phone: '', date: today, time: '', observations: '' };
+    form.value = { name: '', phone: '', email: '', date: today, time: '', observations: '' };
     showNewModal.value = true;
 };
 
@@ -107,7 +132,7 @@ const updateStatus = (schedule, newStatus) => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-brand-green/10 text-brand-green flex items-center justify-center">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -119,7 +144,7 @@ const updateStatus = (schedule, newStatus) => {
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Gestão de visitas à Sala de Vendas</p>
                     </div>
                 </div>
-                <button @click="openNewModal" class="h-10 bg-indigo-600 text-white px-5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm">
+                <button @click="openNewModal" class="h-10 bg-brand-green text-white px-5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#485638] transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Novo Agendamento
                 </button>
@@ -135,7 +160,7 @@ const updateStatus = (schedule, newStatus) => {
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Hoje</p>
                         <h3 class="text-2xl font-black text-slate-900 dark:text-white">{{ metrics.today }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center">
+                    <div class="w-12 h-12 bg-brand-green/10 text-brand-green rounded-full flex items-center justify-center">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
                 </div>
@@ -170,7 +195,7 @@ const updateStatus = (schedule, newStatus) => {
                             <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                                 <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
-                            <input v-model="search" @keyup.enter="fetchFilteredData" type="text" placeholder="Buscar por nome/telefone..." class="w-full pl-7 pr-2 h-8 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-indigo-500/20 placeholder-slate-400">
+                            <input v-model="search" @keyup.enter="fetchFilteredData" type="text" placeholder="Buscar por nome/telefone..." class="w-full pl-7 pr-2 h-8 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400">
                         </div>
                         
                         <!-- Date Filter -->
@@ -184,7 +209,7 @@ const updateStatus = (schedule, newStatus) => {
                         </div>
                         
                         <!-- Search Button -->
-                        <button @click="fetchFilteredData" class="h-8 shrink-0 bg-indigo-600 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors flex items-center gap-1.5 shadow-sm">
+                        <button @click="fetchFilteredData" class="h-8 shrink-0 bg-brand-green text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#485638] transition-colors flex items-center gap-1.5 shadow-sm">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             Buscar
                         </button>
@@ -226,7 +251,7 @@ const updateStatus = (schedule, newStatus) => {
                             <tr v-for="schedule in schedules" :key="schedule.id" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="px-3 py-2">
                                     <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-xs">
+                                        <div class="w-6 h-6 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
                                             {{ schedule.name.charAt(0).toUpperCase() }}
                                         </div>
                                         <div class="flex flex-col">
@@ -238,7 +263,7 @@ const updateStatus = (schedule, newStatus) => {
                                 <td class="px-3 py-2">
                                     <div class="flex flex-col">
                                         <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">{{ formatDate(schedule.date) }}</span>
-                                        <span class="text-[9px] font-bold text-indigo-500">{{ formatTime(schedule.time) || '--:--' }}</span>
+                                        <span class="text-[9px] font-bold text-brand-green">{{ formatTime(schedule.time) || '--:--' }}</span>
                                     </div>
                                 </td>
                                 <td class="px-3 py-2 max-w-[200px] truncate">
@@ -250,24 +275,24 @@ const updateStatus = (schedule, newStatus) => {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <div class="flex items-center justify-end gap-1" v-if="schedule.status === 'scheduled'">
-                                        <button @click="updateStatus(schedule, 'confirmed')" class="px-2 py-1 rounded border border-blue-500/30 text-blue-500 hover:bg-blue-500 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors" title="Confirmar">
+                                    <div class="flex items-center justify-end gap-1.5" v-if="schedule.status === 'scheduled'">
+                                        <button @click="updateStatus(schedule, 'confirmed')" class="px-3 py-1.5 rounded-md bg-blue-500 text-white hover:bg-blue-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95" title="Confirmar Agendamento">
                                             Confirmar
                                         </button>
-                                        <button @click="updateStatus(schedule, 'cancelled')" class="px-2 py-1 rounded border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors" title="Cancelar">
+                                        <button @click="updateStatus(schedule, 'cancelled')" class="px-3 py-1.5 rounded-md bg-red-500 text-white hover:bg-red-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95" title="Cancelar Agendamento">
                                             Cancelar
                                         </button>
                                     </div>
-                                    <div class="flex items-center justify-end gap-1" v-else-if="schedule.status === 'confirmed'">
-                                        <button @click="updateStatus(schedule, 'show')" class="px-2 py-1 rounded border border-green-500/30 text-green-500 hover:bg-green-500 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors" title="Marcar Show">
+                                    <div class="flex items-center justify-end gap-1.5" v-else-if="schedule.status === 'confirmed'">
+                                        <button @click="updateStatus(schedule, 'show')" class="px-3 py-1.5 rounded-md bg-green-500 text-white hover:bg-green-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95" title="Marcar como Show (Compareceu)">
                                             Show
                                         </button>
-                                        <button @click="updateStatus(schedule, 'no_show')" class="px-2 py-1 rounded border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors" title="Marcar No-Show">
+                                        <button @click="updateStatus(schedule, 'no_show')" class="px-3 py-1.5 rounded-md bg-red-500 text-white hover:bg-red-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95" title="Marcar como No-Show (Faltou)">
                                             No-Show
                                         </button>
                                     </div>
-                                    <div v-else>
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Finalizado</span>
+                                    <div v-else class="flex items-center justify-end">
+                                        <span class="inline-flex h-7 items-center justify-center px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">Finalizado</span>
                                     </div>
                                 </td>
                             </tr>
@@ -286,7 +311,7 @@ const updateStatus = (schedule, newStatus) => {
         <Modal :show="showNewModal" @close="showNewModal = false" maxWidth="md">
             <div class="p-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 text-brand-green flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </div>
                     <div>
@@ -298,31 +323,35 @@ const updateStatus = (schedule, newStatus) => {
                 <div class="space-y-4">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nome do Cliente *</label>
-                        <input v-model="form.name" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-indigo-500/20" placeholder="Ex: João da Silva" required>
+                        <input v-model="form.name" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="Ex: João da Silva" required>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Telefone (WhatsApp)</label>
-                        <input v-model="form.phone" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-indigo-500/20" placeholder="(00) 00000-0000">
+                        <input v-model="form.phone" @input="applyPhoneMask" type="text" maxlength="15" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="(00) 00000-0000">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">E-mail (Opcional)</label>
+                        <input v-model="form.email" type="email" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="exemplo@email.com">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data *</label>
-                            <input v-model="form.date" type="date" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-indigo-500/20" required>
+                            <input v-model="form.date" type="date" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" required>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Horário</label>
-                            <input v-model="form.time" type="time" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-indigo-500/20">
+                            <input v-model="form.time" type="time" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20">
                         </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Observações (Opcional)</label>
-                        <textarea v-model="form.observations" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm p-3 focus:ring-indigo-500/20" placeholder="Ex: Casal com 2 filhos..."></textarea>
+                        <textarea v-model="form.observations" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm p-3 focus:ring-brand-green/20" placeholder="Ex: Casal com 2 filhos..."></textarea>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-2 mt-6">
                     <button @click="showNewModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-                    <button @click="submitNewSchedule" :disabled="isSubmitting || !form.name || !form.date" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50">
+                    <button @click="submitNewSchedule" :disabled="isSubmitting || !form.name || !form.date" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-green text-white hover:bg-[#485638] transition-colors flex items-center gap-2 disabled:opacity-50">
                         <span v-if="isSubmitting">Salvando...</span>
                         <span v-else>Salvar Agendamento</span>
                     </button>

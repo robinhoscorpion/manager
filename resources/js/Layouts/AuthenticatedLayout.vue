@@ -170,6 +170,10 @@ const toggleSidebar = () => {
                             </Link>
                             <Link href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
+                                Gestão de Contratos
+                            </Link>
+                            <Link href="#" class="nav-sub-item">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Onboarding
                             </Link>
                             <Link href="#" class="nav-sub-item">
