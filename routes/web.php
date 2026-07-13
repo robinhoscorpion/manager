@@ -110,12 +110,24 @@ Route::middleware('auth')->group(function () {
     Route::prefix('financeiro')->name('finance.')->group(function () {
         Route::get('/recebiveis', [\App\Http\Controllers\Finance\ReceivableController::class, 'index'])->name('receivables.index');
         Route::post('/recebiveis/bulk-pay', [\App\Http\Controllers\Finance\ReceivableController::class, 'bulkPayGlobal'])->name('receivables.bulk-pay');
+        
+        // Controle de Vendas (Auditoria)
+        Route::get('/controle-vendas', [\App\Http\Controllers\Finance\SalesControlController::class, 'index'])->name('sales-control.index');
+        Route::patch('/controle-vendas/{proposal}/audit', [\App\Http\Controllers\Finance\SalesControlController::class, 'auditProposal'])->name('sales-control.audit');
+        Route::patch('/controle-vendas/{proposal}/conciliation', [\App\Http\Controllers\Finance\SalesControlController::class, 'saveConciliation'])->name('sales-control.conciliation');
     });
 
     // Módulo Pós-venda
     Route::prefix('pos-venda')->name('after-sales.')->group(function () {
         Route::get('/boas-vindas', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'index'])->name('welcome.index');
         Route::patch('/boas-vindas/{salesService}/status', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'updateStatus'])->name('welcome.status.update');
+        
+        Route::get('/entrega-contrato', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'index'])->name('contract-delivery.index');
+        Route::patch('/entrega-contrato/{salesService}/status', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'updateStatus'])->name('contract-delivery.status.update');
+        Route::post('/entrega-contrato/{salesService}/upload', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'uploadSignedContract'])->name('contract-delivery.upload');
+        Route::get('/entrega-contrato/{salesService}/download', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'downloadContract'])->name('contract-delivery.download');
+
+        Route::get('/aniversariantes', [\App\Http\Controllers\AfterSales\BirthdayController::class, 'index'])->name('birthdays.index');
     });
 
     // Busca Global

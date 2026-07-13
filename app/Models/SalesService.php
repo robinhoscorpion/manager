@@ -45,6 +45,16 @@ class SalesService extends Model
         'renda_familiar',
         'cortesia',
         'observacoes',
+        'welcome_status',
+        'welcome_sent_at',
+        'welcome_sent_by',
+        'contract_delivery_status',
+        'contract_delivery_method',
+        'contract_delivered_at',
+        'contract_delivered_by',
+        'contract_signature_status',
+        'contract_signed_at',
+        'contract_file_path',
     ];
 
     public function client()

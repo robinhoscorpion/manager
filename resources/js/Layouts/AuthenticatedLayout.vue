@@ -42,6 +42,7 @@ const _configOpen = ref(false);
 watch(() => usePage().url, () => {
     if (route().current('sales.*')) salesRoomOpen.value = true;
     if (route().current('finance.*')) financeiroOpen.value = true;
+    if (route().current('after-sales.*')) posVendaOpen.value = true;
     if (route().current('admin.*')) _configOpen.value = true;
 }, { immediate: true });
 
@@ -146,6 +147,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.receivables.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Recebíveis
                             </Link>
+                            <Link :href="route('finance.sales-control.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.sales-control.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.sales-control.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Controle de Vendas
+                            </Link>
                         </div>
                     </div>
 
@@ -168,8 +173,8 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.welcome.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Boas-vindas
                             </Link>
-                            <Link href="#" class="nav-sub-item">
-                                <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
+                            <Link :href="route('after-sales.contract-delivery.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.contract-delivery.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.contract-delivery.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Gestão de Contratos
                             </Link>
                             <Link href="#" class="nav-sub-item">
@@ -180,10 +185,7 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Pendências documentais
                             </Link>
-                            <Link href="#" class="nav-sub-item">
-                                <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
-                                Entrega do contrato
-                            </Link>
+
                             <Link href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Treinamentos
@@ -196,8 +198,8 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Campanhas de relacionamento
                             </Link>
-                            <Link href="#" class="nav-sub-item">
-                                <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
+                            <Link :href="route('after-sales.birthdays.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.birthdays.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.birthdays.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Aniversariantes
                             </Link>
                         </div>
