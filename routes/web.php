@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/atendimentos/{service}/checklist/pdf', [\App\Http\Controllers\SalesServiceController::class, 'pdfChecklist'])->name('sales.atendimentos.checklist.pdf');
     Route::post('/atendimentos/{service}/protocols', [\App\Http\Controllers\ProtocolController::class, 'store'])->name('sales.atendimentos.protocols.store');
     Route::patch('/protocols/{protocol}/status', [\App\Http\Controllers\ProtocolController::class, 'updateStatus'])->name('sales.protocols.status.update');
+    Route::post('/protocols/bulk-update', [\App\Http\Controllers\ProtocolController::class, 'bulkUpdate'])->name('sales.protocols.bulk-update');
     Route::post('/protocols/{protocol}/replies', [\App\Http\Controllers\ProtocolReplyController::class, 'store'])->name('sales.protocols.replies.store');
     Route::get('/linha-atendimento', [ServiceLineController::class, 'index'])->name('sales.linha');
 
@@ -128,6 +129,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/entrega-contrato/{salesService}/download', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'downloadContract'])->name('contract-delivery.download');
 
         Route::get('/aniversariantes', [\App\Http\Controllers\AfterSales\BirthdayController::class, 'index'])->name('birthdays.index');
+        
+        Route::get('/protocolos', [\App\Http\Controllers\AfterSales\ProtocolController::class, 'index'])->name('protocols.index');
     });
 
     // Busca Global

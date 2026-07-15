@@ -177,6 +177,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.contract-delivery.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Gestão de Contratos
                             </Link>
+                            <Link :href="route('after-sales.protocols.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.protocols.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.protocols.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Protocolos
+                            </Link>
                             <Link href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Onboarding

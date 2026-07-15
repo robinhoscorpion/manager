@@ -55,4 +55,30 @@ class ProtocolController extends Controller
             'success' => 'Status do protocolo atualizado com sucesso!',
         ]);
     }
+
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'protocol_ids' => 'required|array|min:1',
+            'protocol_ids.*' => 'exists:protocols,id',
+            'action' => 'required|string|in:status,priority',
+            'value' => 'required|string',
+        ]);
+
+        if ($validated['action'] === 'status' && !in_array($validated['value'], ['aberto', 'em_andamento', 'fechado'])) {
+            return back()->withErrors(['value' => 'Status inválido.']);
+        }
+
+        if ($validated['action'] === 'priority' && !in_array($validated['value'], ['baixa', 'media', 'alta', 'urgente'])) {
+            return back()->withErrors(['value' => 'Prioridade inválida.']);
+        }
+
+        Protocol::whereIn('id', $validated['protocol_ids'])->update([
+            $validated['action'] => $validated['value'],
+        ]);
+
+        return redirect()->back()->with([
+            'success' => count($validated['protocol_ids']) . ' protocolos atualizados com sucesso!',
+        ]);
+    }
 }
