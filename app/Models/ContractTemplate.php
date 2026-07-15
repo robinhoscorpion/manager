@@ -14,6 +14,8 @@ class ContractTemplate extends Model
         'name',
         'content',
         'is_default',
+        'file_path',
+        'original_filename',
     ];
 
     protected $casts = [

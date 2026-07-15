@@ -30,6 +30,7 @@ const form = useForm({
     content: '',
     is_default: false,
     product_ids: [],
+    file: null,
 });
 
 const openCreateModal = () => {
@@ -44,6 +45,7 @@ const openEditModal = (item) => {
     form.content = item.content || '';
     form.is_default = !!item.is_default;
     form.product_ids = item.products ? item.products.map(p => p.id) : [];
+    form.file = null;
     showEditModal.value = true;
 };
 
@@ -57,14 +59,14 @@ const parsedPreviewContent = computed(() => {
     let html = previewItem.value.content || '';
     
     const mockData = {
-        '[NOME_TITULAR]': 'João Carlos da Silva',
-        '[CPF]': '123.456.789-00',
-        '[DATA]': new Date().toLocaleDateString('pt-BR'),
-        '[PRODUTO]': 'Cota Resort GTR (Fração A-102)',
-        '[VALOR_TOTAL]': 'R$ 45.000,00',
-        '[ENTRADA]': 'R$ 5.000,00',
-        '[PARCELAS]': '48x de R$ 833,33',
-        '[LOCAL]': 'Resort Principal (Mesa 05)',
+        '${NOME_TITULAR}': 'João Carlos da Silva',
+        '${CPF}': '123.456.789-00',
+        '${DATA}': new Date().toLocaleDateString('pt-BR'),
+        '${PRODUTO}': 'Cota Resort GTR (Fração A-102)',
+        '${VALOR_TOTAL}': 'R$ 45.000,00',
+        '${ENTRADA}': 'R$ 5.000,00',
+        '${PARCELAS}': '48x de R$ 833,33',
+        '${LOCAL}': 'Resort Principal (Mesa 05)',
     };
 
     for (const [tag, value] of Object.entries(mockData)) {
@@ -76,8 +78,12 @@ const parsedPreviewContent = computed(() => {
 });
 
 const submit = () => {
+    // Para envio de arquivo no método PUT, no Inertia usamos POST com _method
     if (editingItem.value) {
-        form.put(route('admin.contract_templates.update', editingItem.value.id), {
+        form.transform((data) => ({
+            ...data,
+            _method: 'put',
+        })).post(route('admin.contract_templates.update', editingItem.value.id), {
             onSuccess: () => closeModal(),
         });
     } else {
@@ -141,100 +147,104 @@ const closeModal = () => {
                 </div>
 
                 <!-- Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 pb-12">
                     <div 
                         v-for="item in templates" 
                         :key="item.id"
-                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl group hover:border-brand-green/30 dark:hover:border-brand-green/30 transition-all overflow-hidden flex flex-col shadow-sm hover:shadow-md relative"
+                        class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 rounded-2xl group hover:border-brand-green/50 dark:hover:border-brand-green/50 transition-all duration-500 overflow-hidden flex flex-col shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_30px_-4px_rgba(72,86,56,0.15)] dark:hover:shadow-[0_8px_30px_-4px_rgba(72,86,56,0.25)] relative hover:-translate-y-1"
                     >
+                        <!-- Glow Effect on Hover -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-brand-green/0 to-brand-green/5 dark:from-brand-green/0 dark:to-brand-green/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
                         <!-- Ribbon for Default -->
-                        <div v-if="item.is_default" class="absolute top-0 right-0 z-10 overflow-hidden w-20 h-20">
-                            <div class="bg-brand-green text-[8px] font-black uppercase tracking-widest text-white px-8 py-1 rotate-45 translate-x-[15px] translate-y-[10px] shadow-sm text-center">
+                        <div v-if="item.is_default" class="absolute top-0 right-0 z-10 overflow-hidden w-24 h-24 pointer-events-none">
+                            <div class="bg-gradient-to-r from-brand-green to-[#5c6e46] text-[9px] font-black uppercase tracking-[0.2em] text-white px-8 py-1.5 rotate-45 translate-x-[22px] translate-y-[16px] shadow-lg text-center">
                                 Global
                             </div>
                         </div>
 
-                        <div class="p-6 space-y-4 flex-1">
-                            <div class="flex justify-between items-start relative z-20">
-                                <div class="flex flex-col gap-2">
-                                    <div class="flex items-center gap-3 text-left">
-                                        <div class="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center text-xs font-black text-brand-green bg-brand-green/10 border border-brand-green/20 uppercase shadow-sm group-hover:scale-105 transition-transform">
-                                            CNTR
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <span 
-                                                class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest w-fit border"
-                                                :class="item.is_default ? 'bg-brand-green/10 text-brand-green border-brand-green/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'"
-                                            >
-                                                {{ item.is_default ? 'Padrão Geral' : 'Específico' }}
-                                            </span>
-                                            <span class="text-[9px] font-bold text-slate-400 line-clamp-1 uppercase tracking-widest">Contrato / Jurídico</span>
-                                        </div>
-                                    </div>
+                        <div class="p-6 flex flex-col flex-1 relative z-20">
+                            <!-- Header (Icon + Title) -->
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="relative w-12 h-12 flex-shrink-0 rounded-[14px] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                                    <svg v-if="item.original_filename" class="w-6 h-6 text-blue-500 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11v6m-3-3h6"/></svg>
+                                    <svg v-else class="w-6 h-6 text-brand-green drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 </div>
-                                <div class="flex gap-1">
-                                    <button v-if="item.content" @click="openPreview(item)" class="text-slate-400 hover:text-brand-green p-1.5 transition-colors rounded-md hover:bg-brand-green/10" title="Visualizar">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
-                                    <button @click="openEditModal(item)" class="text-slate-400 hover:text-brand-green p-1.5 transition-colors rounded-md hover:bg-brand-green/10" title="Editar">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
-                                    <button @click="deleteItem(item.id)" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-500/10" title="Remover">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
+                                <div class="flex flex-col pt-1">
+                                    <span 
+                                        class="text-[9px] font-black uppercase tracking-widest mb-1"
+                                        :class="item.is_default ? 'text-brand-green' : 'text-slate-400'"
+                                    >
+                                        {{ item.is_default ? 'Padrão Global' : 'Específico' }}
+                                    </span>
+                                    <h3 class="text-slate-900 dark:text-white font-bold text-lg tracking-tight line-clamp-2 leading-tight">{{ item.name }}</h3>
                                 </div>
                             </div>
                             
-                            <div class="text-left mt-2">
-                                <h3 class="text-slate-900 dark:text-white font-bold text-lg tracking-tight group-hover:text-brand-green transition-colors line-clamp-2 leading-tight min-h-[3rem]">{{ item.name }}</h3>
-                            </div>
-
-                            <div v-if="item.content" class="flex items-center gap-2 px-3 py-2 bg-brand-green/5 border border-brand-green/10 rounded-lg text-center justify-center">
-                                <svg class="w-3.5 h-3.5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                <span class="text-[9px] font-black text-brand-green uppercase tracking-widest italic">Texto Jurídico Definido</span>
-                            </div>
-
-                            <div v-if="!item.is_default && item.products?.length" class="space-y-1.5">
-                                <div class="flex items-center gap-1.5">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-brand-green"></div>
-                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Produtos Vinculados ({{ item.products.length }})</span>
+                            <div class="flex-1 space-y-4">
+                                <!-- Source Indicator -->
+                                <div v-if="item.original_filename || item.content" 
+                                     class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50"
+                                >
+                                    <div class="w-6 h-6 rounded flex items-center justify-center shrink-0" :class="item.original_filename ? 'bg-blue-100/50 text-blue-600' : 'bg-brand-green/10 text-brand-green'">
+                                        <svg v-if="item.original_filename" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{{ item.original_filename ? 'Arquivo Word' : 'Editor Interno' }}</span>
+                                        <span class="text-[11px] font-semibold truncate text-slate-700 dark:text-slate-300">{{ item.original_filename || 'Texto HTML' }}</span>
+                                    </div>
                                 </div>
-                                <div class="flex flex-wrap gap-1.5">
-                                    <span 
-                                        v-for="p in item.products.slice(0, 3)" 
-                                        :key="p.id"
-                                        class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[8px] font-bold text-slate-500 uppercase tracking-tighter"
-                                    >
-                                        {{ p.name }}
-                                    </span>
-                                    <span v-if="item.products.length > 3" class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-                                        + {{ item.products.length - 3 }} mais
-                                    </span>
+
+                                <!-- Products -->
+                                <div v-if="!item.is_default && item.products?.length" class="space-y-2">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Vinculado a ({{ item.products.length }}) Produtos</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <span 
+                                            v-for="p in item.products.slice(0, 3)" 
+                                            :key="p.id"
+                                            class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-tight"
+                                        >
+                                            {{ p.name }}
+                                        </span>
+                                        <span v-if="item.products.length > 3" class="px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 text-[9px] font-semibold text-slate-400 uppercase tracking-tight">
+                                            +{{ item.products.length - 3 }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="px-6 pb-6 mt-auto relative z-20">
-                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-500">Aplicação</span>
-                                    <span class="text-[9px] font-black uppercase text-brand-green tracking-widest">
-                                        {{ item.is_default ? 'Todos os Produtos' : 'Opcional p/ Produto' }}
-                                    </span>
-                                </div>
-                            </div>
+                        <!-- Footer Actions -->
+                        <div class="mt-auto border-t border-slate-100 dark:border-slate-800/60 p-3 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-1 relative z-20">
+                            <!-- Download Word Document -->
+                            <a v-if="item.original_filename" :href="route('admin.contract_templates.download', item.id)" target="_blank" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Baixar / Visualizar Word">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                            <!-- Preview HTML Document -->
+                            <button v-else-if="item.content" @click="openPreview(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Visualizar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+
+                            <button @click="openEditModal(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Editar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button @click="deleteItem(item.id)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="Remover">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Placeholder -->
+                    <!-- Add New Placeholder -->
                     <button 
                         @click="openCreateModal"
-                        class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl h-full min-h-[200px] flex flex-col items-center justify-center p-8 group hover:border-brand-green/30 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                        class="bg-transparent border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl h-full min-h-[280px] flex flex-col items-center justify-center p-8 group hover:border-brand-green hover:bg-brand-green/5 dark:hover:bg-brand-green/10 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                     >
-                        <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-brand-green/10 transition-colors mb-3">
-                            <svg class="w-6 h-6 text-slate-400 group-hover:text-brand-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <div class="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center group-hover:bg-brand-green group-hover:border-brand-green transition-colors duration-300 mb-4 group-hover:scale-110 group-hover:rotate-3">
+                            <svg class="w-8 h-8 text-slate-400 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-brand-green transition-colors">Novo Modelo de Contrato</p>
+                        <p class="text-sm font-bold text-slate-600 dark:text-slate-400 group-hover:text-brand-green transition-colors">Cadastrar Novo Modelo</p>
+                        <p class="text-[10px] text-slate-400 mt-2 font-medium uppercase tracking-widest text-center">Inicie enviando um documento Word</p>
                     </button>
                 </div>
 
@@ -315,16 +325,39 @@ const closeModal = () => {
                         </div>
                     </div>
 
-                    <!-- Rich Text Editor -->
+                    <!-- Word Upload -->
                     <div class="space-y-1.5">
                         <div class="flex items-center justify-between px-1">
-                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Corpo do Contrato (HTML)</label>
-                            <span class="text-[9px] text-brand-green uppercase tracking-widest font-bold">Suporta Tags dinâmicas</span>
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Arquivo do Contrato (Word .docx)</label>
+                            <span class="text-[9px] text-brand-green uppercase tracking-widest font-bold">Mantém formatação original</span>
                         </div>
-                        <div class="rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                        <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer relative">
+                            <input 
+                                type="file" 
+                                accept=".docx" 
+                                @change="e => form.file = e.target.files[0]" 
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            >
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mb-2">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                </div>
+                                <p v-if="form.file" class="text-sm font-bold text-slate-900 dark:text-white">{{ form.file.name }}</p>
+                                <p v-else class="text-sm font-medium text-slate-500 dark:text-slate-400">Clique ou arraste um arquivo Word (.docx)</p>
+                                <p class="text-xs text-slate-400 mt-1" v-if="editingItem?.original_filename && !form.file">Arquivo atual: {{ editingItem.original_filename }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rich Text Editor (Optional Fallback) -->
+                    <div class="space-y-1.5 opacity-50 hover:opacity-100 transition-opacity mt-4">
+                        <div class="flex items-center justify-between px-1">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Corpo do Contrato (Opcional - Legado HTML)</label>
+                        </div>
+                        <div class="rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-64">
                             <HtmlCodeEditor 
                                 v-model="form.content" 
-                                :height="600" 
+                                :height="250" 
                             />
                         </div>
                     </div>
@@ -337,14 +370,14 @@ const closeModal = () => {
                         </div>
                         <p class="text-[11px] text-slate-600 dark:text-slate-400 mb-4 text-left">As tags abaixo serão substituídas pelos dados reais no momento da emissão.</p>
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[NOME_TITULAR]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[CPF]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[PRODUTO]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[VALOR_TOTAL]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[ENTRADA]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[PARCELAS]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[DATA]</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">[LOCAL]</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${NOME_TITULAR}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${CPF}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${PRODUTO}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${VALOR_TOTAL}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${ENTRADA}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${PARCELAS}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${DATA}</code>
+                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${LOCAL}</code>
                         </div>
                     </div>
 

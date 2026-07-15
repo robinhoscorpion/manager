@@ -26,7 +26,14 @@ class ContractTemplateController extends Controller
             'is_default' => 'boolean',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
+            'file' => 'nullable|file|mimes:docx|max:10240', // 10MB max
         ]);
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $validated['original_filename'] = $file->getClientOriginalName();
+            $validated['file_path'] = $file->store('contract_templates');
+        }
 
         if ($validated['is_default']) {
             ContractTemplate::where('is_default', true)->update(['is_default' => false]);
@@ -52,7 +59,19 @@ class ContractTemplateController extends Controller
             'is_default' => 'boolean',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
+            'file' => 'nullable|file|mimes:docx|max:10240',
         ]);
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $validated['original_filename'] = $file->getClientOriginalName();
+            $validated['file_path'] = $file->store('contract_templates');
+            
+            // Delete old file if exists
+            if ($contractTemplate->file_path) {
+                \Illuminate\Support\Facades\Storage::delete($contractTemplate->file_path);
+            }
+        }
 
         if ($validated['is_default']) {
             ContractTemplate::where('id', '!=', $contractTemplate->id)
@@ -84,8 +103,23 @@ class ContractTemplateController extends Controller
 
     public function destroy(ContractTemplate $contractTemplate)
     {
+        if ($contractTemplate->file_path) {
+            \Illuminate\Support\Facades\Storage::delete($contractTemplate->file_path);
+        }
         $contractTemplate->delete();
         return redirect()->back()->with('success', 'Modelo de contrato excluído com sucesso.');
+    }
+
+    public function download(ContractTemplate $contractTemplate)
+    {
+        if (!$contractTemplate->file_path || !\Illuminate\Support\Facades\Storage::exists($contractTemplate->file_path)) {
+            return abort(404, 'Arquivo Word não encontrado no servidor.');
+        }
+
+        return \Illuminate\Support\Facades\Storage::download(
+            $contractTemplate->file_path,
+            $contractTemplate->original_filename ?? 'modelo_de_contrato.docx'
+        );
     }
 
     public function uploadImage(Request $request)

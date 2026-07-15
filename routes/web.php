@@ -105,6 +105,7 @@ Route::middleware('auth')->group(function () {
 
     // Gestão de Modelos de Contrato
     Route::post('admin/contract-templates/upload-image', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'uploadImage'])->name('admin.contract_templates.upload_image');
+    Route::get('admin/contract-templates/{contractTemplate}/download', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'download'])->name('admin.contract_templates.download');
     Route::resource('admin/contract-templates', \App\Http\Controllers\Admin\ContractTemplateController::class)->names('admin.contract_templates');
 
     // Módulo Financeiro
