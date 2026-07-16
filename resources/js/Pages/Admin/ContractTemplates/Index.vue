@@ -4,6 +4,8 @@ import { useForm, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import HtmlCodeEditor from '@/Components/HtmlCodeEditor.vue';
+import axios from 'axios';
+import mammoth from 'mammoth';
 
 const props = defineProps({
     templates: Array,
@@ -24,6 +26,8 @@ const showEditModal = ref(false);
 const editingItem = ref(null);
 const showPreviewModal = ref(false);
 const previewItem = ref(null);
+const parsedPreviewContent = ref('');
+const isLoadingPreview = ref(false);
 
 const form = useForm({
     name: '',
@@ -49,15 +53,7 @@ const openEditModal = (item) => {
     showEditModal.value = true;
 };
 
-const openPreview = (item) => {
-    previewItem.value = item;
-    showPreviewModal.value = true;
-};
-
-const parsedPreviewContent = computed(() => {
-    if (!previewItem.value) return '';
-    let html = previewItem.value.content || '';
-    
+const processHtmlTags = (html) => {
     const mockData = {
         '${NOME_TITULAR}': 'João Carlos da Silva',
         '${CPF}': '123.456.789-00',
@@ -68,14 +64,41 @@ const parsedPreviewContent = computed(() => {
         '${PARCELAS}': '48x de R$ 833,33',
         '${LOCAL}': 'Resort Principal (Mesa 05)',
     };
-
     for (const [tag, value] of Object.entries(mockData)) {
         const highlightedValue = `<span style="background-color: #fffac7; border-bottom: 2px solid #fce05d; color: #854d0e; font-weight: 700; padding: 0 2px; border-radius: 2px;" title="Tag: ${tag}">${value}</span>`;
         html = html.split(tag).join(highlightedValue);
     }
-
     return html;
-});
+};
+
+const openPreview = async (item) => {
+    previewItem.value = item;
+    
+    if (item.original_filename) {
+        isLoadingPreview.value = true;
+        parsedPreviewContent.value = '';
+        showPreviewModal.value = true;
+        
+        try {
+            const response = await axios.get(route('admin.contract_templates.download', item.id), {
+                responseType: 'arraybuffer'
+            });
+            const result = await mammoth.convertToHtml({ arrayBuffer: response.data });
+            parsedPreviewContent.value = processHtmlTags(result.value);
+        } catch (error) {
+            console.error(error);
+            parsedPreviewContent.value = `<div class="text-center text-red-500 py-10">
+                <p>Erro ao carregar o documento Word para visualização na tela.</p>
+                <a href="${route('admin.contract_templates.download', item.id)}" class="underline mt-4 inline-block font-bold">Baixar Arquivo Original</a>
+            </div>`;
+        } finally {
+            isLoadingPreview.value = false;
+        }
+    } else {
+        parsedPreviewContent.value = processHtmlTags(item.content || '');
+        showPreviewModal.value = true;
+    }
+};
 
 const submit = () => {
     // Para envio de arquivo no método PUT, no Inertia usamos POST com _method
@@ -217,12 +240,8 @@ const closeModal = () => {
 
                         <!-- Footer Actions -->
                         <div class="mt-auto border-t border-slate-100 dark:border-slate-800/60 p-3 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-1 relative z-20">
-                            <!-- Download Word Document -->
-                            <a v-if="item.original_filename" :href="route('admin.contract_templates.download', item.id)" target="_blank" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Baixar / Visualizar Word">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </a>
-                            <!-- Preview HTML Document -->
-                            <button v-else-if="item.content" @click="openPreview(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Visualizar">
+                            <!-- Preview Document -->
+                            <button @click="openPreview(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Visualizar">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
 
@@ -402,16 +421,35 @@ const closeModal = () => {
                             <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ previewItem.name }}</h2>
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                {{ previewItem.name }}
+                                <span v-if="previewItem.original_filename" class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-600 font-bold uppercase tracking-wider border border-blue-200">Word</span>
+                            </h2>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Pré-visualização Jurídica</p>
                         </div>
                     </div>
-                    <button @click="showPreviewModal = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
+                    
+                    <div class="flex items-center gap-3">
+                        <a v-if="previewItem?.original_filename" :href="route('admin.contract_templates.download', previewItem.id)" class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Baixar Word
+                        </a>
+                        <button @click="showPreviewModal = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <!-- Browser Shell -->
-                <div class="p-12 overflow-y-auto flex-1 preview-content bg-white dark:bg-slate-50 text-slate-900" v-html="parsedPreviewContent"></div>
+                <div class="p-12 overflow-y-auto flex-1 preview-content bg-white dark:bg-slate-50 text-slate-900 min-h-[500px] relative">
+                    <div v-if="isLoadingPreview" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-10">
+                        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-brand-green mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-sm font-bold text-slate-600 animate-pulse">Renderizando Documento Word...</p>
+                    </div>
+                    <div v-html="parsedPreviewContent"></div>
+                </div>
             </div>
         </Modal>
     </AuthenticatedLayout>
