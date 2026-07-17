@@ -502,7 +502,7 @@ class SalesServiceController extends Controller
      */
     public function pdfProposta(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.proposalTemplate', 'proposal.payments', 'opcUser', 'closerUser']);
+        $service->load(['client.address', 'proposal.product.proposalTemplate', 'proposal.payments', 'opcUser', 'closerUser', 'linerUser']);
         
         $proposal = $service->proposal;
         if (!$proposal) {
@@ -592,29 +592,17 @@ class SalesServiceController extends Controller
             '${PROPOSTA_RESUMO_MANUTENCAO}' => $buildPaymentSummary('taxa_manutencao'),
 
             // Equipe
-            '${VENDEDOR_NOME}' => '', // Se houver campo vendedor
+            '${VENDEDOR_NOME}' => $service->closerUser?->name ?? '',
             '${PROMOTOR_NOME}' => $service->opcUser?->name ?? '',
-            '${CONSULTOR_NOME}' => '', // Consultor
-            '${SUPERVISOR_NOME}' => '', // Supervisor
-            '${GERENTE_NOME}' => '', // Gerente
+            '${CONSULTOR_NOME}' => $service->linerUser?->name ?? '',
+            '${SUPERVISOR_NOME}' => $service->closerUser?->name ?? '',
+            '${GERENTE_NOME}' => $service->closerUser?->name ?? '',
             '${DATA_ATUAL}' => date('d/m/Y'),
             '${HORA_ATUAL}' => date('H:i:s'),
             '${PROPOSTA_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
         
-        // Ajustando equipe pelo liner/closer se aplicável
-        if ($service->liner_id) {
-            $liner = \App\Models\User::find($service->liner_id);
-            $mockData['${CONSULTOR_NOME}'] = $liner ? $liner->name : '';
-        }
-        if ($service->closer_id) {
-            $closer = \App\Models\User::find($service->closer_id);
-            $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; 
-            $mockData['${SUPERVISOR_NOME}'] = $closer ? $closer->name : ''; 
-            $mockData['${VENDEDOR_NOME}'] = $closer ? $closer->name : ''; 
-        }
-
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
             $templateProcessor->setValue($cleanTag, $value);
@@ -655,7 +643,7 @@ class SalesServiceController extends Controller
      */
     public function pdfContrato(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.contractTemplate', 'proposal.payments', 'opcUser', 'closerUser']);
+        $service->load(['client.address', 'proposal.product.contractTemplate', 'proposal.payments', 'opcUser', 'closerUser', 'linerUser']);
         
         $proposal = $service->proposal;
         if (!$proposal) {
@@ -745,28 +733,17 @@ class SalesServiceController extends Controller
             '${PROPOSTA_RESUMO_MANUTENCAO}' => $buildPaymentSummary('taxa_manutencao'),
 
             // Equipe
-            '${VENDEDOR_NOME}' => '',
+            '${VENDEDOR_NOME}' => $service->closerUser?->name ?? '',
             '${PROMOTOR_NOME}' => $service->opcUser?->name ?? '',
-            '${CONSULTOR_NOME}' => '',
-            '${SUPERVISOR_NOME}' => '',
-            '${GERENTE_NOME}' => '',
+            '${CONSULTOR_NOME}' => $service->linerUser?->name ?? '',
+            '${SUPERVISOR_NOME}' => $service->closerUser?->name ?? '',
+            '${GERENTE_NOME}' => $service->closerUser?->name ?? '',
             '${DATA_ATUAL}' => date('d/m/Y'),
             '${HORA_ATUAL}' => date('H:i:s'),
             '${PROPOSTA_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
         
-        if ($service->liner_id) {
-            $liner = \App\Models\User::find($service->liner_id);
-            $mockData['${CONSULTOR_NOME}'] = $liner ? $liner->name : '';
-        }
-        if ($service->closer_id) {
-            $closer = \App\Models\User::find($service->closer_id);
-            $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; 
-            $mockData['${SUPERVISOR_NOME}'] = $closer ? $closer->name : ''; 
-            $mockData['${VENDEDOR_NOME}'] = $closer ? $closer->name : ''; 
-        }
-
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
             $templateProcessor->setValue($cleanTag, $value);
