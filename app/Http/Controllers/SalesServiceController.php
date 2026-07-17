@@ -195,9 +195,13 @@ class SalesServiceController extends Controller
                 // Cônjuge
                 'tem_conjuge' => $request->temConjuge,
                 'nome_conjuge' => $request->nomeConjuge,
+                'cpf_conjuge' => $request->cpfConjuge,
+                'rg_conjuge' => $request->rgConjuge,
+                'nacionalidade_conjuge' => $request->nacionalidadeConjuge,
                 'data_nascimento_conjuge' => $request->dataNascimentoConjuge,
                 'idade_conjuge' => $request->idadeConjuge, // Assuming 'idadeConjuge' is passed or calculated
                 'profissao_conjuge' => $request->profissaoConjuge,
+                'estado_civil_conjuge' => $request->estadoCivilConjuge,
                 
                 // Família
                 'quantidade_filhos' => $request->quantidadeFilhos,
@@ -263,9 +267,13 @@ class SalesServiceController extends Controller
                 'status' => $request->status,
                 'tem_conjuge' => $request->temConjuge,
                 'nome_conjuge' => $request->nomeConjuge,
+                'cpf_conjuge' => $request->cpfConjuge,
+                'rg_conjuge' => $request->rgConjuge,
+                'nacionalidade_conjuge' => $request->nacionalidadeConjuge,
                 'data_nascimento_conjuge' => $request->dataNascimentoConjuge,
                 'idade_conjuge' => $request->idadeConjuge,
                 'profissao_conjuge' => $request->profissaoConjuge,
+                'estado_civil_conjuge' => $request->estadoCivilConjuge,
                 'quantidade_filhos' => $request->quantidadeFilhos,
                 'tempo_juntos' => $request->tempoJuntos,
                 'renda_familiar' => $request->rendaFamiliar,

@@ -57,9 +57,13 @@ const form = ref({
     // Cônjuge
     temConjuge: false,
     nomeConjuge: '',
+    cpfConjuge: '',
+    rgConjuge: '',
+    nacionalidadeConjuge: 'Brasileira',
     dataNascimentoConjuge: '',
     idadeConjuge: '',
     profissaoConjuge: '',
+    estadoCivilConjuge: 'solteiro',
     
     // Família e Relação
     quantidadeFilhos: 0,
@@ -125,9 +129,13 @@ watch(() => props.initialData, (newVal) => {
         // Dados específicos do atendimento (Cônjuge/Família)
         form.value.temConjuge = !!newVal.tem_conjuge;
         form.value.nomeConjuge = newVal.nome_conjuge;
+        form.value.cpfConjuge = newVal.cpf_conjuge || '';
+        form.value.rgConjuge = newVal.rg_conjuge || '';
+        form.value.nacionalidadeConjuge = newVal.nacionalidade_conjuge || 'Brasileira';
         form.value.dataNascimentoConjuge = newVal.data_nascimento_conjuge;
         form.value.idadeConjuge = newVal.idade_conjuge;
         form.value.profissaoConjuge = newVal.profissao_conjuge;
+        form.value.estadoCivilConjuge = newVal.estado_civil_conjuge || 'solteiro';
         form.value.quantidadeFilhos = newVal.quantidade_filhos;
         form.value.tempoJuntos = newVal.tempo_juntos;
         form.value.rendaFamiliar = newVal.renda_familiar;
@@ -139,8 +147,8 @@ watch(() => props.initialData, (newVal) => {
             isEstrangeiro: false,
             nome: '', cpf: '', rg: '', nacionalidade: 'Brasileira', dataNascimento: '', idade: '', profissao: '', 
             estadoCivil: 'solteiro', celular1: '', celular2: '', email: '',
-            temConjuge: false, nomeConjuge: '', dataNascimentoConjuge: '', 
-            idadeConjuge: '', profissaoConjuge: '',
+            temConjuge: false, nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira',
+            dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: 'solteiro',
             quantidadeFilhos: 0, tempoJuntos: '', rendaFamiliar: '',
             cep: '', rua: '', bairro: '', numero: '', cidade: '', estado: '',
             complemento: '', pontoReferencia: '', cortesia: [], observacoes: '',
@@ -230,6 +238,9 @@ const onInputMask = (e, field, type) => {
     if (type === 'phone') form.value[field] = maskPhone(val);
     if (type === 'cep') form.value[field] = maskCEP(val);
     if (type === 'cpf') {
+        form.value[field] = form.value.isEstrangeiro ? val.toUpperCase() : maskCPF(val);
+    }
+    if (type === 'cpfConjuge') {
         form.value[field] = form.value.isEstrangeiro ? val.toUpperCase() : maskCPF(val);
     }
 };
@@ -466,14 +477,32 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <input v-model="form.nomeConjuge" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                                 <div class="h-[14px]"></div>
                             </div>
+                            <div class="col-span-12 sm:col-span-3 flex flex-col">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{{ form.isEstrangeiro ? 'Documento / Passaporte' : 'CPF (Opcional)' }}</label>
+                                <input :value="form.cpfConjuge" @input="onInputMask($event, 'cpfConjuge', 'cpfConjuge')" type="text" :placeholder="form.isEstrangeiro ? 'DOCUMENTO' : '000.000.000-00'" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
+                                <div class="h-[14px]"></div>
+                            </div>
+                            <div class="col-span-12 sm:col-span-3 flex flex-col">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">RG (Opcional)</label>
+                                <input v-model="form.rgConjuge" type="text" placeholder="RG" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
+                                <div class="h-[14px]"></div>
+                            </div>
                             <div class="col-span-6 sm:col-span-3 flex flex-col">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento</label>
                                 <input v-model="form.dataNascimentoConjuge" @change="calculateAge(form.dataNascimentoConjuge, 'idadeConjuge')" type="date" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                                 <div class="h-[14px]"></div>
                             </div>
-                            <div class="col-span-6 sm:col-span-3 flex flex-col">
+                            <div class="col-span-6 sm:col-span-2 flex flex-col">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Idade</label>
                                 <input v-model="form.idadeConjuge" type="number" readonly class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-brand-green font-bold text-sm shadow-sm opacity-80 cursor-not-allowed">
+                                <div class="h-[14px]"></div>
+                            </div>
+                            <div class="col-span-12 sm:col-span-4 flex flex-col">
+                                <SearchableSelect v-model="form.nacionalidadeConjuge" :options="nationalities" label="Nacionalidade" placeholder="SELECIONE" :disabled="isReadOnly" />
+                                <div class="h-[14px]"></div>
+                            </div>
+                            <div class="col-span-12 sm:col-span-3 flex flex-col">
+                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil" :disabled="isReadOnly" />
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
