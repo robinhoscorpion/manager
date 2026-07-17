@@ -502,7 +502,7 @@ class SalesServiceController extends Controller
      */
     public function pdfProposta(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.proposalTemplate', 'proposal.payments', 'opc', 'closer']);
+        $service->load(['client.address', 'proposal.product.proposalTemplate', 'proposal.payments', 'opcUser', 'closerUser']);
         
         $proposal = $service->proposal;
         if (!$proposal) {
@@ -593,7 +593,7 @@ class SalesServiceController extends Controller
 
             // Equipe
             '${VENDEDOR_NOME}' => '', // Se houver campo vendedor
-            '${PROMOTOR_NOME}' => $service->opc?->name ?? '',
+            '${PROMOTOR_NOME}' => $service->opcUser?->name ?? '',
             '${CONSULTOR_NOME}' => '', // Consultor
             '${SUPERVISOR_NOME}' => '', // Supervisor
             '${GERENTE_NOME}' => '', // Gerente
@@ -652,7 +652,7 @@ class SalesServiceController extends Controller
      */
     public function pdfContrato(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.contractTemplate', 'proposal.payments', 'opc', 'closer']);
+        $service->load(['client.address', 'proposal.product.contractTemplate', 'proposal.payments', 'opcUser', 'closerUser']);
         
         $proposal = $service->proposal;
         if (!$proposal) {
@@ -743,7 +743,7 @@ class SalesServiceController extends Controller
 
             // Equipe
             '${VENDEDOR_NOME}' => '',
-            '${PROMOTOR_NOME}' => $service->opc?->name ?? '',
+            '${PROMOTOR_NOME}' => $service->opcUser?->name ?? '',
             '${CONSULTOR_NOME}' => '',
             '${SUPERVISOR_NOME}' => '',
             '${GERENTE_NOME}' => '',
