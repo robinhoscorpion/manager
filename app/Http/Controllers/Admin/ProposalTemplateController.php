@@ -165,8 +165,7 @@ class ProposalTemplateController extends Controller
             $converter = new \NcJoes\OfficeConverter\OfficeConverter($tempPath, storage_path('app/temp'), 'soffice', false);
             $converter->convertTo($pdfFileName);
         } catch (\Exception $e) {
-            @unlink($tempPath);
-            return back()->with('error', 'Ocorreu um erro ao converter para PDF. Verifique se o LibreOffice está instalado e acessível no servidor. Detalhes: ' . $e->getMessage());
+            return response()->download($tempPath, $tempFileName)->deleteFileAfterSend(true);
         }
 
         @unlink($tempPath);
