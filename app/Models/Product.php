@@ -30,7 +30,9 @@ class Product extends Model
         'contract_format',
         'current_sequence',
         'proposal_template_id',
-        'contract_template_id'
+        'contract_template_id',
+        'category',
+        'package'
     ];
 
     public function productType()
