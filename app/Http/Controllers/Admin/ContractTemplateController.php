@@ -14,7 +14,7 @@ class ContractTemplateController extends Controller
     {
         return Inertia::render('Admin/ContractTemplates/Index', [
             'templates' => ContractTemplate::with('products')->orderBy('name')->get(),
-            'products' => Product::with('productType')->orderBy('product_type_id')->orderBy('name')->get(['id', 'name', 'product_type_id'])
+            'products' => Product::with('productType')->orderBy('product_type_id')->orderBy('name')->get(['id', 'name', 'product_type_id', 'category', 'package'])
         ]);
     }
 

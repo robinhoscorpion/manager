@@ -285,11 +285,14 @@ const closeModal = () => {
                                         <span 
                                             v-for="p in item.products.slice(0, 3)" 
                                             :key="p.id"
-                                            class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-tight"
+                                            class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-tight flex flex-col min-w-0"
                                         >
-                                            {{ p.name }}
+                                            <span class="truncate">{{ p.name }}</span>
+                                            <span v-if="p.category || p.package" class="text-[7.5px] text-slate-400 mt-0.5 truncate">
+                                                {{ [p.category, p.package].filter(Boolean).join(' / ') }}
+                                            </span>
                                         </span>
-                                        <span v-if="item.products.length > 3" class="px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 text-[9px] font-semibold text-slate-400 uppercase tracking-tight">
+                                        <span v-if="item.products.length > 3" class="px-2 py-1 flex items-center rounded bg-slate-50 dark:bg-slate-900 text-[9px] font-semibold text-slate-400 uppercase tracking-tight">
                                             +{{ item.products.length - 3 }}
                                         </span>
                                     </div>
@@ -396,14 +399,19 @@ const closeModal = () => {
                                             class="sr-only"
                                         >
                                         <div 
-                                            class="w-4 h-4 rounded border flex items-center justify-center transition-all bg-white dark:bg-slate-900"
+                                            class="w-4 h-4 rounded border flex items-center justify-center transition-all bg-white dark:bg-slate-900 shrink-0"
                                             :class="form.product_ids.includes(product.id) ? 'bg-brand-green border-brand-green' : 'border-slate-300 dark:border-slate-600'"
                                         >
                                             <svg v-if="form.product_ids.includes(product.id)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                         </div>
-                                        <span class="text-[9px] font-bold uppercase tracking-tight truncate flex-1" :class="form.product_ids.includes(product.id) ? 'text-slate-900 dark:text-white' : 'text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'">
-                                            {{ product.name }}
-                                        </span>
+                                        <div class="flex flex-col min-w-0 flex-1">
+                                            <span class="text-[9px] font-bold uppercase tracking-tight truncate w-full" :class="form.product_ids.includes(product.id) ? 'text-slate-900 dark:text-white' : 'text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'">
+                                                {{ product.name }}
+                                            </span>
+                                            <span v-if="product.category || product.package" class="text-[8px] text-slate-400 uppercase tracking-widest truncate w-full mt-0.5">
+                                                {{ [product.category, product.package].filter(Boolean).join(' / ') }}
+                                            </span>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
