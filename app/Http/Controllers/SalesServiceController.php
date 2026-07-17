@@ -502,7 +502,7 @@ class SalesServiceController extends Controller
      */
     public function pdfProposta(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.proposalTemplate']);
+        $service->load(['client.address', 'proposal.product.proposalTemplate', 'proposal.payments', 'opc', 'closer']);
         
         $proposal = $service->proposal;
         if (!$proposal) {
@@ -511,13 +511,21 @@ class SalesServiceController extends Controller
 
         $template = $proposal->product?->proposalTemplate;
         
-        // Se não houver template, podemos usar um padrão ou o primeiro ativo
+        // Se não houver template para o produto, tenta usar um ativo padrão
         if (!$template) {
             $template = \App\Models\ProposalTemplate::where('is_active', true)->first();
         }
 
-        if (!$template) {
-            abort(404, 'Nenhum modelo de proposta configurado no sistema.');
+        if (!$template || !$template->file_path || !\Illuminate\Support\Facades\Storage::exists($template->file_path)) {
+            return abort(404, 'Nenhum modelo de proposta em Word configurado no sistema ou o arquivo não foi encontrado.');
+        }
+
+        $filePath = \Illuminate\Support\Facades\Storage::path($template->file_path);
+
+        try {
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($filePath);
+        } catch (\Exception $e) {
+            return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
         }
 
         $client = $service->client;
@@ -534,54 +542,109 @@ class SalesServiceController extends Controller
             }
         };
 
-        $replacements = [
-            '[NOME_TITULAR]' => $client ? $client->nome : '',
-            '[DATA_NASCIMENTO]' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
-            '[CPF]' => $client ? $client->cpf : '',
-            '[EMAIL]' => $client ? $client->email : '',
-            '[CELULAR]' => $client ? $client->celular1 : '',
-            '[PROFISSAO]' => $client ? $client->profissao : '',
-            
-            // Cônjuge
-            '[NOME_CONJUGE]' => $service->nome_conjuge ?? '',
-            '[DATA_NASCIMENTO_CONJUGE]' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
-            '[PROFISSAO_CONJUGE]' => $service->profissao_conjuge ?? '',
-            
-            // Serviço
-            '[DATA]' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
-            '[HORA]' => $service->time ?? '',
-            '[LOCAL]' => $service->local ?? '',
-            '[OBSERVACOES]' => $service->observacoes ?? '',
-            '[ID_ATENDIMENTO]' => str_pad($service->id, 5, '0', STR_PAD_LEFT),
+        $buildPaymentSummary = function($category) use ($proposal) {
+            if (!$proposal || !$proposal->payments) return '';
+            $payments = $proposal->payments->where('category', $category);
+            if ($payments->isEmpty()) return '';
+            $lines = [];
+            foreach ($payments as $payment) {
+                $start = $payment->start_date ? \Carbon\Carbon::parse($payment->start_date)->format('d/m/Y') : 'A combinar';
+                $val = number_format($payment->installment_value, 2, ',', '.');
+                $lines[] = "{$payment->installments}x de R$ {$val} no {$payment->payment_method} (Início: {$start})";
+            }
+            return implode("\n + ", $lines);
+        };
 
-            // Proposta / Produto
-            '[PRODUTO_NOME]' => $proposal->product?->name ?? 'Produto não especificado',
-            '[VALOR_TOTAL]' => $proposal->total_value ? 'R$ ' . number_format($proposal->total_value, 2, ',', '.') : 'R$ 0,00',
-            '[QUANTIDADE]' => $proposal->quantity ?? '1',
-            '[METODO_PAGAMENTO]' => $proposal->payment_method ?? 'A combinar',
-            '[NUMERO_CONTRATO]' => $proposal->contract_number ?? 'S/N',
+        $mockData = [
+            '${CLIENTE_NOME}' => $client->nome ?? '',
+            '${CLIENTE_CPF}' => $client->cpf ?? '',
+            '${CLIENTE_RG}' => $client->rg ?? '',
+            '${CLIENTE_NASCIMENTO}' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
+            '${CLIENTE_ENDERECO}' => ($client && $client->address) ? "{$client->address->rua}, {$client->address->numero}, {$client->address->bairro}, {$client->address->cidade}/{$client->address->estado}, {$client->address->cep}" : '',
+            '${CLIENTE_ESTADO_CIVIL}' => $client->estado_civil ?? '',
+            '${CLIENTE_PROFISSAO}' => $client->profissao ?? '',
+            '${CLIENTE_NACIONALIDADE}' => $client->nacionalidade ?? '',
+            '${CLIENTE_EMAIL}' => $client->email ?? '',
+            '${CLIENTE_TELEFONE}' => $client->celular1 ?? '',
+            '${CLIENTE_CIDADE_UF}' => ($client && $client->address) ? "{$client->address->cidade} / {$client->address->estado}" : '',
+
+            '${CONJUNGE_NOME}' => $service->nome_conjuge ?? '',
+            '${CONJUNGE_CPF}' => '', // Não existe na tabela atual
+            '${CONJUNGE_RG}' => '',
+            '${CONJUNGE_NASCIMENTO}' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
+            '${CONJUNGE_ESTADO_CIVIL}' => '',
+            '${CONJUNGE_PROFISSAO}' => $service->profissao_conjuge ?? '',
+            '${CONJUNGE_NACIONALIDADE}' => '',
+
+            '${PROPOSTA_NUMERO}' => $proposal->contract_number ?? str_pad($proposal->id, 5, '0', STR_PAD_LEFT),
+            '${PROPOSTA_PLANO}' => $proposal->product?->name ?? '',
+            '${PROPOSTA_CATEGORIA}' => $proposal->product?->category ?? '',
+            '${PROPOSTA_PACOTE}' => $proposal->product?->package ?? '',
+            '${PROPOSTA_PONTOS}' => $proposal->product?->points ? "{$proposal->product->points} Pontos" : '',
+            '${PROPOSTA_USO_INICIAL}' => $proposal->initial_use ?? '',
+            '${PROPOSTA_VIGENCIA}' => $proposal->product?->validity ?? '',
+            '${PROPOSTA_VALOR_TOTAL}' => $proposal->total_value ? 'R$ ' . number_format($proposal->total_value, 2, ',', '.') : '',
+            '${PROPOSTA_ENTRADA}' => 'R$ ' . number_format($proposal->payments->where('category', 'entrada')->sum('total_value'), 2, ',', '.'),
+            '${PROPOSTA_RESUMO_ENTRADA}' => $buildPaymentSummary('entrada'),
+            '${PROPOSTA_SALDO}' => 'R$ ' . number_format($proposal->payments->where('category', 'saldo')->sum('total_value'), 2, ',', '.'),
+            '${PROPOSTA_RESUMO_SALDO}' => $buildPaymentSummary('saldo'),
+            '${PROPOSTA_RESUMO_TAXA}' => $buildPaymentSummary('taxa'),
+            '${PROPOSTA_RESUMO_MANUTENCAO}' => $buildPaymentSummary('manutencao'),
+
+            // Equipe
+            '${VENDEDOR_NOME}' => '', // Se houver campo vendedor
+            '${PROMOTOR_NOME}' => $service->opc?->name ?? '',
+            '${CONSULTOR_NOME}' => '', // Consultor
+            '${SUPERVISOR_NOME}' => '', // Supervisor
+            '${GERENTE_NOME}' => '', // Gerente
+            '${DATA_ATUAL}' => date('d/m/Y'),
+            '${HORA_ATUAL}' => date('H:i:s'),
+            '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
-
-        // Endereço
-        if ($client && $client->address) {
-            $addr = $client->address;
-            $replacements['[CEP]'] = $addr->cep ?? '';
-            $replacements['[RUA]'] = $addr->rua ?? '';
-            $replacements['[NUMERO]'] = $addr->numero ?? '';
-            $replacements['[BAIRRO]'] = $addr->bairro ?? '';
-            $replacements['[CIDADE]'] = $addr->cidade ?? '';
-            $replacements['[ESTADO]'] = $addr->estado ?? '';
+        
+        // Ajustando equipe pelo liner/closer se aplicável
+        if ($service->liner_id) {
+            $liner = \App\Models\User::find($service->liner_id);
+            $mockData['${CONSULTOR_NOME}'] = $liner ? $liner->name : '';
+        }
+        if ($service->closer_id) {
+            $closer = \App\Models\User::find($service->closer_id);
+            $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; // Exemplo de mapeamento
         }
 
-        $content = $template->content;
-        foreach ($replacements as $tag => $val) {
-            $content = str_replace($tag, $val, $content);
+        foreach ($mockData as $tag => $value) {
+            $cleanTag = str_replace(['${', '}'], '', $tag);
+            $templateProcessor->setValue($cleanTag, $value);
         }
 
-        return view('pdf.proposal', [
-            'service' => $service,
-            'content' => $content
-        ]);
+        $tempFileName = 'PROPOSTA_' . ($proposal->contract_number ?? $proposal->id) . '.docx';
+        $tempPath = storage_path('app/temp/' . $tempFileName);
+
+        if (!\Illuminate\Support\Facades\File::exists(storage_path('app/temp'))) {
+            \Illuminate\Support\Facades\File::makeDirectory(storage_path('app/temp'), 0755, true);
+        }
+
+        $templateProcessor->saveAs($tempPath);
+
+        // Convert to PDF
+        $pdfFileName = str_replace('.docx', '.pdf', $tempFileName);
+        $pdfPath = storage_path('app/temp/' . $pdfFileName);
+
+        try {
+            $converter = new \NcJoes\OfficeConverter\OfficeConverter($tempPath, storage_path('app/temp'), 'soffice', false);
+            $converter->convertTo($pdfFileName);
+        } catch (\Exception $e) {
+            @unlink($tempPath);
+            return back()->with('error', 'Ocorreu um erro ao converter para PDF. Verifique se o LibreOffice está instalado e acessível no servidor. Detalhes: ' . $e->getMessage());
+        }
+
+        @unlink($tempPath);
+
+        if (!\Illuminate\Support\Facades\File::exists($pdfPath)) {
+            return back()->with('error', 'Falha ao gerar o arquivo PDF.');
+        }
+
+        return response()->download($pdfPath, $pdfFileName)->deleteFileAfterSend(true);
     }
 
     /**
@@ -589,7 +652,7 @@ class SalesServiceController extends Controller
      */
     public function pdfContrato(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.contractTemplate']);
+        $service->load(['client.address', 'proposal.product.contractTemplate', 'proposal.payments', 'opc', 'closer']);
         
         $proposal = $service->proposal;
         if (!$proposal) {
@@ -603,8 +666,16 @@ class SalesServiceController extends Controller
             $template = \App\Models\ContractTemplate::where('is_default', true)->first();
         }
 
-        if (!$template) {
-            abort(404, 'Nenhum modelo de contrato (específico ou global) configurado no sistema.');
+        if (!$template || !$template->file_path || !\Illuminate\Support\Facades\Storage::exists($template->file_path)) {
+            return abort(404, 'Nenhum modelo de contrato (específico ou global) configurado no sistema ou o arquivo não foi encontrado.');
+        }
+
+        $filePath = \Illuminate\Support\Facades\Storage::path($template->file_path);
+
+        try {
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($filePath);
+        } catch (\Exception $e) {
+            return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
         }
 
         $client = $service->client;
@@ -621,51 +692,108 @@ class SalesServiceController extends Controller
             }
         };
 
-        $replacements = [
-            '[NOME_TITULAR]' => $client ? $client->nome : '',
-            '[DATA_NASCIMENTO]' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
-            '[CPF]' => $client ? $client->cpf : '-',
-            '[EMAIL]' => $client ? $client->email : '',
-            '[CELULAR]' => $client ? $client->celular1 : '',
-            '[PROFISSAO]' => $client ? $client->profissao : '',
-            
-            // Cônjuge
-            '[NOME_CONJUGE]' => $service->nome_conjuge ?? '',
-            '[DATA_NASCIMENTO_CONJUGE]' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
-            '[PROFISSAO_CONJUGE]' => $service->profissao_conjuge ?? '',
-            
-            // Serviço
-            '[DATA]' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
-            '[HORA]' => $service->time ?? '',
-            '[LOCAL]' => $service->local ?? '',
-            '[ID_ATENDIMENTO]' => str_pad($service->id, 5, '0', STR_PAD_LEFT),
+        $buildPaymentSummary = function($category) use ($proposal) {
+            if (!$proposal || !$proposal->payments) return '';
+            $payments = $proposal->payments->where('category', $category);
+            if ($payments->isEmpty()) return '';
+            $lines = [];
+            foreach ($payments as $payment) {
+                $start = $payment->start_date ? \Carbon\Carbon::parse($payment->start_date)->format('d/m/Y') : 'A combinar';
+                $val = number_format($payment->installment_value, 2, ',', '.');
+                $lines[] = "{$payment->installments}x de R$ {$val} no {$payment->payment_method} (Início: {$start})";
+            }
+            return implode("\n + ", $lines);
+        };
 
-            // Proposta / Produto
-            '[PRODUTO_NOME]' => $proposal->product?->name ?? 'Produto não especificado',
-            '[VALOR_TOTAL]' => $proposal->total_value ? 'R$ ' . number_format($proposal->total_value, 2, ',', '.') : 'R$ 0,00',
-            '[NUMERO_CONTRATO]' => $proposal->contract_number ?? 'S/N',
+        $mockData = [
+            '${CLIENTE_NOME}' => $client->nome ?? '',
+            '${CLIENTE_CPF}' => $client->cpf ?? '',
+            '${CLIENTE_RG}' => $client->rg ?? '',
+            '${CLIENTE_NASCIMENTO}' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
+            '${CLIENTE_ENDERECO}' => ($client && $client->address) ? "{$client->address->rua}, {$client->address->numero}, {$client->address->bairro}, {$client->address->cidade}/{$client->address->estado}, {$client->address->cep}" : '',
+            '${CLIENTE_ESTADO_CIVIL}' => $client->estado_civil ?? '',
+            '${CLIENTE_PROFISSAO}' => $client->profissao ?? '',
+            '${CLIENTE_NACIONALIDADE}' => $client->nacionalidade ?? '',
+            '${CLIENTE_EMAIL}' => $client->email ?? '',
+            '${CLIENTE_TELEFONE}' => $client->celular1 ?? '',
+            '${CLIENTE_CIDADE_UF}' => ($client && $client->address) ? "{$client->address->cidade} / {$client->address->estado}" : '',
+
+            '${CONJUNGE_NOME}' => $service->nome_conjuge ?? '',
+            '${CONJUNGE_CPF}' => '', 
+            '${CONJUNGE_RG}' => '',
+            '${CONJUNGE_NASCIMENTO}' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
+            '${CONJUNGE_ESTADO_CIVIL}' => '',
+            '${CONJUNGE_PROFISSAO}' => $service->profissao_conjuge ?? '',
+            '${CONJUNGE_NACIONALIDADE}' => '',
+
+            '${PROPOSTA_NUMERO}' => $proposal->contract_number ?? str_pad($proposal->id, 5, '0', STR_PAD_LEFT),
+            '${PROPOSTA_PLANO}' => $proposal->product?->name ?? '',
+            '${PROPOSTA_CATEGORIA}' => $proposal->product?->category ?? '',
+            '${PROPOSTA_PACOTE}' => $proposal->product?->package ?? '',
+            '${PROPOSTA_PONTOS}' => $proposal->product?->points ? "{$proposal->product->points} Pontos" : '',
+            '${PROPOSTA_USO_INICIAL}' => $proposal->initial_use ?? '',
+            '${PROPOSTA_VIGENCIA}' => $proposal->product?->validity ?? '',
+            '${PROPOSTA_VALOR_TOTAL}' => $proposal->total_value ? 'R$ ' . number_format($proposal->total_value, 2, ',', '.') : '',
+            '${PROPOSTA_ENTRADA}' => 'R$ ' . number_format($proposal->payments->where('category', 'entrada')->sum('total_value'), 2, ',', '.'),
+            '${PROPOSTA_RESUMO_ENTRADA}' => $buildPaymentSummary('entrada'),
+            '${PROPOSTA_SALDO}' => 'R$ ' . number_format($proposal->payments->where('category', 'saldo')->sum('total_value'), 2, ',', '.'),
+            '${PROPOSTA_RESUMO_SALDO}' => $buildPaymentSummary('saldo'),
+            '${PROPOSTA_RESUMO_TAXA}' => $buildPaymentSummary('taxa'),
+            '${PROPOSTA_RESUMO_MANUTENCAO}' => $buildPaymentSummary('manutencao'),
+
+            // Equipe
+            '${VENDEDOR_NOME}' => '',
+            '${PROMOTOR_NOME}' => $service->opc?->name ?? '',
+            '${CONSULTOR_NOME}' => '',
+            '${SUPERVISOR_NOME}' => '',
+            '${GERENTE_NOME}' => '',
+            '${DATA_ATUAL}' => date('d/m/Y'),
+            '${HORA_ATUAL}' => date('H:i:s'),
+            '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
-
-        // Endereço
-        if ($client && $client->address) {
-            $addr = $client->address;
-            $replacements['[CEP]'] = $addr->cep ?? '';
-            $replacements['[RUA]'] = $addr->rua ?? '';
-            $replacements['[NUMERO]'] = $addr->numero ?? '';
-            $replacements['[BAIRRO]'] = $addr->bairro ?? '';
-            $replacements['[CIDADE]'] = $addr->cidade ?? '';
-            $replacements['[ESTADO]'] = $addr->estado ?? '';
+        
+        if ($service->liner_id) {
+            $liner = \App\Models\User::find($service->liner_id);
+            $mockData['${CONSULTOR_NOME}'] = $liner ? $liner->name : '';
+        }
+        if ($service->closer_id) {
+            $closer = \App\Models\User::find($service->closer_id);
+            $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; 
         }
 
-        $content = $template->content;
-        foreach ($replacements as $tag => $val) {
-            $content = str_replace($tag, $val, $content);
+        foreach ($mockData as $tag => $value) {
+            $cleanTag = str_replace(['${', '}'], '', $tag);
+            $templateProcessor->setValue($cleanTag, $value);
         }
 
-        return view('pdf.contract', [
-            'service' => $service,
-            'content' => $content
-        ]);
+        $tempFileName = 'CONTRATO_' . ($proposal->contract_number ?? $proposal->id) . '.docx';
+        $tempPath = storage_path('app/temp/' . $tempFileName);
+
+        if (!\Illuminate\Support\Facades\File::exists(storage_path('app/temp'))) {
+            \Illuminate\Support\Facades\File::makeDirectory(storage_path('app/temp'), 0755, true);
+        }
+
+        $templateProcessor->saveAs($tempPath);
+
+        // Convert to PDF
+        $pdfFileName = str_replace('.docx', '.pdf', $tempFileName);
+        $pdfPath = storage_path('app/temp/' . $pdfFileName);
+
+        try {
+            $converter = new \NcJoes\OfficeConverter\OfficeConverter($tempPath, storage_path('app/temp'), 'soffice', false);
+            $converter->convertTo($pdfFileName);
+        } catch (\Exception $e) {
+            @unlink($tempPath);
+            return back()->with('error', 'Ocorreu um erro ao converter para PDF. Verifique se o LibreOffice está instalado e acessível no servidor. Detalhes: ' . $e->getMessage());
+        }
+
+        @unlink($tempPath);
+
+        if (!\Illuminate\Support\Facades\File::exists($pdfPath)) {
+            return back()->with('error', 'Falha ao gerar o arquivo PDF.');
+        }
+
+        return response()->download($pdfPath, $pdfFileName)->deleteFileAfterSend(true);
     }
 
     /**
