@@ -222,6 +222,7 @@ class ProposalTemplateController extends Controller
             '${GERENTE_NOME}' => 'Ana Beatriz',
             '${DATA_ATUAL}' => date('d/m/Y'),
             '${HORA_ATUAL}' => date('H:i:s'),
+            '${PROPOSTA_DATA}' => date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
     }

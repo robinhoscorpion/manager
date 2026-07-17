@@ -599,6 +599,7 @@ class SalesServiceController extends Controller
             '${GERENTE_NOME}' => '', // Gerente
             '${DATA_ATUAL}' => date('d/m/Y'),
             '${HORA_ATUAL}' => date('H:i:s'),
+            '${PROPOSTA_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
         
@@ -609,7 +610,9 @@ class SalesServiceController extends Controller
         }
         if ($service->closer_id) {
             $closer = \App\Models\User::find($service->closer_id);
-            $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; // Exemplo de mapeamento
+            $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; 
+            $mockData['${SUPERVISOR_NOME}'] = $closer ? $closer->name : ''; 
+            $mockData['${VENDEDOR_NOME}'] = $closer ? $closer->name : ''; 
         }
 
         foreach ($mockData as $tag => $value) {
@@ -749,6 +752,7 @@ class SalesServiceController extends Controller
             '${GERENTE_NOME}' => '',
             '${DATA_ATUAL}' => date('d/m/Y'),
             '${HORA_ATUAL}' => date('H:i:s'),
+            '${PROPOSTA_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
         
@@ -759,6 +763,8 @@ class SalesServiceController extends Controller
         if ($service->closer_id) {
             $closer = \App\Models\User::find($service->closer_id);
             $mockData['${GERENTE_NOME}'] = $closer ? $closer->name : ''; 
+            $mockData['${SUPERVISOR_NOME}'] = $closer ? $closer->name : ''; 
+            $mockData['${VENDEDOR_NOME}'] = $closer ? $closer->name : ''; 
         }
 
         foreach ($mockData as $tag => $value) {
