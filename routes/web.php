@@ -100,12 +100,16 @@ Route::middleware('auth')->group(function () {
     Route::resource('admin/complimentary-items', \App\Http\Controllers\Admin\ComplimentaryItemController::class)->names('admin.complimentary_items');
 
     // Gestão de Modelos de Proposta
-    Route::post('admin/proposal-templates/upload-image', [\App\Http\Controllers\Admin\ProposalTemplateController::class, 'uploadImage'])->name('admin.proposal_templates.upload_image');
+    Route::get('admin/proposal-templates/{proposalTemplate}/download', [\App\Http\Controllers\Admin\ProposalTemplateController::class, 'download'])->name('admin.proposal_templates.download');
+    Route::get('admin/proposal-templates/{proposalTemplate}/test-print', [\App\Http\Controllers\Admin\ProposalTemplateController::class, 'testPrint'])->name('admin.proposal_templates.test_print');
+    Route::get('admin/proposal-templates/{proposalTemplate}/download-pdf', [\App\Http\Controllers\Admin\ProposalTemplateController::class, 'downloadPdf'])->name('admin.proposal_templates.download_pdf');
     Route::resource('admin/proposal-templates', \App\Http\Controllers\Admin\ProposalTemplateController::class)->names('admin.proposal_templates');
 
     // Gestão de Modelos de Contrato
     Route::post('admin/contract-templates/upload-image', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'uploadImage'])->name('admin.contract_templates.upload_image');
     Route::get('admin/contract-templates/{contractTemplate}/download', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'download'])->name('admin.contract_templates.download');
+    Route::get('admin/contract-templates/{contractTemplate}/test-print', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'testPrint'])->name('admin.contract_templates.test_print');
+    Route::get('admin/contract-templates/{contractTemplate}/download-pdf', [\App\Http\Controllers\Admin\ContractTemplateController::class, 'downloadPdf'])->name('admin.contract_templates.download_pdf');
     Route::resource('admin/contract-templates', \App\Http\Controllers\Admin\ContractTemplateController::class)->names('admin.contract_templates');
 
     // Módulo Financeiro

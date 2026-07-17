@@ -122,12 +122,142 @@ class ContractTemplateController extends Controller
         );
     }
 
-    public function uploadImage(Request $request)
+    public function testPrint(ContractTemplate $contractTemplate)
     {
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/contracts/images');
-            return response()->json(['url' => \Storage::url($path)]);
+        if (!$contractTemplate->file_path || !\Illuminate\Support\Facades\Storage::exists($contractTemplate->file_path)) {
+            return abort(404, 'Arquivo Word não encontrado no servidor.');
         }
-        return response()->json(['error' => 'No image uploaded'], 400);
+
+        $filePath = \Illuminate\Support\Facades\Storage::path($contractTemplate->file_path);
+        
+        try {
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($filePath);
+        } catch (\Exception $e) {
+            return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
+        }
+
+        $mockData = $this->getMockData();
+
+        foreach ($mockData as $tag => $value) {
+            // Remove the ${ and } from the tag since TemplateProcessor works with variables without braces
+            $cleanTag = str_replace(['${', '}'], '', $tag);
+            
+            // Cria um TextRun com o valor e fundo amarelo para destacar
+            $textRun = new \PhpOffice\PhpWord\Element\TextRun();
+            $textRun->addText($value, ['bgColor' => 'FFFF00']);
+            
+            $templateProcessor->setComplexValue($cleanTag, $textRun);
+        }
+
+        $tempFileName = 'TESTE_' . ($contractTemplate->original_filename ?? 'modelo_de_contrato.docx');
+        $tempPath = storage_path('app/temp/' . $tempFileName);
+        
+        if (!\Illuminate\Support\Facades\File::exists(storage_path('app/temp'))) {
+            \Illuminate\Support\Facades\File::makeDirectory(storage_path('app/temp'), 0755, true);
+        }
+        
+        $templateProcessor->saveAs($tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
+
+    public function downloadPdf(ContractTemplate $contractTemplate)
+    {
+        if (!$contractTemplate->file_path || !\Illuminate\Support\Facades\Storage::exists($contractTemplate->file_path)) {
+            return abort(404, 'Arquivo Word não encontrado no servidor.');
+        }
+
+        $filePath = \Illuminate\Support\Facades\Storage::path($contractTemplate->file_path);
+        
+        try {
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($filePath);
+        } catch (\Exception $e) {
+            return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
+        }
+
+        $mockData = $this->getMockData();
+
+        foreach ($mockData as $tag => $value) {
+            $cleanTag = str_replace(['${', '}'], '', $tag);
+            $textRun = new \PhpOffice\PhpWord\Element\TextRun();
+            $textRun->addText($value, ['bgColor' => 'FFFF00']);
+            $templateProcessor->setComplexValue($cleanTag, $textRun);
+        }
+
+        $tempFileName = 'TESTE_' . ($contractTemplate->original_filename ?? 'modelo_de_contrato.docx');
+        $tempPath = storage_path('app/temp/' . $tempFileName);
+        
+        if (!\Illuminate\Support\Facades\File::exists(storage_path('app/temp'))) {
+            \Illuminate\Support\Facades\File::makeDirectory(storage_path('app/temp'), 0755, true);
+        }
+        
+        $templateProcessor->saveAs($tempPath);
+
+        // Convert to PDF
+        $pdfFileName = str_replace('.docx', '.pdf', $tempFileName);
+        $pdfPath = storage_path('app/temp/' . $pdfFileName);
+        
+        try {
+            $converter = new \NcJoes\OfficeConverter\OfficeConverter($tempPath, storage_path('app/temp'), 'soffice', false);
+            $converter->convertTo($pdfFileName);
+        } catch (\Exception $e) {
+            @unlink($tempPath);
+            return back()->with('error', 'Ocorreu um erro ao converter para PDF. Verifique se o LibreOffice está instalado e acessível no servidor. Detalhes: ' . $e->getMessage());
+        }
+        
+        @unlink($tempPath);
+
+        if (!\Illuminate\Support\Facades\File::exists($pdfPath)) {
+            return back()->with('error', 'Falha ao gerar o arquivo PDF.');
+        }
+
+        return response()->download($pdfPath, $pdfFileName)->deleteFileAfterSend(true);
+    }
+
+    private function getMockData(): array
+    {
+        return [
+            '${CLIENTE_NOME}' => 'João Carlos da Silva',
+            '${CLIENTE_CPF}' => '123.456.789-00',
+            '${CLIENTE_RG}' => '12.345.678-9',
+            '${CLIENTE_NASCIMENTO}' => '15/04/1985',
+            '${CLIENTE_ENDERECO}' => 'Av. Paulista, 1000, Apto 2, Centro, São Paulo/SP, 01310-100',
+            '${CLIENTE_ESTADO_CIVIL}' => 'Casado(a)',
+            '${CLIENTE_PROFISSAO}' => 'Engenheiro',
+            '${CLIENTE_NACIONALIDADE}' => 'Brasileiro(a)',
+            '${CLIENTE_EMAIL}' => 'joao@email.com',
+            '${CLIENTE_TELEFONE}' => '(11) 98765-4321',
+            '${CLIENTE_CIDADE_UF}' => 'São Paulo / SP',
+
+            '${CONJUNGE_NOME}' => 'Maria Oliveira da Silva',
+            '${CONJUNGE_CPF}' => '987.654.321-00',
+            '${CONJUNGE_RG}' => '98.765.432-1',
+            '${CONJUNGE_NASCIMENTO}' => '20/10/1988',
+            '${CONJUNGE_ESTADO_CIVIL}' => 'Casada',
+            '${CONJUNGE_PROFISSAO}' => 'Arquiteta',
+            '${CONJUNGE_NACIONALIDADE}' => 'Brasileira',
+
+            '${CONTRATO_PLANO}' => 'Premium Plus',
+            '${CONTRATO_CATEGORIA}' => 'Exclusive',
+            '${CONTRATO_PACOTE}' => '7 Noites',
+            '${CONTRATO_NUMERO}' => '2026/001',
+            '${CONTRATO_PONTOS}' => '150.000 Pontos',
+            '${CONTRATO_VALOR_TOTAL}' => 'R$ 45.000,00',
+            '${CONTRATO_ENTRADA}' => 'R$ 5.000,00',
+            '${CONTRATO_DATA_ENTRADA}' => '16/07/2026',
+            '${CONTRATO_SALDO}' => 'R$ 40.000,00',
+            '${CONTRATO_DATA_SALDO}' => '16/08/2026',
+            '${CONTRATO_FORMA_PAGAMENTO_ENTRADA}' => 'PIX',
+            '${CONTRATO_FORMA_PAGAMENTO_SALDO}' => 'Boleto Bancário',
+            '${CONTRATO_FORMA_PAGAMENTO}' => 'Cartão de Crédito',
+            '${CONTRATO_TAXA}' => 'R$ 250,00',
+            '${CONTRATO_TAXA_MANUTENCAO}' => 'R$ 1.200,00',
+            '${CONTRATO_DATA}' => date('d/m/Y'),
+            '${CONTRATO_DATA_EXTENSO}' => date('d') . ' de ' . \Carbon\Carbon::now()->locale('pt_BR')->translatedFormat('F') . ' de ' . date('Y'),
+            '${CONTRATO_VIGENCIA}' => '5 (cinco) anos',
+
+            '${EMPRESA_EMAIL}' => 'contato@itacare.com.br',
+            '${EMPRESA_WHATSAPP}' => '(73) 9999-8888',
+        ];
     }
 }

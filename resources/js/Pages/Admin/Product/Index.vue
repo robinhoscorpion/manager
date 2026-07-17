@@ -77,9 +77,22 @@ const submit = () => {
     }
 };
 
-const deleteProduct = (id) => {
-    if (confirm('Tem certeza que deseja remover este produto?')) {
-        form.delete(route('admin.products.destroy', id));
+const showDeleteConfirmModal = ref(false);
+const itemToDelete = ref(null);
+
+const confirmDelete = (product) => {
+    itemToDelete.value = product;
+    showDeleteConfirmModal.value = true;
+};
+
+const executeDelete = () => {
+    if (itemToDelete.value) {
+        form.delete(route('admin.products.destroy', itemToDelete.value.id), {
+            onSuccess: () => {
+                showDeleteConfirmModal.value = false;
+                itemToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -110,6 +123,14 @@ const quantityLabel = computed(() => {
     if (typeName.includes('diária') || typeName.includes('diaria')) return 'Qtd./Diárias';
     if (typeName.includes('cota')) return 'Nº Cotas';
     return 'Quantidade';
+});
+
+const contractNumberPreview = computed(() => {
+    let prefix = form.contract_prefix || 'PREFIX';
+    let seq = form.current_sequence || '100';
+    if (form.contract_format === 'prefix_sep_seq') return `${prefix}-${seq}`;
+    if (form.contract_format === 'prefix_seq') return `${prefix}${seq}`;
+    return `${seq}`;
 });
 
 </script>
@@ -191,7 +212,7 @@ const quantityLabel = computed(() => {
                                     <button @click="openEditModal(product)" class="text-slate-400 hover:text-brand-green p-1.5 transition-colors rounded-md hover:bg-brand-green/10">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
-                                    <button @click="deleteProduct(product.id)" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
+                                    <button @click="confirmDelete(product)" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
                                 </div>
@@ -342,21 +363,35 @@ const quantityLabel = computed(() => {
                                 </select>
                                 <p class="text-[10px] text-slate-500 mt-1 px-1">* Se não informado, o sistema utilizará o contrato marcado como "Global Padrão".</p>
                             </div>
-                            <div class="col-span-1 sm:col-span-2 space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Formato do Número de Contrato</label>
-                                <select v-model="form.contract_format" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
-                                    <option value="prefix_sep_seq">Prefixo-Seq (35-100)</option>
-                                    <option value="prefix_seq">PrefixoSeq (35100)</option>
-                                    <option value="seq_only">Apenas Sequencial (100)</option>
-                                </select>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Prefixo</label>
-                                <input v-model="form.contract_prefix" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: 35">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Seq. Inicial</label>
-                                <input v-model="form.current_sequence" type="number" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                            <div class="col-span-1 sm:col-span-2 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-4">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+                                    <h4 class="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 tracking-wider">Configuração de Numeração</h4>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="space-y-1.5 sm:col-span-2">
+                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Formato do Número</label>
+                                        <select v-model="form.contract_format" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                            <option value="prefix_sep_seq">Prefixo e Hífen (Ex: VIP-100)</option>
+                                            <option value="prefix_seq">Prefixo Junto (Ex: VIP100)</option>
+                                            <option value="seq_only">Apenas Sequencial (Ex: 100)</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-1.5" :class="{'opacity-50 pointer-events-none': form.contract_format === 'seq_only'}">
+                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Prefixo (Ex: VIP, P01)</label>
+                                        <input v-model="form.contract_prefix" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Opcional">
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Seq. Inicial (Ex: 1)</label>
+                                        <input v-model="form.current_sequence" type="number" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                    </div>
+                                </div>
+
+                                <div class="mt-2 bg-white dark:bg-[#0f1219] rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-3 flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pré-visualização:</span>
+                                    <span class="text-sm font-black text-brand-green tracking-wider">{{ contractNumberPreview }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -370,6 +405,39 @@ const quantityLabel = computed(() => {
                         </button>
                     </div>
                 </form>
+            </div>
+        </Modal>
+
+        <!-- Delete Confirmation Modal -->
+        <Modal :show="showDeleteConfirmModal" @close="showDeleteConfirmModal = false" maxWidth="md">
+            <div class="p-6 bg-white dark:bg-[#0f1219]">
+                <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-5 border-4 border-red-100 dark:border-red-500/20">
+                    <svg class="w-8 h-8 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                
+                <h3 class="text-xl font-black text-slate-900 dark:text-white text-center mb-2 tracking-tight">
+                    Excluir Produto?
+                </h3>
+                
+                <p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 px-4 leading-relaxed">
+                    Você está prestes a excluir o produto <br>
+                    <strong class="text-slate-700 dark:text-slate-300">"{{ itemToDelete?.name }}"</strong>. <br>
+                    <span class="text-red-500 font-bold block mt-3">Esta ação não pode ser desfeita.</span>
+                </p>
+
+                <div class="flex gap-3 w-full">
+                    <button @click="showDeleteConfirmModal = false" class="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all shadow-sm">
+                        Cancelar
+                    </button>
+                    <button @click="executeDelete" :disabled="form.processing" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
+                        <svg v-if="form.processing" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        {{ form.processing ? 'Excluindo...' : 'Sim, excluir' }}
+                    </button>
+                </div>
             </div>
         </Modal>
     </AuthenticatedLayout>

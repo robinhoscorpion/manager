@@ -1,11 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import HtmlCodeEditor from '@/Components/HtmlCodeEditor.vue';
 import axios from 'axios';
-import mammoth from 'mammoth';
+import * as docx from 'docx-preview';
 
 const props = defineProps({
     templates: Array,
@@ -27,11 +26,13 @@ const editingItem = ref(null);
 const showPreviewModal = ref(false);
 const previewItem = ref(null);
 const parsedPreviewContent = ref('');
+const docxContainer = ref(null);
 const isLoadingPreview = ref(false);
+const showDeleteConfirmModal = ref(false);
+const itemToDelete = ref(null);
 
 const form = useForm({
     name: '',
-    content: '',
     is_default: false,
     product_ids: [],
     file: null,
@@ -46,7 +47,6 @@ const openCreateModal = () => {
 const openEditModal = (item) => {
     editingItem.value = item;
     form.name = item.name;
-    form.content = item.content || '';
     form.is_default = !!item.is_default;
     form.product_ids = item.products ? item.products.map(p => p.id) : [];
     form.file = null;
@@ -55,14 +55,47 @@ const openEditModal = (item) => {
 
 const processHtmlTags = (html) => {
     const mockData = {
-        '${NOME_TITULAR}': 'João Carlos da Silva',
-        '${CPF}': '123.456.789-00',
-        '${DATA}': new Date().toLocaleDateString('pt-BR'),
-        '${PRODUTO}': 'Cota Resort GTR (Fração A-102)',
-        '${VALOR_TOTAL}': 'R$ 45.000,00',
-        '${ENTRADA}': 'R$ 5.000,00',
-        '${PARCELAS}': '48x de R$ 833,33',
-        '${LOCAL}': 'Resort Principal (Mesa 05)',
+        '${CLIENTE_NOME}': 'João Carlos da Silva',
+        '${CLIENTE_NACIONALIDADE}': 'Brasileiro(a)',
+        '${CLIENTE_ESTADO_CIVIL}': 'Casado(a)',
+        '${CLIENTE_PROFISSAO}': 'Engenheiro',
+        '${CLIENTE_CPF}': '123.456.789-00',
+        '${CLIENTE_RG}': '12.345.678-9',
+        '${CLIENTE_NASCIMENTO}': '15/04/1985',
+        '${CLIENTE_ENDERECO}': 'Av. Paulista, 1000, Bela Vista, São Paulo, SP',
+        '${CLIENTE_EMAIL}': 'joao@email.com',
+        '${CLIENTE_TELEFONE}': '(11) 98765-4321',
+        '${CLIENTE_CIDADE_UF}': 'São Paulo / SP',
+
+        '${CONJUNGE_NOME}': 'Maria Oliveira da Silva',
+        '${CONJUNGE_NACIONALIDADE}': 'Brasileira',
+        '${CONJUNGE_ESTADO_CIVIL}': 'Casada',
+        '${CONJUNGE_PROFISSAO}': 'Arquiteta',
+        '${CONJUNGE_CPF}': '987.654.321-00',
+        '${CONJUNGE_RG}': '98.765.432-1',
+        '${CONJUNGE_NASCIMENTO}': '20/10/1988',
+
+        '${CONTRATO_PLANO}': 'Premium Plus',
+        '${CONTRATO_CATEGORIA}': 'Exclusive',
+        '${CONTRATO_PACOTE}': '7 Noites',
+        '${CONTRATO_NUMERO}': '2026/001',
+        '${CONTRATO_PONTOS}': '150.000 Pontos',
+        '${CONTRATO_VALOR_TOTAL}': 'R$ 45.000,00',
+        '${CONTRATO_ENTRADA}': 'R$ 5.000,00',
+        '${CONTRATO_DATA_ENTRADA}': '16/07/2026',
+        '${CONTRATO_SALDO}': 'R$ 40.000,00',
+        '${CONTRATO_DATA_SALDO}': '16/08/2026',
+        '${CONTRATO_FORMA_PAGAMENTO_ENTRADA}': 'PIX',
+        '${CONTRATO_FORMA_PAGAMENTO_SALDO}': 'Boleto Bancário',
+        '${CONTRATO_FORMA_PAGAMENTO}': 'Cartão de Crédito',
+        '${CONTRATO_TAXA}': 'R$ 250,00',
+        '${CONTRATO_TAXA_MANUTENCAO}': 'R$ 1.200,00',
+        '${CONTRATO_DATA}': new Date().toLocaleDateString('pt-BR'),
+        '${CONTRATO_DATA_EXTENSO}': '16 de Julho de 2026',
+        '${CONTRATO_VIGENCIA}': '5 (cinco) anos',
+
+        '${EMPRESA_EMAIL}': 'contato@itacare.com.br',
+        '${EMPRESA_WHATSAPP}': '(73) 9999-8888',
     };
     for (const [tag, value] of Object.entries(mockData)) {
         const highlightedValue = `<span style="background-color: #fffac7; border-bottom: 2px solid #fce05d; color: #854d0e; font-weight: 700; padding: 0 2px; border-radius: 2px;" title="Tag: ${tag}">${value}</span>`;
@@ -80,16 +113,32 @@ const openPreview = async (item) => {
         showPreviewModal.value = true;
         
         try {
-            const response = await axios.get(route('admin.contract_templates.download', item.id), {
+            // Usa a rota test_print para já trazer o Word com os dados substituídos, mostrando a formatação exata.
+            const response = await axios.get(route('admin.contract_templates.test_print', item.id), {
                 responseType: 'arraybuffer'
             });
-            const result = await mammoth.convertToHtml({ arrayBuffer: response.data });
-            parsedPreviewContent.value = processHtmlTags(result.value);
+            
+            await nextTick();
+            if (docxContainer.value) {
+                docxContainer.value.innerHTML = ''; // Limpa antes de renderizar
+                await docx.renderAsync(response.data, docxContainer.value, null, {
+                    className: 'docx', // Default className
+                    inWrapper: true,
+                    ignoreWidth: true,
+                    ignoreHeight: false,
+                    ignoreFonts: false,
+                    breakPages: true,
+                    ignoreLastRenderedPageBreak: true,
+                    experimental: true,
+                    trimXmlDeclaration: true,
+                    debug: false,
+                });
+            }
         } catch (error) {
             console.error(error);
             parsedPreviewContent.value = `<div class="text-center text-red-500 py-10">
                 <p>Erro ao carregar o documento Word para visualização na tela.</p>
-                <a href="${route('admin.contract_templates.download', item.id)}" class="underline mt-4 inline-block font-bold">Baixar Arquivo Original</a>
+                <a href="${route('admin.contract_templates.test_print', item.id)}" class="underline mt-4 inline-block font-bold">Baixar Arquivo Original</a>
             </div>`;
         } finally {
             isLoadingPreview.value = false;
@@ -116,9 +165,19 @@ const submit = () => {
     }
 };
 
-const deleteItem = (id) => {
-    if (confirm('Tem certeza que deseja remover este modelo de contrato?')) {
-        form.delete(route('admin.contract_templates.destroy', id));
+const confirmDelete = (item) => {
+    itemToDelete.value = item;
+    showDeleteConfirmModal.value = true;
+};
+
+const executeDelete = () => {
+    if (itemToDelete.value) {
+        form.delete(route('admin.contract_templates.destroy', itemToDelete.value.id), {
+            onSuccess: () => {
+                showDeleteConfirmModal.value = false;
+                itemToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -240,15 +299,22 @@ const closeModal = () => {
 
                         <!-- Footer Actions -->
                         <div class="mt-auto border-t border-slate-100 dark:border-slate-800/60 p-3 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-1 relative z-20">
-                            <!-- Preview Document -->
-                            <button @click="openPreview(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Visualizar">
+                            <button @click="openPreview(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-brand-green hover:bg-brand-green/10 transition-colors" title="Visualizar HTML">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
+
+                            <a v-if="item.original_filename" :href="route('admin.contract_templates.test_print', item.id)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors" title="Testar Impressão (Baixar Word com tags preenchidas)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                            
+                            <a v-if="item.original_filename" :href="route('admin.contract_templates.download_pdf', item.id)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="Gerar PDF (Exige LibreOffice no Servidor)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 13l2-2 2 2m-2-2v6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
 
                             <button @click="openEditModal(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Editar">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
-                            <button @click="deleteItem(item.id)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="Remover">
+                            <button @click="confirmDelete(item)" class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="Remover">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                         </div>
@@ -368,35 +434,82 @@ const closeModal = () => {
                         </div>
                     </div>
 
-                    <!-- Rich Text Editor (Optional Fallback) -->
-                    <div class="space-y-1.5 opacity-50 hover:opacity-100 transition-opacity mt-4">
-                        <div class="flex items-center justify-between px-1">
-                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Corpo do Contrato (Opcional - Legado HTML)</label>
-                        </div>
-                        <div class="rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-64">
-                            <HtmlCodeEditor 
-                                v-model="form.content" 
-                                :height="250" 
-                            />
-                        </div>
-                    </div>
-
                     <!-- Magic Tags Cheatsheet -->
                     <div class="bg-brand-green/5 border border-brand-green/10 rounded-xl p-5 shadow-sm">
                         <div class="flex items-center gap-2 mb-2">
-                            <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <h4 class="text-xs font-bold uppercase text-slate-900 dark:text-white tracking-wider">Tags Jurídicas Disponíveis</h4>
+                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <h3 class="font-bold text-slate-800 dark:text-slate-200">Tags Mágicas Disponíveis</h3>
                         </div>
-                        <p class="text-[11px] text-slate-600 dark:text-slate-400 mb-4 text-left">As tags abaixo serão substituídas pelos dados reais no momento da emissão.</p>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${NOME_TITULAR}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${CPF}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${PRODUTO}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${VALOR_TOTAL}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${ENTRADA}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${PARCELAS}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${DATA}</code>
-                            <code class="px-2 py-2 bg-white dark:bg-slate-800 text-brand-green border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-mono font-medium shadow-sm select-all text-center">${LOCAL}</code>
+                        <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">Substitua as informações do seu Word pelas tags abaixo. O sistema as preencherá automaticamente. <br>Exemplo: troque <span class="font-mono bg-slate-100 dark:bg-slate-800 rounded px-1">[Nome completo]</span> por <span class="font-mono text-brand-green bg-brand-green/10 rounded px-1 font-bold">${CLIENTE_NOME}</span>.</p>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6 mt-4">
+                            <!-- Titular -->
+                            <div>
+                                <h4 class="text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-3 border-b-2 border-brand-green/30 pb-2 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    Titular
+                                </h4>
+                                <ul class="text-[10px] text-slate-600 dark:text-slate-400 font-mono flex flex-col">
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_NOME}</span> <span class="font-sans text-slate-400 truncate pl-2">João Carlos da Silva</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_CPF}</span> <span class="font-sans text-slate-400 truncate pl-2">123.456.789-00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_RG}</span> <span class="font-sans text-slate-400 truncate pl-2">12.345.678-9</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_NASCIMENTO}</span> <span class="font-sans text-slate-400 truncate pl-2">15/04/1985</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_ESTADO_CIVIL}</span> <span class="font-sans text-slate-400 truncate pl-2">Casado(a)</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_PROFISSAO}</span> <span class="font-sans text-slate-400 truncate pl-2">Engenheiro</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_NACIONALIDADE}</span> <span class="font-sans text-slate-400 truncate pl-2">Brasileiro(a)</span></li>
+                                    <li class="flex flex-col p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_ENDERECO}</span> <span class="font-sans text-slate-400 text-[9px] mt-1 leading-tight">Av. Paulista, 1000, Apto 2, Centro, SP, 01310-100</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_CIDADE_UF}</span> <span class="font-sans text-slate-400 truncate pl-2">São Paulo / SP</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_TELEFONE}</span> <span class="font-sans text-slate-400 truncate pl-2">(11) 98765-4321</span></li>
+                                    <li class="flex items-center justify-between p-2 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CLIENTE_EMAIL}</span> <span class="font-sans text-slate-400 truncate pl-2">joao@email.com</span></li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Cônjuge -->
+                            <div>
+                                <h4 class="text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-3 border-b-2 border-brand-green/30 pb-2 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                    Cônjuge
+                                </h4>
+                                <ul class="text-[10px] text-slate-600 dark:text-slate-400 font-mono flex flex-col">
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_NOME}</span> <span class="font-sans text-slate-400 truncate pl-2">Maria O. da Silva</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_CPF}</span> <span class="font-sans text-slate-400 truncate pl-2">987.654.321-00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_RG}</span> <span class="font-sans text-slate-400 truncate pl-2">98.765.432-1</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_NASCIMENTO}</span> <span class="font-sans text-slate-400 truncate pl-2">20/10/1988</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_ESTADO_CIVIL}</span> <span class="font-sans text-slate-400 truncate pl-2">Casada</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_PROFISSAO}</span> <span class="font-sans text-slate-400 truncate pl-2">Arquiteta</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONJUNGE_NACIONALIDADE}</span> <span class="font-sans text-slate-400 truncate pl-2">Brasileira</span></li>
+                                </ul>
+                            </div>
+
+                            <!-- Contrato -->
+                            <div>
+                                <h4 class="text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-3 border-b-2 border-brand-green/30 pb-2 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    Dados do Contrato
+                                </h4>
+                                <ul class="text-[10px] text-slate-600 dark:text-slate-400 font-mono flex flex-col">
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_NUMERO}</span> <span class="font-sans text-slate-400 truncate pl-2">2026/001</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_PLANO}</span> <span class="font-sans text-slate-400 truncate pl-2">Premium Plus</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_CATEGORIA}</span> <span class="font-sans text-slate-400 truncate pl-2">Exclusive</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_PACOTE}</span> <span class="font-sans text-slate-400 truncate pl-2">7 Noites</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_PONTOS}</span> <span class="font-sans text-slate-400 truncate pl-2">150.000 Pontos</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_VALOR_TOTAL}</span> <span class="font-sans text-slate-400 truncate pl-2">R$ 45.000,00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_ENTRADA}</span> <span class="font-sans text-slate-400 truncate pl-2">R$ 5.000,00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_DATA_ENTRADA}</span> <span class="font-sans text-slate-400 truncate pl-2">16/07/2026</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_SALDO}</span> <span class="font-sans text-slate-400 truncate pl-2">R$ 40.000,00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_DATA_SALDO}</span> <span class="font-sans text-slate-400 truncate pl-2">16/08/2026</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_FORMA_PAGAMENTO}</span> <span class="font-sans text-slate-400 truncate pl-2">Cartão</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_FORMA_PAGAMENTO_ENTRADA}</span> <span class="font-sans text-slate-400 truncate pl-2">PIX</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_FORMA_PAGAMENTO_SALDO}</span> <span class="font-sans text-slate-400 truncate pl-2">Boleto</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_TAXA}</span> <span class="font-sans text-slate-400 truncate pl-2">R$ 250,00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_TAXA_MANUTENCAO}</span> <span class="font-sans text-slate-400 truncate pl-2">R$ 1.200,00</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_VIGENCIA}</span> <span class="font-sans text-slate-400 truncate pl-2">5 (cinco) anos</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_DATA}</span> <span class="font-sans text-slate-400 truncate pl-2">16/07/2026</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CONTRATO_DATA_EXTENSO}</span> <span class="font-sans text-slate-400 truncate pl-2">16 de Julho</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${EMPRESA_EMAIL}</span> <span class="font-sans text-slate-400 truncate pl-2">contato@itacare</span></li>
+                                    <li class="flex items-center justify-between p-2 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${EMPRESA_WHATSAPP}</span> <span class="font-sans text-slate-400 truncate pl-2">(73) 9999-8888</span></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
@@ -440,15 +553,48 @@ const closeModal = () => {
                     </div>
                 </div>
                 <!-- Browser Shell -->
-                <div class="p-12 overflow-y-auto flex-1 preview-content bg-white dark:bg-slate-50 text-slate-900 min-h-[500px] relative">
+                <div class="overflow-y-auto flex-1 preview-content bg-slate-200/80 dark:bg-slate-900 text-slate-900 min-h-[500px] relative">
                     <div v-if="isLoadingPreview" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-10">
                         <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-brand-green mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <p class="text-sm font-bold text-slate-600 animate-pulse">Renderizando Documento Word...</p>
+                        <p class="text-sm font-bold text-slate-600 animate-pulse">Renderizando Formatação Original do Word...</p>
                     </div>
-                    <div v-html="parsedPreviewContent"></div>
+                    <div v-show="!previewItem?.original_filename" v-html="parsedPreviewContent" class="p-12"></div>
+                    <div v-show="previewItem?.original_filename" ref="docxContainer" class="w-full px-[200px] py-8 docx-preview-wrapper"></div>
+                </div>
+            </div>
+        </Modal>
+        <!-- Delete Confirm Modal -->
+        <Modal :show="showDeleteConfirmModal" @close="showDeleteConfirmModal = false" maxWidth="md">
+            <div class="p-6 bg-white dark:bg-[#0f1219]">
+                <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-5 border-4 border-red-100 dark:border-red-500/20">
+                    <svg class="w-8 h-8 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                
+                <h3 class="text-xl font-black text-slate-900 dark:text-white text-center mb-2 tracking-tight">
+                    Excluir Modelo?
+                </h3>
+                
+                <p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 px-4 leading-relaxed">
+                    Você está prestes a excluir o modelo <br>
+                    <strong class="text-slate-700 dark:text-slate-300">"{{ itemToDelete?.name }}"</strong>. <br>
+                    <span class="text-red-500 font-bold block mt-3">Esta ação não pode ser desfeita.</span> Todos os produtos vinculados perderão este modelo.
+                </p>
+
+                <div class="flex gap-3 w-full">
+                    <button @click="showDeleteConfirmModal = false" class="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all shadow-sm">
+                        Cancelar
+                    </button>
+                    <button @click="executeDelete" :disabled="form.processing" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
+                        <svg v-if="form.processing" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        {{ form.processing ? 'Excluindo...' : 'Sim, excluir' }}
+                    </button>
                 </div>
             </div>
         </Modal>
@@ -484,5 +630,30 @@ const closeModal = () => {
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
+}
+</style>
+
+<style>
+/* Diminui a página toda em 10% */
+.docx-preview-wrapper {
+    zoom: 0.9;
+}
+/* Global CSS para forçar o tamanho da tabela gerada dinamicamente pelo docx-preview */
+.docx-preview-wrapper table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+}
+/* Remove metadados de colunas que travam a largura */
+.docx-preview-wrapper table colgroup {
+    display: none !important;
+}
+.docx-preview-wrapper table td,
+.docx-preview-wrapper table th {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    word-break: break-word;
 }
 </style>

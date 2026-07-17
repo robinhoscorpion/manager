@@ -12,7 +12,15 @@ class ProposalTemplate extends Model
 
     protected $fillable = [
         'name',
-        'content',
+        'file_path',
+        'original_filename',
         'is_active'
     ];
+
+    protected $appends = ['file_url'];
+
+    public function getFileUrlAttribute()
+    {
+        return $this->file_path ? asset('storage/' . $this->file_path) : null;
+    }
 }
