@@ -150,12 +150,16 @@ const submit = () => {
     if (editingItem.value) {
         form.transform((data) => ({
             ...data,
+            is_active: data.is_active ? 1 : 0,
             _method: 'put',
         })).post(route('admin.proposal_templates.update', editingItem.value.id), {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.post(route('admin.proposal_templates.store'), {
+        form.transform((data) => ({
+            ...data,
+            is_active: data.is_active ? 1 : 0,
+        })).post(route('admin.proposal_templates.store'), {
             onSuccess: () => closeModal(),
         });
     }

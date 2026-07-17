@@ -154,12 +154,16 @@ const submit = () => {
     if (editingItem.value) {
         form.transform((data) => ({
             ...data,
+            is_default: data.is_default ? 1 : 0,
             _method: 'put',
         })).post(route('admin.contract_templates.update', editingItem.value.id), {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.post(route('admin.contract_templates.store'), {
+        form.transform((data) => ({
+            ...data,
+            is_default: data.is_default ? 1 : 0,
+        })).post(route('admin.contract_templates.store'), {
             onSuccess: () => closeModal(),
         });
     }
