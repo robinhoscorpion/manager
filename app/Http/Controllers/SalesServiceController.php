@@ -585,6 +585,7 @@ class SalesServiceController extends Controller
             '${CONJUNGE_NACIONALIDADE}' => $service->nacionalidade_conjuge ?? '',
 
             '${PROPOSTA_NUMERO}' => $proposal->contract_number ?? str_pad($proposal->id, 5, '0', STR_PAD_LEFT),
+            '${CONTRATO_NUMERO}' => $proposal->contract_number ?? str_pad($proposal->id, 5, '0', STR_PAD_LEFT),
             '${PROPOSTA_PLANO}' => $proposal->product?->name ?? '',
             '${PROPOSTA_CATEGORIA}' => $proposal->product?->category ?? '',
             '${PROPOSTA_PACOTE}' => $proposal->product?->package ?? '',
@@ -726,6 +727,7 @@ class SalesServiceController extends Controller
             '${CONJUNGE_NACIONALIDADE}' => $service->nacionalidade_conjuge ?? '',
 
             '${PROPOSTA_NUMERO}' => $proposal->contract_number ?? str_pad($proposal->id, 5, '0', STR_PAD_LEFT),
+            '${CONTRATO_NUMERO}' => $proposal->contract_number ?? str_pad($proposal->id, 5, '0', STR_PAD_LEFT),
             '${PROPOSTA_PLANO}' => $proposal->product?->name ?? '',
             '${PROPOSTA_CATEGORIA}' => $proposal->product?->category ?? '',
             '${PROPOSTA_PACOTE}' => $proposal->product?->package ?? '',
