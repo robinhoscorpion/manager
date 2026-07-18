@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
+import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
@@ -48,6 +49,9 @@ const closeViewModal = () => {
 
 // --- Create Installment Logic ---
 const isCreateModalOpen = ref(false);
+const isEditModalOpen = ref(false);
+const isEditProposalModalOpen = ref(false);
+
 const createForm = useForm({
     category: 'saldo',
     due_date: new Date().toISOString().split('T')[0],
@@ -241,7 +245,6 @@ const submitProtocol = () => {
 };
 
 // --- Edit Installment Logic ---
-const isEditModalOpen = ref(false);
 const editingBill = ref(null);
 const editForm = useForm({
     id: null,
@@ -757,7 +760,7 @@ const updateProtocolStatus = (protocolId, status) => {
                     <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-[20px] p-6 hover:shadow-lg transition-all duration-300">
                         <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-5 flex items-center gap-2.5">
                             <span class="w-5 h-5 rounded-lg bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center">
-                                <svg class="w-3 h-3 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <svg class="w-3 h-3 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"/></svg>
                             </span>
                             Vigência do Contrato
                         </h3>
@@ -1002,11 +1005,18 @@ const updateProtocolStatus = (protocolId, status) => {
                                 </div>
                             </div>
                         </div>
-                        <button v-if="proposal" @click="openCreateModal"
-                            class="flex items-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-green/20 active:scale-95">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            Nova Parcela
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button v-if="proposal" @click="isEditProposalModalOpen = true"
+                                class="flex items-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border border-emerald-500/20 dark:border-emerald-500/30">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Editar Proposta
+                            </button>
+                            <button v-if="proposal" @click="openCreateModal"
+                                class="flex items-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-green/20 active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Nova Parcela
+                            </button>
+                        </div>
                     </div>
 
                     <div class="p-0">
@@ -1158,7 +1168,6 @@ const updateProtocolStatus = (protocolId, status) => {
         </div>
 
         <!-- Create Installment Modal -->
-                <!-- Create Installment Modal -->
         <Modal :show="isCreateModalOpen" @close="closeCreateModal" maxWidth="lg">
             <div class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden flex flex-col">
                 <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f1219] flex items-center justify-between shrink-0">
@@ -1323,6 +1332,14 @@ const updateProtocolStatus = (protocolId, status) => {
                 </form>
             </div>
         </Modal>
+
+        <!-- Edit Proposal Modal -->
+        <ProposalFormModal 
+            :show="isEditProposalModalOpen"
+            :service="service"
+            :force-edit-mode="true"
+            @close="isEditProposalModalOpen = false"
+        />
 
         <!-- Renegotiation/BulkPay Floating Action Bar -->
         <div v-show="selectedBills.length > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700 px-6 py-3 rounded-[20px] shadow-[0_0_40px_rgba(34,197,94,0.15)] z-40 flex items-center gap-6 animate-in slide-in-from-bottom-5">
@@ -1713,6 +1730,14 @@ const updateProtocolStatus = (protocolId, status) => {
                 </div>
             </div>
         </Modal>
+
+        <!-- Edit Proposal Modal -->
+        <ProposalFormModal 
+            :show="isEditProposalModalOpen"
+            :service="service"
+            :force-edit-mode="true"
+            @close="isEditProposalModalOpen = false"
+        />
     </AuthenticatedLayout>
 </template>
 

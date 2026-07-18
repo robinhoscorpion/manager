@@ -7,6 +7,10 @@ import SearchableSelect from '@/Components/SearchableSelect.vue';
 const props = defineProps({
     show: Boolean,
     service: Object,
+    forceEditMode: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const emit = defineEmits(['close']);
@@ -257,8 +261,13 @@ const loadProposalData = () => {
     if (!service) return;
 
     if (service.proposal) {
-        isViewMode.value = true;
-        isEditMode.value = false;
+        if (props.forceEditMode) {
+            isViewMode.value = false;
+            isEditMode.value = true;
+        } else {
+            isViewMode.value = true;
+            isEditMode.value = false;
+        }
         
         if (service.proposal.product) {
             activeTypeTab.value = service.proposal.product.product_type_id;

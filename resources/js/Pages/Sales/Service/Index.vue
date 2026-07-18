@@ -7,6 +7,7 @@ import LocationPicker from '@/Components/Dashboard/LocationPicker.vue';
 import ActionsPicker from '@/Components/Dashboard/ActionsPicker.vue';
 import NewServiceModal from '@/Components/Sales/NewServiceModal.vue';
 import ServiceActionsModal from '@/Components/Sales/ServiceActionsModal.vue';
+import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
 import { getStatusMetadata, SERVICE_STATUS } from '@/Constants/ServiceStatus';
 
 const props = defineProps({
@@ -62,7 +63,12 @@ watch(localSearch, (value) => {
 
 const isNewServiceModalOpen = ref(false);
 const isActionsModalOpen = ref(false);
+const isEditProposalModalOpen = ref(false);
 const selectedService = ref(null);
+
+const handleEditProposal = () => {
+    isEditProposalModalOpen.value = true;
+};
 
 const handleCreateService = (newService) => {
     serviceData.value.unshift(newService);
@@ -494,7 +500,7 @@ const hasCortesia = (cortesia) => {
                                 v-for="(item, index) in filteredServiceData" 
                                 :key="item.id"
                                 @click="openService(item)"
-                                class="ledger-row flex items-center gap-3 px-6 py-3 cursor-pointer group relative"
+                                class="ledger-row flex items-center gap-3 px-6 py-3 cursor-pointer group relative hover:z-50"
                             >
                                 <!-- Accent bar on hover -->
                                 <div class="ledger-row-accent"></div>
@@ -524,12 +530,11 @@ const hasCortesia = (cortesia) => {
                                                 <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                             
-                                            <!-- Tooltip -->
                                             <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'mkt' && item.mkt_id" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
+                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'mkt' && item.mkt_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
                                                     <p class="text-[9px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5">Marketing / Seller</p>
                                                     <p class="text-xs font-semibold">{{ item.mkt_user?.name || getAvatarName(item.mkt_id) }}</p>
-                                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
                                                 </div>
                                             </Transition>
                                         </div>
@@ -549,12 +554,11 @@ const hasCortesia = (cortesia) => {
                                                 <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                             
-                                            <!-- Tooltip -->
                                             <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'opc' && item.opc_id" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
+                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'opc' && item.opc_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
                                                     <p class="text-[9px] font-bold text-cyan-300 uppercase tracking-wider mb-0.5">OPC / Atendente</p>
                                                     <p class="text-xs font-semibold">{{ item.opc_user?.name || getAvatarName(item.opc_id) }}</p>
-                                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
                                                 </div>
                                             </Transition>
                                         </div>
@@ -583,10 +587,10 @@ const hasCortesia = (cortesia) => {
                                             
                                             <!-- Tooltip -->
                                             <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'liner' && item.liner_id" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
+                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'liner' && item.liner_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
                                                     <p class="text-[9px] font-bold text-emerald-300 uppercase tracking-wider mb-0.5">Liner / Consultor</p>
                                                     <p class="text-xs font-semibold">{{ item.liner_user?.name || getAvatarName(item.liner_id) }}</p>
-                                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
                                                 </div>
                                             </Transition>
                                         </div>
@@ -608,10 +612,10 @@ const hasCortesia = (cortesia) => {
                                             
                                             <!-- Tooltip -->
                                             <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'closer' && item.closer_id" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
+                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'closer' && item.closer_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
                                                     <p class="text-[9px] font-bold text-pink-300 uppercase tracking-wider mb-0.5">Closer / Fechador</p>
                                                     <p class="text-xs font-semibold">{{ item.closer_user?.name || getAvatarName(item.closer_id) }}</p>
-                                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
                                                 </div>
                                             </Transition>
                                         </div>
@@ -645,13 +649,13 @@ const hasCortesia = (cortesia) => {
 
                                      <!-- Tooltip Qualificação -->
                                      <Transition name="tooltip-fade">
-                                         <div v-if="hoveredQualId === item.id && getQualificationMetadata(item.qualification)" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max flex flex-col items-center">
+                                         <div v-if="hoveredQualId === item.id && getQualificationMetadata(item.qualification)" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max flex flex-col items-center">
                                              <div class="flex items-center gap-1.5 mb-0.5">
                                                  <div class="w-2 h-2 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.3)]" :class="getQualificationMetadata(item.qualification).color"></div>
                                                  <p class="text-[9px] font-bold text-slate-300 uppercase tracking-wider leading-none">Qualificação</p>
                                              </div>
                                              <p class="text-xs font-semibold">{{ getQualificationMetadata(item.qualification).name }}</p>
-                                             <div class="absolute top-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                                             <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
                                          </div>
                                      </Transition>
                                  </div>
@@ -869,6 +873,14 @@ const hasCortesia = (cortesia) => {
             :show="isActionsModalOpen"
             :service="selectedService"
             @close="isActionsModalOpen = false"
+            @edit-proposal="handleEditProposal"
+        />
+
+        <ProposalFormModal 
+            :show="isEditProposalModalOpen"
+            :service="selectedService"
+            :force-edit-mode="true"
+            @close="isEditProposalModalOpen = false"
         />
 
         <!-- Local Notification Toast -->
