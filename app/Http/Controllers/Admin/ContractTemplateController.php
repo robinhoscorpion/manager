@@ -66,7 +66,7 @@ class ContractTemplateController extends Controller
             $file = $request->file('file');
             $validated['original_filename'] = $file->getClientOriginalName();
             $validated['file_path'] = $file->store('contract_templates');
-            
+
             // Delete old file if exists
             if ($contractTemplate->file_path) {
                 \Illuminate\Support\Facades\Storage::delete($contractTemplate->file_path);
@@ -77,7 +77,7 @@ class ContractTemplateController extends Controller
             ContractTemplate::where('id', '!=', $contractTemplate->id)
                 ->where('is_default', true)
                 ->update(['is_default' => false]);
-            
+
             // Clear specific links if this becomes global
             Product::whereNotNull('contract_template_id')->update(['contract_template_id' => null]);
         }
@@ -90,7 +90,7 @@ class ContractTemplateController extends Controller
             Product::where('contract_template_id', $contractTemplate->id)
                 ->whereNotIn('id', $validated['product_ids'] ?? [])
                 ->update(['contract_template_id' => null]);
-            
+
             // Add to products in list
             if (!empty($validated['product_ids'])) {
                 Product::whereIn('id', $validated['product_ids'])
@@ -129,7 +129,7 @@ class ContractTemplateController extends Controller
         }
 
         $filePath = \Illuminate\Support\Facades\Storage::path($contractTemplate->file_path);
-        
+
         try {
             $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($filePath);
         } catch (\Exception $e) {
@@ -142,7 +142,7 @@ class ContractTemplateController extends Controller
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
             $count = $variablesCount[$cleanTag] ?? 1;
-            
+
             for ($i = 0; $i < $count; $i++) {
                 $textRun = new \PhpOffice\PhpWord\Element\TextRun();
                 $textRun->addText($value, ['bgColor' => 'FFFF00']);
@@ -152,11 +152,11 @@ class ContractTemplateController extends Controller
 
         $tempFileName = 'TESTE_' . ($contractTemplate->original_filename ?? 'modelo_de_contrato.docx');
         $tempPath = storage_path('app/temp/' . $tempFileName);
-        
+
         if (!\Illuminate\Support\Facades\File::exists(storage_path('app/temp'))) {
             \Illuminate\Support\Facades\File::makeDirectory(storage_path('app/temp'), 0755, true);
         }
-        
+
         $templateProcessor->saveAs($tempPath);
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
@@ -169,7 +169,7 @@ class ContractTemplateController extends Controller
         }
 
         $filePath = \Illuminate\Support\Facades\Storage::path($contractTemplate->file_path);
-        
+
         try {
             $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($filePath);
         } catch (\Exception $e) {
@@ -182,7 +182,7 @@ class ContractTemplateController extends Controller
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
             $count = $variablesCount[$cleanTag] ?? 1;
-            
+
             for ($i = 0; $i < $count; $i++) {
                 $textRun = new \PhpOffice\PhpWord\Element\TextRun();
                 $textRun->addText($value, ['bgColor' => 'FFFF00']);
@@ -192,24 +192,24 @@ class ContractTemplateController extends Controller
 
         $tempFileName = 'TESTE_' . ($contractTemplate->original_filename ?? 'modelo_de_contrato.docx');
         $tempPath = storage_path('app/temp/' . $tempFileName);
-        
+
         if (!\Illuminate\Support\Facades\File::exists(storage_path('app/temp'))) {
             \Illuminate\Support\Facades\File::makeDirectory(storage_path('app/temp'), 0755, true);
         }
-        
+
         $templateProcessor->saveAs($tempPath);
 
         // Convert to PDF
         $pdfFileName = str_replace('.docx', '.pdf', $tempFileName);
         $pdfPath = storage_path('app/temp/' . $pdfFileName);
-        
+
         try {
             $converter = new \NcJoes\OfficeConverter\OfficeConverter($tempPath, storage_path('app/temp'), 'soffice', false);
             $converter->convertTo($pdfFileName);
         } catch (\Exception $e) {
             return response()->download($tempPath, $tempFileName)->deleteFileAfterSend(true);
         }
-        
+
         @unlink($tempPath);
 
         if (!\Illuminate\Support\Facades\File::exists($pdfPath)) {
