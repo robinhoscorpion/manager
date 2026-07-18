@@ -518,23 +518,24 @@ const closeModal = () => {
 
         <!-- Preview Modal -->
         <Modal :show="showPreviewModal" @close="showPreviewModal = false" maxWidth="7xl">
-            <div v-if="previewItem" class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden flex flex-col max-h-[90vh]">
-                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-brand-green/10 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                                {{ previewItem.name }}
-                                <span v-if="previewItem.original_filename" class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-600 font-bold uppercase tracking-wider border border-blue-200">Word</span>
-                            </h2>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Pré-visualização Jurídica</p>
+            <div v-if="previewItem" class="bg-white dark:bg-[#0f1219] border border-slate-200 dark:border-slate-800 rounded-[20px] relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl flex flex-col max-h-[90vh]">
+                <!-- Background Glow -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 dark:bg-brand-green/10 rounded-full blur-[60px] pointer-events-none"></div>
+
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                            <span class="w-1.5 h-5 bg-brand-green rounded-full shadow-sm"></span>
+                            Visualizar Proposta
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-slate-600 dark:text-slate-400 tracking-wider uppercase">| {{ previewItem.name }}</span>
+                            <span v-if="previewItem.original_filename" class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-600 font-bold uppercase tracking-wider border border-blue-200">Word</span>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <a v-if="previewItem?.original_filename" :href="route('admin.proposal_templates.download', previewItem.id)" class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200">
+                        <a v-if="previewItem?.original_filename" :href="route('admin.proposal_templates.download', previewItem.id)" class="flex items-center gap-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 uppercase tracking-widest">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Baixar Word
                         </a>
