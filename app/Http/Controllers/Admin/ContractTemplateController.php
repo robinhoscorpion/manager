@@ -136,17 +136,17 @@ class ContractTemplateController extends Controller
             return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
         }
 
-        $mockData = $this->getMockData();
+        $variablesCount = $templateProcessor->getVariableCount();
 
         foreach ($mockData as $tag => $value) {
-            // Remove the ${ and } from the tag since TemplateProcessor works with variables without braces
             $cleanTag = str_replace(['${', '}'], '', $tag);
+            $count = $variablesCount[$cleanTag] ?? 1;
             
-            // Cria um TextRun com o valor e fundo amarelo para destacar
-            $textRun = new \PhpOffice\PhpWord\Element\TextRun();
-            $textRun->addText($value, ['bgColor' => 'FFFF00']);
-            
-            $templateProcessor->setComplexValue($cleanTag, $textRun);
+            for ($i = 0; $i < $count; $i++) {
+                $textRun = new \PhpOffice\PhpWord\Element\TextRun();
+                $textRun->addText($value, ['bgColor' => 'FFFF00']);
+                $templateProcessor->setComplexValue($cleanTag, $textRun);
+            }
         }
 
         $tempFileName = 'TESTE_' . ($contractTemplate->original_filename ?? 'modelo_de_contrato.docx');
@@ -175,13 +175,17 @@ class ContractTemplateController extends Controller
             return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
         }
 
-        $mockData = $this->getMockData();
+        $variablesCount = $templateProcessor->getVariableCount();
 
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
-            $textRun = new \PhpOffice\PhpWord\Element\TextRun();
-            $textRun->addText($value, ['bgColor' => 'FFFF00']);
-            $templateProcessor->setComplexValue($cleanTag, $textRun);
+            $count = $variablesCount[$cleanTag] ?? 1;
+            
+            for ($i = 0; $i < $count; $i++) {
+                $textRun = new \PhpOffice\PhpWord\Element\TextRun();
+                $textRun->addText($value, ['bgColor' => 'FFFF00']);
+                $templateProcessor->setComplexValue($cleanTag, $textRun);
+            }
         }
 
         $tempFileName = 'TESTE_' . ($contractTemplate->original_filename ?? 'modelo_de_contrato.docx');
