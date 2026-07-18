@@ -674,7 +674,10 @@ class SalesServiceController extends Controller
             return back()->with('error', 'Falha ao gerar o arquivo PDF.');
         }
 
-        return response()->download($pdfPath, $pdfFileName)->deleteFileAfterSend(true);
+        return response()->file($pdfPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"'
+        ])->deleteFileAfterSend(true);
     }
 
     /**
@@ -845,7 +848,10 @@ class SalesServiceController extends Controller
             return back()->with('error', 'Falha ao gerar o arquivo PDF.');
         }
 
-        return response()->download($pdfPath, $pdfFileName)->deleteFileAfterSend(true);
+        return response()->file($pdfPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"'
+        ])->deleteFileAfterSend(true);
     }
 
     /**
