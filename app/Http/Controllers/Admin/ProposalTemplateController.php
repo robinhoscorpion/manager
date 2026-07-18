@@ -230,6 +230,8 @@ class ProposalTemplateController extends Controller
 
             '${PROPOSTA_NUMERO}' => '2026/001',
             '${PROPOSTA_PLANO}' => 'Premium Plus',
+            '${CATEGORIA_PACOTE}' => 'Premium Plus',
+            '${PRODUTO_NOME}' => 'Premium Plus',
             '${PROPOSTA_CATEGORIA}' => 'Exclusive',
             '${PROPOSTA_PACOTE}' => '7 Noites',
             '${PROPOSTA_PONTOS}' => '150.000 Pontos',

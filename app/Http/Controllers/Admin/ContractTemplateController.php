@@ -243,6 +243,8 @@ class ContractTemplateController extends Controller
             '${CONJUNGE_NACIONALIDADE}' => 'Brasileira',
 
             '${CONTRATO_PLANO}' => 'Premium Plus',
+            '${CATEGORIA_PACOTE}' => 'Premium Plus',
+            '${PRODUTO_NOME}' => 'Premium Plus',
             '${CONTRATO_CATEGORIA}' => 'Exclusive',
             '${CONTRATO_PACOTE}' => '7 Noites',
             '${CONTRATO_NUMERO}' => '2026/001',

@@ -64,6 +64,8 @@ const processHtmlTags = (html) => {
 
         '${PROPOSTA_NUMERO}': '2026/001',
         '${PROPOSTA_PLANO}': 'Premium Plus',
+        '${CATEGORIA_PACOTE}': 'Premium Plus',
+        '${PRODUTO_NOME}': 'Premium Plus',
         '${PROPOSTA_CATEGORIA}': 'Exclusive',
         '${PROPOSTA_PACOTE}': '7 Noites',
         '${PROPOSTA_PONTOS}': '150.000 Pontos',
@@ -439,6 +441,8 @@ const closeModal = () => {
                                 <ul class="text-[10px] text-slate-600 dark:text-slate-400 font-mono flex flex-col">
                                     <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${PROPOSTA_NUMERO}</span> <span class="font-sans text-slate-400 truncate pl-2">2026/001</span></li>
                                     <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${PROPOSTA_PLANO}</span> <span class="font-sans text-slate-400 truncate pl-2">Premium Plus</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${CATEGORIA_PACOTE}</span> <span class="font-sans text-slate-400 truncate pl-2">Premium Plus</span></li>
+                                    <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${PRODUTO_NOME}</span> <span class="font-sans text-slate-400 truncate pl-2">Premium Plus</span></li>
                                     <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${PROPOSTA_CATEGORIA}</span> <span class="font-sans text-slate-400 truncate pl-2">Exclusive</span></li>
                                     <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${PROPOSTA_PACOTE}</span> <span class="font-sans text-slate-400 truncate pl-2">7 Noites</span></li>
                                     <li class="flex items-center justify-between p-2 border-b border-slate-100 dark:border-slate-800 hover:bg-brand-green/5 transition-colors"><span class="text-brand-green font-bold">${PROPOSTA_PONTOS}</span> <span class="font-sans text-slate-400 truncate pl-2">150.000 Pontos</span></li>
