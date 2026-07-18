@@ -136,6 +136,7 @@ class ContractTemplateController extends Controller
             return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
         }
 
+        $mockData = $this->getMockData();
         $variablesCount = $templateProcessor->getVariableCount();
 
         foreach ($mockData as $tag => $value) {
@@ -175,6 +176,7 @@ class ContractTemplateController extends Controller
             return abort(500, 'Erro ao processar o arquivo Word: ' . $e->getMessage());
         }
 
+        $mockData = $this->getMockData();
         $variablesCount = $templateProcessor->getVariableCount();
 
         foreach ($mockData as $tag => $value) {
