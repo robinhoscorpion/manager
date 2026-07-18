@@ -24,15 +24,23 @@ class ProposalTemplateController extends Controller
             'file' => 'nullable|file|mimes:docx|max:10240', // 10MB max
         ]);
 
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $validated['original_filename'] = $file->getClientOriginalName();
-            $validated['file_path'] = $file->store('proposal_templates');
+        try {
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                if (!$file->isValid()) {
+                    return back()->withErrors(['file' => 'O upload do arquivo falhou. Código do erro: ' . $file->getError()]);
+                }
+                $validated['original_filename'] = $file->getClientOriginalName();
+                $validated['file_path'] = $file->store('proposal_templates');
+            }
+
+            ProposalTemplate::create($validated);
+
+            return redirect()->back()->with('success', 'Modelo de proposta criado com sucesso.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao salvar proposal template: ' . $e->getMessage());
+            return back()->withErrors(['file' => 'Erro interno ao salvar o arquivo: ' . $e->getMessage()]);
         }
-
-        ProposalTemplate::create($validated);
-
-        return redirect()->back()->with('success', 'Modelo de proposta criado com sucesso.');
     }
 
     public function update(Request $request, ProposalTemplate $proposalTemplate)
@@ -43,20 +51,28 @@ class ProposalTemplateController extends Controller
             'file' => 'nullable|file|mimes:docx|max:10240',
         ]);
 
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $validated['original_filename'] = $file->getClientOriginalName();
-            $validated['file_path'] = $file->store('proposal_templates');
+        try {
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                if (!$file->isValid()) {
+                    return back()->withErrors(['file' => 'O upload do arquivo falhou. Código do erro: ' . $file->getError()]);
+                }
+                $validated['original_filename'] = $file->getClientOriginalName();
+                $validated['file_path'] = $file->store('proposal_templates');
 
-            // Delete old file if exists
-            if ($proposalTemplate->file_path) {
-                \Illuminate\Support\Facades\Storage::delete($proposalTemplate->file_path);
+                // Delete old file if exists
+                if ($proposalTemplate->file_path) {
+                    \Illuminate\Support\Facades\Storage::delete($proposalTemplate->file_path);
+                }
             }
+
+            $proposalTemplate->update($validated);
+
+            return redirect()->back()->with('success', 'Modelo de proposta atualizado com sucesso.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao atualizar proposal template: ' . $e->getMessage());
+            return back()->withErrors(['file' => 'Erro interno ao atualizar o arquivo: ' . $e->getMessage()]);
         }
-
-        $proposalTemplate->update($validated);
-
-        return redirect()->back()->with('success', 'Modelo de proposta atualizado com sucesso.');
     }
 
     public function destroy(ProposalTemplate $proposalTemplate)
