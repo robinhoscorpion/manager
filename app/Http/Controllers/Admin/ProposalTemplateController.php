@@ -21,7 +21,7 @@ class ProposalTemplateController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
-            'file' => 'nullable|file|mimes:docx|max:10240', // 10MB max
+            'file' => 'nullable|file|max:10240', // 10MB max
         ]);
 
         try {
@@ -30,6 +30,12 @@ class ProposalTemplateController extends Controller
                 if (!$file->isValid()) {
                     return back()->withErrors(['file' => 'O upload do arquivo falhou. Código do erro: ' . $file->getError()]);
                 }
+                
+                $extension = strtolower($file->getClientOriginalExtension());
+                if ($extension !== 'docx') {
+                    return back()->withErrors(['file' => 'O arquivo deve obrigatoriamente ter a extensão .docx (Word).']);
+                }
+
                 $validated['original_filename'] = $file->getClientOriginalName();
                 $validated['file_path'] = $file->store('proposal_templates');
             }
@@ -48,7 +54,7 @@ class ProposalTemplateController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
-            'file' => 'nullable|file|mimes:docx|max:10240',
+            'file' => 'nullable|file|max:10240',
         ]);
 
         try {
@@ -57,6 +63,12 @@ class ProposalTemplateController extends Controller
                 if (!$file->isValid()) {
                     return back()->withErrors(['file' => 'O upload do arquivo falhou. Código do erro: ' . $file->getError()]);
                 }
+
+                $extension = strtolower($file->getClientOriginalExtension());
+                if ($extension !== 'docx') {
+                    return back()->withErrors(['file' => 'O arquivo deve obrigatoriamente ter a extensão .docx (Word).']);
+                }
+
                 $validated['original_filename'] = $file->getClientOriginalName();
                 $validated['file_path'] = $file->store('proposal_templates');
 
