@@ -1,7 +1,12 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
 import Dropdown from '@/Components/Dropdown.vue';

@@ -65,8 +65,15 @@ const toggleConfig = () => {
 };
 
 const can = (permission) => {
+    const roles = usePage().props.auth.roles || [];
+    if (roles.includes('admin')) return true;
+
     const permissions = usePage().props.auth.permissions || [];
     return permissions.includes(permission);
+};
+
+const hasAnyPermission = (permissionsToCheck) => {
+    return permissionsToCheck.some(permission => can(permission));
 };
 
 // Sidebar Collapsed State
@@ -103,7 +110,7 @@ const toggleSidebar = () => {
                     </Link>
 
                     <!-- Sala de Vendas Group -->
-                    <div v-if="can('atendimentos.ver')" class="nav-group" :class="{ 'open': salesRoomOpen }">
+                    <div v-if="hasAnyPermission(['agendamentos.acessar', 'atendimentos.acessar'])" class="nav-group" :class="{ 'open': salesRoomOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleSalesRoom">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,11 +124,11 @@ const toggleSidebar = () => {
                         </div>
                         
                         <div class="nav-sub-menu">
-                            <Link :href="route('sales.agendamentos.index')" class="nav-sub-item" :class="{ 'active': route().current('sales.agendamentos.*') }">
+                            <Link v-if="can('agendamentos.acessar')" :href="route('sales.agendamentos.index')" class="nav-sub-item" :class="{ 'active': route().current('sales.agendamentos.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.agendamentos.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Agendamentos
                             </Link>
-                            <Link :href="route('sales.atendimentos')" class="nav-sub-item" :class="{ 'active': route().current('sales.atendimentos') }">
+                            <Link v-if="can('atendimentos.acessar')" :href="route('sales.atendimentos')" class="nav-sub-item" :class="{ 'active': route().current('sales.atendimentos') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.atendimentos') ? 'opacity-100' : 'opacity-30'"></div>
                                 Atendimentos
                             </Link>
@@ -129,7 +136,7 @@ const toggleSidebar = () => {
                     </div>
 
                     <!-- Financeiro Group -->
-                    <div class="nav-group" :class="{ 'open': financeiroOpen }">
+                    <div v-if="hasAnyPermission(['recebiveis.acessar', 'controle_vendas.acessar'])" class="nav-group" :class="{ 'open': financeiroOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleFinanceiro">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,11 +150,11 @@ const toggleSidebar = () => {
                         </div>
                         
                         <div class="nav-sub-menu">
-                            <Link :href="route('finance.receivables.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.receivables.*') }">
+                            <Link v-if="can('recebiveis.acessar')" :href="route('finance.receivables.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.receivables.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.receivables.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Recebíveis
                             </Link>
-                            <Link :href="route('finance.sales-control.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.sales-control.*') }">
+                            <Link v-if="can('controle_vendas.acessar')" :href="route('finance.sales-control.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.sales-control.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.sales-control.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Controle de Vendas
                             </Link>
@@ -155,7 +162,7 @@ const toggleSidebar = () => {
                     </div>
 
                     <!-- Pós-venda Group -->
-                    <div class="nav-group" :class="{ 'open': posVendaOpen }">
+                    <div v-if="hasAnyPermission(['pos_venda.boas_vindas.acessar', 'pos_venda.gestao_contratos.acessar', 'pos_venda.protocolos.acessar', 'pos_venda.onboarding.acessar', 'pos_venda.pendencias.acessar', 'pos_venda.treinamentos.acessar', 'pos_venda.acompanhamentos.acessar', 'pos_venda.campanhas.acessar', 'pos_venda.aniversariantes.acessar'])" class="nav-group" :class="{ 'open': posVendaOpen }">
                         <div class="nav-item nav-item-toggle" @click="togglePosVenda">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,40 +176,40 @@ const toggleSidebar = () => {
                         </div>
                         
                         <div class="nav-sub-menu">
-                            <Link :href="route('after-sales.welcome.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.welcome.*') }">
+                            <Link v-if="can('pos_venda.boas_vindas.acessar')" :href="route('after-sales.welcome.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.welcome.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.welcome.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Boas-vindas
                             </Link>
-                            <Link :href="route('after-sales.contract-delivery.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.contract-delivery.*') }">
+                            <Link v-if="can('pos_venda.gestao_contratos.acessar')" :href="route('after-sales.contract-delivery.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.contract-delivery.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.contract-delivery.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Gestão de Contratos
                             </Link>
-                            <Link :href="route('after-sales.protocols.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.protocols.*') }">
+                            <Link v-if="can('pos_venda.protocolos.acessar')" :href="route('after-sales.protocols.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.protocols.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.protocols.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Protocolos
                             </Link>
-                            <Link href="#" class="nav-sub-item">
+                            <Link v-if="can('pos_venda.onboarding.acessar')" href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Onboarding
                             </Link>
-                            <Link href="#" class="nav-sub-item">
+                            <Link v-if="can('pos_venda.pendencias.acessar')" href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Pendências documentais
                             </Link>
 
-                            <Link href="#" class="nav-sub-item">
+                            <Link v-if="can('pos_venda.treinamentos.acessar')" href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Treinamentos
                             </Link>
-                            <Link href="#" class="nav-sub-item">
+                            <Link v-if="can('pos_venda.acompanhamentos.acessar')" href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Acompanhamentos
                             </Link>
-                            <Link href="#" class="nav-sub-item">
+                            <Link v-if="can('pos_venda.campanhas.acessar')" href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
                                 Campanhas de relacionamento
                             </Link>
-                            <Link :href="route('after-sales.birthdays.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.birthdays.*') }">
+                            <Link v-if="can('pos_venda.aniversariantes.acessar')" :href="route('after-sales.birthdays.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.birthdays.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.birthdays.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Aniversariantes
                             </Link>
@@ -211,7 +218,7 @@ const toggleSidebar = () => {
 
 
                     <Link 
-                        v-if="can('funcionarios.ver')"
+                        v-if="can('funcionarios.acessar')"
                         :href="route('employees.index')" 
                         class="nav-item" 
                         :class="{ 'active': route().current('employees.*') }"
@@ -224,7 +231,7 @@ const toggleSidebar = () => {
                     </Link>
 
                     <Link 
-                        v-if="can('usuarios.ver')"
+                        v-if="can('usuarios.acessar')"
                         :href="route('users.index')" 
                         class="nav-item" 
                         :class="{ 'active': route().current('users.*') }"
@@ -237,7 +244,7 @@ const toggleSidebar = () => {
                     </Link>
 
                     <Link 
-                        v-if="can('cargos.gerenciar')"
+                        v-if="can('cargos.acessar')"
                         :href="route('roles.index')" 
                         class="nav-item" 
                         :class="{ 'active': route().current('roles.*') }"
@@ -249,7 +256,7 @@ const toggleSidebar = () => {
                         <span>Cargos</span>
                     </Link>
 
-                    <div v-if="can('atendimentos.gerenciar')" class="nav-group" :class="{ 'open': configOpen }">
+                    <div v-if="hasAnyPermission(['configuracoes.colunas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleConfig">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,39 +271,39 @@ const toggleSidebar = () => {
                         </div>
                         
                         <div class="nav-sub-menu">
-                            <Link :href="route('admin.settings.columns.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.columns.index') }">
+                            <Link v-if="can('configuracoes.colunas.acessar')" :href="route('admin.settings.columns.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.columns.index') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.columns.index') ? 'opacity-100' : 'opacity-30'"></div>
                                 Colunas do Dashboard
                             </Link>
-                            <Link :href="route('admin.proposal_templates.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.proposal_templates.*') }">
+                            <Link v-if="can('configuracoes.modelos_proposta.acessar')" :href="route('admin.proposal_templates.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.proposal_templates.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.proposal_templates.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Modelos de Proposta
                             </Link>
-                            <Link :href="route('admin.contract_templates.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.contract_templates.*') }">
+                            <Link v-if="can('configuracoes.modelos_contrato.acessar')" :href="route('admin.contract_templates.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.contract_templates.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.contract_templates.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Modelos de Contrato
                             </Link>
-                            <Link :href="route('admin.products.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.products.*') }">
+                            <Link v-if="can('configuracoes.produtos.acessar')" :href="route('admin.products.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.products.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.products.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Gestão de Produtos
                             </Link>
-                            <Link :href="route('admin.maintenance.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.maintenance.*') }">
+                            <Link v-if="can('configuracoes.manutencao.acessar')" :href="route('admin.maintenance.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.maintenance.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.maintenance.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Gestão de Manutenção
                             </Link>
-                            <Link :href="route('admin.payment_methods.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.payment_methods.*') }">
+                            <Link v-if="can('configuracoes.formas_pagamento.acessar')" :href="route('admin.payment_methods.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.payment_methods.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.payment_methods.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Formas de Pagamento
                             </Link>
-                            <Link :href="route('admin.qualifications.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.qualifications.*') }">
+                            <Link v-if="can('configuracoes.qualificacao.acessar')" :href="route('admin.qualifications.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.qualifications.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.qualifications.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Tipos de Qualificação
                             </Link>
-                            <Link :href="route('admin.complimentary_items.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.complimentary_items.*') }">
+                            <Link v-if="can('configuracoes.cortesias.acessar')" :href="route('admin.complimentary_items.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.complimentary_items.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.complimentary_items.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Cortesias
                             </Link>
-                            <Link v-if="can('usuarios.editar')" :href="route('admin.audit-logs.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.audit-logs.index') }">
+                            <Link v-if="can('configuracoes.logs.acessar')" :href="route('admin.audit-logs.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.audit-logs.index') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.audit-logs.index') ? 'opacity-100' : 'opacity-30'"></div>
                                 Logs do Sistema
                             </Link>

@@ -1,6 +1,11 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import debounce from 'lodash/debounce';
@@ -527,7 +532,7 @@ const getStatusBadge = (status) => {
                                     </div>
                                 </td>
                                 <td class="px-2 py-2">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2" v-if="can('recebiveis.gerenciar')">
                                         <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ bill.description }}</span>
                                         <span v-if="bill.installment_number" class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500">{{ bill.installment_number }}/{{ bill.total_installments }}</span>
                                     </div>

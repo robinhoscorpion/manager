@@ -1,9 +1,14 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const passwordInput = ref(null);

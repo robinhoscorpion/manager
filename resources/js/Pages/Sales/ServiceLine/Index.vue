@@ -1,6 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { Head, usePage } from '@inertiajs/vue3';
 </script>
 
 <template>

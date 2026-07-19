@@ -1,5 +1,10 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 
 defineProps({
     canLogin: {

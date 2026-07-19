@@ -224,7 +224,7 @@ const filteredAvatars = computed(() => {
 });
 
 const openPicker = (index, field) => {
-    if (!can('atendimentos.gerenciar')) return;
+    if (!can('atendimentos.editar')) return;
     activeRecordIndex.value = index;
     activeField.value = field;
     isPickerOpen.value = true;
@@ -233,7 +233,14 @@ const openPicker = (index, field) => {
 
 const isAvatarSelected = (avatarPath) => {
     if (activeRecordIndex.value === null || !activeField.value) return false;
-    return serviceData.value[activeRecordIndex.value][activeField.value] === avatarPath;
+    const fieldMapping = {
+        'opcAvatar': 'opc_id',
+        'linerAvatar': 'liner_id',
+        'closerAvatar': 'closer_id',
+        'avatar': 'mkt_id'
+    };
+    const backendField = fieldMapping[activeField.value] || activeField.value;
+    return serviceData.value[activeRecordIndex.value][backendField] === avatarPath;
 };
 
 const saveQuickUpdate = (index, data) => {
@@ -274,13 +281,11 @@ const getQualStyles = (colorClass) => {
 };
 
 const openQualPicker = (index) => {
-    if (!can('atendimentos.gerenciar')) return;
-    const item = serviceData.value[index];
-    // Aceita tanto o valor novo 'MESA' quanto o legado 'table'
-    if (item.status !== 'MESA' && item.status !== 'table') {
-        showNotification('Qualificação bloqueada: Atendimento fora da MESA.', 'error');
+    if (!can('atendimentos.alterar_qualificacao')) {
+        showNotification('Você não tem permissão para alterar a qualificação.', 'error');
         return;
     }
+    const item = serviceData.value[index];
     activeQualIndex.value = index;
     isQualPickerOpen.value = true;
 };
@@ -301,7 +306,7 @@ const selectAvatar = (avatarPath) => {
         if (activeField.value === 'opcAvatar') updateData.opc = true;
         if (activeField.value === 'closerAvatar') updateData.closer = true;
 
-        serviceData.value[activeRecordIndex.value][activeField.value] = avatarPath;
+        serviceData.value[activeRecordIndex.value][backendField] = avatarPath;
         saveQuickUpdate(activeRecordIndex.value, updateData);
     }
     isPickerOpen.value = false;
@@ -376,9 +381,36 @@ const selectStatus = (value) => {
 };
 
 // Tooltip State
-const hoveredStatusId = ref(null);
-const hoveredQualId = ref(null);
-const hoveredAvatar = ref({ id: null, type: null }); // type: 'mkt', 'opc', 'liner', 'closer'
+const tooltipData = ref({
+    show: false,
+    x: 0,
+    y: 0,
+    title: '',
+    subtitle: '',
+    color: ''
+});
+
+const onTooltipEnter = (e, title, subtitle, color = '') => {
+    tooltipData.value = {
+        show: true,
+        x: e.clientX,
+        y: e.clientY,
+        title,
+        subtitle,
+        color
+    };
+};
+
+const onTooltipMove = (e) => {
+    if (tooltipData.value.show) {
+        tooltipData.value.x = e.clientX;
+        tooltipData.value.y = e.clientY;
+    }
+};
+
+const onTooltipLeave = () => {
+    tooltipData.value.show = false;
+};
 
 const getAvatarName = (userId) => {
     if (!userId) return 'Não Definido';
@@ -519,54 +551,40 @@ const hasCortesia = (cortesia) => {
                                 <div class="flex gap-4">
                                     <div v-if="columnSettings.mkt" class="w-14 hidden md:flex justify-center relative">
                                         <div 
-                                            @mouseenter="hoveredAvatar = { id: item.id, type: 'mkt' }"
-                                            @mouseleave="hoveredAvatar = { id: null, type: null }"
+                                            @mouseenter="(e) => item.mkt_id && onTooltipEnter(e, 'Marketing / Seller', item.mkt_user?.name || getAvatarName(item.mkt_id), 'text-indigo-400')"
+                                            @mouseleave="onTooltipLeave"
+                                            @mousemove="onTooltipMove"
                                             @click.stop="openPicker(index, 'avatar')"
                                             class="w-9 h-9 rounded-full ring-2 ring-indigo-100 dark:ring-indigo-900/50 bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
-                                            :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-indigo-300' : 'cursor-default'"
+                                            :class="can('atendimentos.editar') ? 'cursor-pointer hover:ring-indigo-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.mkt_user && item.mkt_user.profile_photo_path && !item.mkt_user.has_error" :src="item.mkt_user.profile_photo_url" @error="item.mkt_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="Seller">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
                                                 <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
-                                            
-                                            <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'mkt' && item.mkt_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
-                                                    <p class="text-[9px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5">Marketing / Seller</p>
-                                                    <p class="text-xs font-semibold">{{ item.mkt_user?.name || getAvatarName(item.mkt_id) }}</p>
-                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
-                                                </div>
-                                            </Transition>
                                         </div>
                                     </div>
 
                                     <div v-if="columnSettings.opc" class="w-14 hidden lg:flex justify-center relative">
                                         <div 
-                                            @mouseenter="hoveredAvatar = { id: item.id, type: 'opc' }"
-                                            @mouseleave="hoveredAvatar = { id: null, type: null }"
+                                            @mouseenter="(e) => item.opc_id && onTooltipEnter(e, 'OPC / Atendente', item.opc_user?.name || getAvatarName(item.opc_id), 'text-cyan-400')"
+                                            @mouseleave="onTooltipLeave"
+                                            @mousemove="onTooltipMove"
                                             v-if="item.opc_id" 
                                             @click.stop="openPicker(index, 'opcAvatar')"
                                             class="w-9 h-9 rounded-full ring-2 ring-cyan-100 dark:ring-cyan-900/50 bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
-                                            :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-cyan-300' : 'cursor-default'"
+                                            :class="can('atendimentos.editar') ? 'cursor-pointer hover:ring-cyan-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.opc_user && item.opc_user.profile_photo_path && !item.opc_user.has_error" :src="item.opc_user.profile_photo_url" @error="item.opc_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="OPC">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
                                                 <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
-                                            
-                                            <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'opc' && item.opc_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
-                                                    <p class="text-[9px] font-bold text-cyan-300 uppercase tracking-wider mb-0.5">OPC / Atendente</p>
-                                                    <p class="text-xs font-semibold">{{ item.opc_user?.name || getAvatarName(item.opc_id) }}</p>
-                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
-                                                </div>
-                                            </Transition>
                                         </div>
                                         <div 
                                             v-else 
                                             @click.stop="openPicker(index, 'opcAvatar')"
                                             class="w-9 h-9 flex items-center justify-center group/add"
-                                            :class="can('atendimentos.gerenciar') ? 'cursor-pointer' : 'cursor-default'"
+                                            :class="can('atendimentos.editar') ? 'cursor-pointer' : 'cursor-default'"
                                         >
                                             <div class="w-4 h-[2px] bg-slate-200 dark:bg-slate-700 group-hover/add:w-6 group-hover/add:bg-cyan-400 transition-all rounded-full"></div>
                                         </div>
@@ -574,56 +592,40 @@ const hasCortesia = (cortesia) => {
 
                                     <div v-if="columnSettings.liner" class="w-14 hidden lg:flex justify-center relative">
                                         <div 
-                                            @mouseenter="hoveredAvatar = { id: item.id, type: 'liner' }"
-                                            @mouseleave="hoveredAvatar = { id: null, type: null }"
+                                            @mouseenter="(e) => item.liner_id && onTooltipEnter(e, 'Liner / Consultor', item.liner_user?.name || getAvatarName(item.liner_id), 'text-emerald-400')"
+                                            @mouseleave="onTooltipLeave"
+                                            @mousemove="onTooltipMove"
                                             @click.stop="openPicker(index, 'linerAvatar')"
                                             class="w-9 h-9 rounded-full ring-2 ring-emerald-100 dark:ring-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
-                                            :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-emerald-300' : 'cursor-default'"
+                                            :class="can('atendimentos.editar') ? 'cursor-pointer hover:ring-emerald-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.liner_user && item.liner_user.profile_photo_path && !item.liner_user.has_error" :src="item.liner_user.profile_photo_url" @error="item.liner_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="Liner">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
                                                 <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
-                                            
-                                            <!-- Tooltip -->
-                                            <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'liner' && item.liner_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
-                                                    <p class="text-[9px] font-bold text-emerald-300 uppercase tracking-wider mb-0.5">Liner / Consultor</p>
-                                                    <p class="text-xs font-semibold">{{ item.liner_user?.name || getAvatarName(item.liner_id) }}</p>
-                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
-                                                </div>
-                                            </Transition>
                                         </div>
                                     </div>
 
                                     <div v-if="columnSettings.closer" class="w-14 hidden lg:flex justify-center relative">
                                         <div 
                                             v-if="item.closer" 
-                                            @mouseenter="hoveredAvatar = { id: item.id, type: 'closer' }"
-                                            @mouseleave="hoveredAvatar = { id: null, type: null }"
+                                            @mouseenter="(e) => item.closer_id && onTooltipEnter(e, 'Closer / Fechador', item.closer_user?.name || getAvatarName(item.closer_id), 'text-pink-400')"
+                                            @mouseleave="onTooltipLeave"
+                                            @mousemove="onTooltipMove"
                                             @click.stop="openPicker(index, 'closerAvatar')"
                                             class="w-9 h-9 rounded-full ring-2 ring-pink-100 dark:ring-pink-900/50 bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform duration-300 relative"
-                                            :class="can('atendimentos.gerenciar') ? 'cursor-pointer hover:ring-pink-300' : 'cursor-default'"
+                                            :class="can('atendimentos.editar') ? 'cursor-pointer hover:ring-pink-300' : 'cursor-default'"
                                         >
                                             <img v-if="item.closer_user && item.closer_user.profile_photo_path && !item.closer_user.has_error" :src="item.closer_user.profile_photo_url" @error="item.closer_user.has_error = true" class="w-full h-full object-cover rounded-full" alt="Closer">
                                             <div v-else class="w-full h-full bg-slate-200 dark:bg-slate-700 rounded-full flex items-end justify-center overflow-hidden">
                                                 <svg class="w-7 h-7 text-slate-400 dark:text-slate-500 translate-y-1" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
-                                            
-                                            <!-- Tooltip -->
-                                            <Transition name="tooltip-fade">
-                                                <div v-if="hoveredAvatar.id === item.id && hoveredAvatar.type === 'closer' && item.closer_id" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max">
-                                                    <p class="text-[9px] font-bold text-pink-300 uppercase tracking-wider mb-0.5">Closer / Fechador</p>
-                                                    <p class="text-xs font-semibold">{{ item.closer_user?.name || getAvatarName(item.closer_id) }}</p>
-                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
-                                                </div>
-                                            </Transition>
                                         </div>
                                         <div 
                                             v-else 
                                             @click.stop="openPicker(index, 'closerAvatar')"
                                             class="w-9 h-9 flex items-center justify-center group/add"
-                                            :class="can('atendimentos.gerenciar') ? 'cursor-pointer' : 'cursor-default'"
+                                            :class="can('atendimentos.editar') ? 'cursor-pointer' : 'cursor-default'"
                                         >
                                             <div class="w-4 h-[2px] bg-slate-200 dark:bg-slate-700 group-hover/add:w-6 group-hover/add:bg-pink-400 transition-all rounded-full"></div>
                                         </div>
@@ -633,31 +635,20 @@ const hasCortesia = (cortesia) => {
                                  <!-- Qualification -->
                                  <div v-if="columnSettings.qualification" class="w-24 flex justify-center relative">
                                      <div 
-                                         @mouseenter="hoveredQualId = item.id"
-                                         @mouseleave="hoveredQualId = null"
+                                         @mouseenter="(e) => getQualificationMetadata(item.qualification) && onTooltipEnter(e, 'Qualificação', getQualificationMetadata(item.qualification).name, getQualificationMetadata(item.qualification).color)"
+                                         @mouseleave="onTooltipLeave"
+                                         @mousemove="onTooltipMove"
                                          @click.stop="openQualPicker(index)"
                                          class="min-w-[56px] h-9 px-3 rounded-[10px] border flex items-center justify-center text-xs font-black uppercase tracking-wider transition-all shadow-sm"
                                          :class="[
                                              getQualificationMetadata(item.qualification) 
                                                 ? getQualStyles(getQualificationMetadata(item.qualification).color)
                                                 : 'border-slate-200 text-slate-500 bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
-                                             can('atendimentos.gerenciar') && (item.status === 'MESA' || item.status === 'table') ? 'cursor-pointer hover:scale-105 hover:shadow-md' : 'cursor-not-allowed opacity-70'
+                                             can('atendimentos.alterar_qualificacao') ? 'cursor-pointer hover:scale-105 hover:shadow-md' : 'cursor-not-allowed opacity-70'
                                          ]"
                                      >
                                          {{ item.qualification }}
                                      </div>
-
-                                     <!-- Tooltip Qualificação -->
-                                     <Transition name="tooltip-fade">
-                                         <div v-if="hoveredQualId === item.id && getQualificationMetadata(item.qualification)" class="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-[200] pointer-events-none px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max flex flex-col items-center">
-                                             <div class="flex items-center gap-1.5 mb-0.5">
-                                                 <div class="w-2 h-2 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.3)]" :class="getQualificationMetadata(item.qualification).color"></div>
-                                                 <p class="text-[9px] font-bold text-slate-300 uppercase tracking-wider leading-none">Qualificação</p>
-                                             </div>
-                                             <p class="text-xs font-semibold">{{ getQualificationMetadata(item.qualification).name }}</p>
-                                             <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-[4px] border-transparent border-b-slate-800 dark:border-b-slate-700"></div>
-                                         </div>
-                                     </Transition>
                                  </div>
 
 
@@ -922,6 +913,23 @@ const hasCortesia = (cortesia) => {
                 ></div>
             </div>
         </Transition>
+
+        <Teleport to="body">
+            <Transition name="tooltip-fade">
+                <div v-if="tooltipData.show" 
+                     class="fixed z-[9999] pointer-events-none px-3 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg shadow-xl min-w-max flex flex-col items-center transition-opacity"
+                     :style="{ left: tooltipData.x + 'px', top: (tooltipData.y - 15) + 'px', transform: 'translate(-50%, -100%)' }">
+                     
+                     <div class="flex items-center gap-1.5 mb-1">
+                         <div v-if="tooltipData.color" class="w-2 h-2 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.3)]" :class="tooltipData.color"></div>
+                         <p class="text-[9px] font-bold text-slate-300 uppercase tracking-wider leading-none">{{ tooltipData.title }}</p>
+                     </div>
+                     <p class="text-xs font-semibold whitespace-nowrap text-center">{{ tooltipData.subtitle }}</p>
+                     
+                     <div class="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+                </div>
+            </Transition>
+        </Teleport>
     </AuthenticatedLayout>
 </template>
 

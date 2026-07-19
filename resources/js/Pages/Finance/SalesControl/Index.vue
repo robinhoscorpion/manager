@@ -1,7 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
@@ -234,7 +239,7 @@ const hasDiscrepancy = (proposal) => {
                         </div>
                         <input v-model="search" @input="performSearch" type="text" placeholder="Buscar por contrato ou nome..." class="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:ring-brand-green/20 placeholder-slate-400 h-8">
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2" v-if="can('controle_vendas.gerenciar')">
                         <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600 dark:text-slate-400 select-none">
                             <div class="relative">
                                 <input type="checkbox" v-model="filtersForm.only_discrepancies" @change="performSearch" class="sr-only">

@@ -31,7 +31,14 @@ class ComplimentaryItemController extends Controller
             'content' => 'nullable|string',
             'type' => 'required|in:atendimento,contrato',
             'is_active' => 'required|boolean',
+            'template_type' => 'required|in:html,image,docx',
+            'file' => 'nullable|file|mimes:jpeg,png,jpg,webp,docx|max:10240',
+            'metadata' => 'nullable|array',
         ]);
+
+        if ($request->hasFile('file')) {
+            $validated['file_path'] = $request->file('file')->store('complimentary-templates', 'public');
+        }
 
         ComplimentaryItem::create($validated);
 
@@ -50,7 +57,14 @@ class ComplimentaryItemController extends Controller
             'content' => 'nullable|string',
             'type' => 'required|in:atendimento,contrato',
             'is_active' => 'required|boolean',
+            'template_type' => 'required|in:html,image,docx',
+            'file' => 'nullable|file|mimes:jpeg,png,jpg,webp,docx|max:10240',
+            'metadata' => 'nullable|array',
         ]);
+
+        if ($request->hasFile('file')) {
+            $validated['file_path'] = $request->file('file')->store('complimentary-templates', 'public');
+        }
 
         $complimentaryItem->update($validated);
 
@@ -62,6 +76,14 @@ class ComplimentaryItemController extends Controller
      */
     public function destroy(ComplimentaryItem $complimentaryItem)
     {
+        // Verifica se a cortesia já está em uso em algum atendimento/contrato
+        $isUsed = \App\Models\SalesService::where('cortesia', 'like', '%' . $complimentaryItem->code . '%')->exists();
+
+        if ($isUsed) {
+            $complimentaryItem->update(['is_active' => false]);
+            return redirect()->back()->with('success', 'Cortesia em uso! Ela não pode ser excluída, mas foi inativada para manter o histórico.');
+        }
+
         $complimentaryItem->delete();
 
         return redirect()->back()->with('success', 'Cortesia excluída com sucesso!');

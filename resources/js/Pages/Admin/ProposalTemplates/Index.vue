@@ -1,6 +1,11 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue';
-import { useForm, Head } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { useForm, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import axios from 'axios';
@@ -217,7 +222,7 @@ const closeModal = () => {
 
                         <!-- Actions -->
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                            <button 
+                            <button v-if="can('configuracoes.modelos_proposta.gerenciar')" 
                                 @click="openCreateModal"
                                 class="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >

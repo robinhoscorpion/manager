@@ -1,7 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
@@ -144,7 +149,7 @@ const updateStatus = (schedule, newStatus) => {
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Gestão de visitas à Sala de Vendas</p>
                     </div>
                 </div>
-                <button @click="openNewModal" class="h-10 bg-brand-green text-white px-5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#485638] transition-colors flex items-center gap-2 shadow-sm">
+                <button v-if="can('agendamentos.gerenciar')" @click="openNewModal" class="h-10 bg-brand-green text-white px-5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#485638] transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Novo Agendamento
                 </button>
@@ -250,7 +255,7 @@ const updateStatus = (schedule, newStatus) => {
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50">
                             <tr v-for="schedule in schedules" :key="schedule.id" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="px-3 py-2">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2" v-if="can('agendamentos.gerenciar')">
                                         <div class="w-6 h-6 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
                                             {{ schedule.name.charAt(0).toUpperCase() }}
                                         </div>
@@ -275,7 +280,7 @@ const updateStatus = (schedule, newStatus) => {
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <div class="flex items-center justify-end gap-1.5" v-if="schedule.status === 'scheduled'">
+                                    <div class="flex items-center justify-end gap-1.5" v-if="schedule.status === 'scheduled' && can('agendamentos.gerenciar')">
                                         <button @click="updateStatus(schedule, 'confirmed')" class="px-3 py-1.5 rounded-md bg-blue-500 text-white hover:bg-blue-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95" title="Confirmar Agendamento">
                                             Confirmar
                                         </button>
@@ -283,7 +288,7 @@ const updateStatus = (schedule, newStatus) => {
                                             Cancelar
                                         </button>
                                     </div>
-                                    <div class="flex items-center justify-end gap-1.5" v-else-if="schedule.status === 'confirmed'">
+                                    <div class="flex items-center justify-end gap-1.5" v-else-if="schedule.status === 'confirmed' && can('agendamentos.gerenciar')">
                                         <button @click="updateStatus(schedule, 'show')" class="px-3 py-1.5 rounded-md bg-green-500 text-white hover:bg-green-600 text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95" title="Marcar como Show (Compareceu)">
                                             Show
                                         </button>

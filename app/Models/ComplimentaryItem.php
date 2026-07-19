@@ -13,9 +13,17 @@ class ComplimentaryItem extends Model
     protected $fillable = [
         'name',
         'code',
-        'description',
-        'content',
         'type',
+        'description',
+        'template_type',
+        'file_path',
+        'content',
+        'metadata',
         'is_active',
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
+        'is_active' => 'boolean',
     ];
 }

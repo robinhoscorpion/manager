@@ -1,6 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import Modal from '@/Components/Modal.vue';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import PermissionsMatrix from '@/Components/Roles/PermissionsMatrix.vue';
 
@@ -12,6 +18,8 @@ const props = defineProps({
 const isModalOpen = ref(false);
 const isPermissionsModalOpen = ref(false);
 const editingRole = ref(null);
+const showDeleteConfirmModal = ref(false);
+const roleToDelete = ref(null);
 
 const form = useForm({
     name: '',
@@ -57,9 +65,19 @@ const submitPermissions = () => {
     });
 };
 
-const deleteRole = (role) => {
-    if (confirm(`Tem certeza que deseja remover o cargo ${role.name}?`)) {
-        router.delete(route('roles.destroy', role.id));
+const confirmDelete = (role) => {
+    roleToDelete.value = role;
+    showDeleteConfirmModal.value = true;
+};
+
+const executeDelete = () => {
+    if (roleToDelete.value) {
+        form.delete(route('roles.destroy', roleToDelete.value.id), {
+            onSuccess: () => {
+                showDeleteConfirmModal.value = false;
+                roleToDelete.value = null;
+            }
+        });
     }
 };
 
@@ -109,7 +127,7 @@ const deleteRole = (role) => {
                                 >
                             </div>
 
-                            <button 
+                            <button v-if="can('cargos.gerenciar')"
                                 @click="openModal()"
                                 class="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >
@@ -163,15 +181,22 @@ const deleteRole = (role) => {
                                     </span>
                                 </div>
 
-                                <!-- 4. Permissões -->
-                                <div class="w-32 flex justify-center items-center">
+                                <!-- 4. Permissões e Usuários -->
+                                <div class="w-32 flex flex-col justify-center items-center gap-1">
                                     <span class="px-2 py-0.5 bg-brand-green/10 border border-brand-green/20 rounded-md text-[9px] font-black text-brand-green uppercase tracking-widest shadow-sm">
                                         {{ role.permissions.length }} IDs
+                                    </span>
+                                    <span v-if="role.users_count > 0" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1" :title="`${role.users_count} usuário(s) usando este cargo`">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                        {{ role.users_count }}
+                                    </span>
+                                    <span v-else class="text-[9px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest flex items-center gap-1">
+                                        Sem Usuários
                                     </span>
                                 </div>
 
                                 <!-- 5. Ações -->
-                                <div class="w-32 flex items-center justify-end gap-1.5">
+                                <div class="w-32 flex items-center justify-end gap-1.5" v-if="can('cargos.gerenciar')">
                                     <button 
                                         @click="openPermissionsModal(role)"
                                         class="p-1.5 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 rounded-md transition-all"
@@ -190,16 +215,29 @@ const deleteRole = (role) => {
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
-                                    <button 
-                                        v-if="!['admin', 'promotor', 'consultor', 'supervisor'].includes(role.slug)" 
-                                        @click="deleteRole(role)"
-                                        class="p-1.5 rounded-md transition-all text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-                                        title="Remover Cargo"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                    <div class="relative group/tooltip flex items-center justify-center">
+                                        <button 
+                                            v-if="!['admin', 'promotor', 'consultor', 'supervisor'].includes(role.slug)" 
+                                            @click="role.users_count > 0 ? null : confirmDelete(role)"
+                                            :disabled="role.users_count > 0"
+                                            :class="[
+                                                'p-1.5 transition-colors rounded-md',
+                                                role.users_count > 0 
+                                                    ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' 
+                                                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
+                                            ]"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Custom Tooltip -->
+                                        <div v-if="!['admin', 'promotor', 'consultor', 'supervisor'].includes(role.slug) && role.users_count > 0" class="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-56 bg-slate-900 dark:bg-black text-white text-xs font-medium leading-relaxed px-3 py-2 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 shadow-xl border border-slate-700/50 z-[100] pointer-events-none transform -translate-x-2 group-hover/tooltip:translate-x-0 text-center">
+                                            Não é possível remover: Existem <strong class="text-brand-green">{{ role.users_count }} usuário(s)</strong> usando este cargo.
+                                            <div class="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-900 dark:bg-black border-t border-r border-slate-700/50 transform rotate-45"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -296,6 +334,40 @@ const deleteRole = (role) => {
                 </div>
             </div>
         </div>
+
+        <!-- Delete Confirm Modal -->
+        <Modal :show="showDeleteConfirmModal" @close="showDeleteConfirmModal = false" maxWidth="md">
+            <div class="p-6 bg-white dark:bg-[#0f1219]">
+                <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-5 border-4 border-red-100 dark:border-red-500/20">
+                    <svg class="w-8 h-8 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                
+                <h3 class="text-xl font-black text-slate-900 dark:text-white text-center mb-2 tracking-tight">
+                    Excluir Cargo?
+                </h3>
+                
+                <p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 px-4 leading-relaxed">
+                    Você está prestes a excluir o cargo <br>
+                    <strong class="text-slate-700 dark:text-slate-300">"{{ roleToDelete?.name }}"</strong>. <br>
+                    <span class="text-red-500 font-bold block mt-3">Esta ação não pode ser desfeita.</span> Todos os usuários vinculados perderão este cargo e suas respectivas permissões.
+                </p>
+
+                <div class="flex gap-3 w-full">
+                    <button @click="showDeleteConfirmModal = false" class="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all shadow-sm">
+                        Cancelar
+                    </button>
+                    <button @click="executeDelete" :disabled="form.processing" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
+                        <svg v-if="form.processing" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        {{ form.processing ? 'Excluindo...' : 'Sim, excluir' }}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+
     </AuthenticatedLayout>
 </template>
 

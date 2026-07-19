@@ -1,21 +1,35 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
     logs: Object,
+    users: Array,
     filters: Object,
 });
 
-const search = ref(props.filters.search);
-const eventFilter = ref(props.filters.event);
+const search = ref(props.filters.search || '');
+const eventFilter = ref(props.filters.event || '');
+const moduleFilter = ref(props.filters.module || '');
+const userFilter = ref(props.filters.user_id || '');
+const dateStartFilter = ref(props.filters.date_start || '');
+const dateEndFilter = ref(props.filters.date_end || '');
 
-watch([search, eventFilter], debounce(() => {
+watch([search, eventFilter, moduleFilter, userFilter, dateStartFilter, dateEndFilter], debounce(() => {
     router.get(route('admin.audit-logs.index'), { 
         search: search.value, 
-        event: eventFilter.value 
+        event: eventFilter.value,
+        module: moduleFilter.value,
+        user_id: userFilter.value,
+        date_start: dateStartFilter.value,
+        date_end: dateEndFilter.value,
     }, { 
         preserveState: true, 
         replace: true 
@@ -43,7 +57,21 @@ const getEventColor = (event) => {
 
 const getModelName = (type) => {
     if (!type) return 'N/A';
-    return type.split('\\').pop();
+    const model = type.split('\\').pop();
+    const translations = {
+        'User': 'Usuário',
+        'Role': 'Cargo',
+        'Permission': 'Permissão',
+        'Product': 'Produto',
+        'ProductType': 'Tipo de Produto',
+        'Proposal': 'Proposta',
+        'ProposalTemplate': 'Modelo de Proposta',
+        'ContractTemplate': 'Modelo de Contrato',
+        'Client': 'Cliente',
+        'SalesService': 'Atendimento',
+        'PaymentMethod': 'Forma de Pagamento'
+    };
+    return translations[model] || model;
 };
 
 const selectedLog = ref(null);
@@ -79,23 +107,69 @@ const formatJson = (json) => {
                             </div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                            <select v-model="eventFilter" class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest focus:outline-none focus:border-brand-green/40 transition-all shadow-sm">
-                                <option value="" class="bg-white dark:bg-slate-800">Todos Eventos</option>
-                                <option value="created" class="bg-white dark:bg-slate-800">Criação</option>
-                                <option value="updated" class="bg-white dark:bg-slate-800">Edição</option>
-                                <option value="deleted" class="bg-white dark:bg-slate-800">Exclusão</option>
-                            </select>
+                        <div class="relative group/search w-full sm:w-64">
+                            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/search:text-brand-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input 
+                                v-model="search"
+                                type="text" 
+                                placeholder="BUSCAR LOG..." 
+                                class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest placeholder:text-slate-400 focus:outline-none focus:border-brand-green/40 transition-all shadow-sm"
+                            >
+                        </div>
+                    </div>
 
-                            <div class="relative group/search">
-                                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/search:text-brand-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+                    <!-- Advanced Filters Bar -->
+                    <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-200/50 dark:border-slate-800/50 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Módulo / Tipo</label>
+                            <select v-model="moduleFilter" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest focus:outline-none focus:border-brand-green/40 transition-all shadow-sm">
+                                <option value="" class="bg-white dark:bg-slate-800">Todos os Módulos</option>
+                                <option value="User" class="bg-white dark:bg-slate-800">Usuários</option>
+                                <option value="Role" class="bg-white dark:bg-slate-800">Cargos</option>
+                                <option value="Product" class="bg-white dark:bg-slate-800">Produtos</option>
+                                <option value="Proposal" class="bg-white dark:bg-slate-800">Propostas</option>
+                                <option value="Client" class="bg-white dark:bg-slate-800">Clientes</option>
+                                <option value="SalesService" class="bg-white dark:bg-slate-800">Atendimentos</option>
+                                <option value="PaymentMethod" class="bg-white dark:bg-slate-800">F. Pagamento</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Usuário Responsável</label>
+                            <select v-model="userFilter" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest focus:outline-none focus:border-brand-green/40 transition-all shadow-sm">
+                                <option value="" class="bg-white dark:bg-slate-800">Todos os Usuários</option>
+                                <option v-for="user in users" :key="user.id" :value="user.id" class="bg-white dark:bg-slate-800">{{ user.name }}</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Tipo de Evento</label>
+                            <select v-model="eventFilter" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest focus:outline-none focus:border-brand-green/40 transition-all shadow-sm">
+                                <option value="" class="bg-white dark:bg-slate-800">Todos Eventos</option>
+                                <option value="created" class="bg-white dark:bg-slate-800">Criação (Insert)</option>
+                                <option value="updated" class="bg-white dark:bg-slate-800">Edição (Update)</option>
+                                <option value="deleted" class="bg-white dark:bg-slate-800">Exclusão (Delete)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Período de Data</label>
+                            <div class="flex items-center gap-2">
                                 <input 
-                                    v-model="search"
-                                    type="text" 
-                                    placeholder="BUSCAR LOG..." 
-                                    class="w-full sm:w-64 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest placeholder:text-slate-400 focus:outline-none focus:border-brand-green/40 transition-all shadow-sm"
+                                    v-model="dateStartFilter"
+                                    type="date"
+                                    class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase focus:outline-none focus:border-brand-green/40 transition-all shadow-sm"
+                                    title="Data Inicial"
+                                >
+                                <span class="text-slate-400 font-bold text-[10px]">ATÉ</span>
+                                <input 
+                                    v-model="dateEndFilter"
+                                    type="date"
+                                    class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase focus:outline-none focus:border-brand-green/40 transition-all shadow-sm"
+                                    title="Data Final"
                                 >
                             </div>
                         </div>
@@ -137,6 +211,9 @@ const formatJson = (json) => {
                                         <div class="flex flex-col gap-0.5">
                                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">{{ getModelName(log.auditable_type) }}</span>
                                             <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">ID: #{{ log.auditable_id }}</span>
+                                        </div>
+                                        <div v-if="log.description" class="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium italic">
+                                            {{ log.description }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
@@ -212,7 +289,7 @@ const formatJson = (json) => {
                 </div>
 
                 <div class="p-6 md:p-8 flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0f1219] custom-scrollbar">
-                    <div class="grid grid-cols-2 gap-4 md:gap-8 mb-8">
+                    <div class="grid grid-cols-2 gap-4 md:gap-8 mb-6">
                         <div>
                             <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Responsável</span>
                             <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
@@ -226,6 +303,13 @@ const formatJson = (json) => {
                                 <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{{ formatDate(selectedLog.created_at) }}</span>
                             </div>
+                        </div>
+                    </div>
+
+                    <div v-if="selectedLog.description" class="mb-8">
+                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Descrição da Ação</span>
+                        <div class="p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-sm text-slate-700 dark:text-slate-300 font-medium">
+                            {{ selectedLog.description }}
                         </div>
                     </div>
 
@@ -284,6 +368,10 @@ const formatJson = (json) => {
                     <!-- Metadata -->
                     <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
                         <div class="flex flex-col gap-2 px-1">
+                            <div class="flex items-center justify-between text-[10px] mb-2">
+                                <span class="font-bold text-slate-500 uppercase tracking-widest">Endereço IP</span>
+                                <span class="text-slate-700 dark:text-slate-400 font-medium tabular-nums">{{ selectedLog.ip_address }}</span>
+                            </div>
                             <div class="flex items-center justify-between text-[10px]">
                                 <span class="font-bold text-slate-500 uppercase tracking-widest">User Agent</span>
                                 <span class="text-slate-700 dark:text-slate-400 font-medium line-clamp-1 max-w-[70%] select-all">{{ selectedLog.user_agent }}</span>

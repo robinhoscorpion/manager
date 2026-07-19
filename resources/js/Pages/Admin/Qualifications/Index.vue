@@ -1,6 +1,11 @@
 <script setup>
 import { ref } from 'vue';
-import { useForm, Head } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { useForm, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 
@@ -97,7 +102,7 @@ const closeModal = () => {
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <button 
+                            <button v-if="can('configuracoes.qualificacao.gerenciar')"
                                 @click="openCreateModal"
                                 class="bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] text-xs font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
                             >
@@ -125,7 +130,7 @@ const closeModal = () => {
                                 >
                                     {{ qual.code }}
                                 </div>
-                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity" v-if="can('configuracoes.qualificacao.gerenciar')">
                                     <button @click="openEditModal(qual)" class="text-slate-500 hover:text-brand-green p-1 transition-colors bg-slate-50 dark:bg-slate-800/50 hover:bg-brand-green/10 rounded-lg">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
@@ -153,7 +158,7 @@ const closeModal = () => {
                     </div>
 
                     <!-- Placeholder -->
-                    <button 
+                    <button v-if="can('configuracoes.qualificacao.gerenciar')"
                         @click="openCreateModal"
                         class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[20px] h-full min-h-[180px] flex flex-col items-center justify-center p-8 group hover:border-brand-green/30 transition-all bg-slate-50/50 dark:bg-slate-900/40 hover:bg-brand-green/5 dark:hover:bg-brand-green/5"
                     >

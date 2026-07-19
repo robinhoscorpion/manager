@@ -1,7 +1,12 @@
 <script setup>
 import { ref } from 'vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
 import SalesChart from '@/Components/Dashboard/SalesChart.vue';
 import GoalProgress from '@/Components/Dashboard/GoalProgress.vue';

@@ -17,8 +17,8 @@ class AdminProductController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Product/Index', [
-            'products' => Product::with(['productType', 'proposalTemplate', 'contractTemplate'])->get(),
-            'productTypes' => ProductType::all(),
+            'products' => Product::with(['productType', 'proposalTemplate', 'contractTemplate'])->withCount('proposals')->get(),
+            'productTypes' => ProductType::orderByRaw("CASE WHEN name = 'Pontos' THEN 1 ELSE 2 END")->orderBy('name')->get(),
             'proposalTemplates' => ProposalTemplate::where('is_active', true)->orderBy('name')->get(),
             'contractTemplates' => ContractTemplate::orderBy('name')->get()
         ]);
@@ -113,6 +113,10 @@ class AdminProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        if ($product->proposals()->count() > 0) {
+            return redirect()->back()->with('error', "Não é possível excluir este produto pois já existem vendas (propostas) vinculadas a ele. Você pode inativá-lo para que não seja mais vendido.");
+        }
+
         $product->delete();
         return redirect()->back()->with('success', 'Produto removido com sucesso!');
     }

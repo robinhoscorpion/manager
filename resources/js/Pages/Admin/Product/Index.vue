@@ -1,6 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm, Head } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { useForm, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 
@@ -162,7 +167,7 @@ const contractNumberPreview = computed(() => {
 
                         <!-- Actions -->
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                            <button 
+                            <button v-if="can('configuracoes.produtos.gerenciar')" 
                                 @click="openCreateModal"
                                 class="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-green hover:bg-[#485638] text-white px-5 py-2.5 rounded-[12px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >
@@ -193,11 +198,11 @@ const contractNumberPreview = computed(() => {
                     <div 
                         v-for="product in filteredProducts" 
                         :key="product.id"
-                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl group hover:border-brand-green/30 dark:hover:border-brand-green/30 transition-all overflow-hidden flex flex-col shadow-sm hover:shadow-md"
+                        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl group hover:border-brand-green/30 dark:hover:border-brand-green/30 transition-all flex flex-col shadow-sm hover:shadow-md relative"
                     >
                         <div class="p-6 space-y-4 flex-1">
                             <div class="flex justify-between items-start">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2" v-if="can('configuracoes.produtos.gerenciar')">
                                     <div class="bg-brand-green/10 border border-brand-green/20 px-2 py-1 rounded-md text-[9px] font-bold text-brand-green uppercase tracking-widest">
                                         {{ product.product_type?.name }}
                                     </div>
@@ -212,9 +217,27 @@ const contractNumberPreview = computed(() => {
                                     <button @click="openEditModal(product)" class="text-slate-400 hover:text-brand-green p-1.5 transition-colors rounded-md hover:bg-brand-green/10">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
-                                    <button @click="confirmDelete(product)" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
+                                <!-- Delete Button with Custom Tooltip -->
+                                    <div class="relative group/tooltip flex items-center justify-center">
+                                        <button 
+                                            @click="product.proposals_count > 0 ? null : confirmDelete(product)" 
+                                            :disabled="product.proposals_count > 0"
+                                            :class="[
+                                                'p-1.5 transition-colors rounded-md',
+                                                product.proposals_count > 0 
+                                                    ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' 
+                                                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
+                                            ]"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        </button>
+                                        
+                                        <!-- Custom Tooltip -->
+                                        <div v-if="product.proposals_count > 0" class="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-56 bg-slate-900 dark:bg-black text-white text-xs font-medium leading-relaxed px-3 py-2 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 shadow-xl border border-slate-700/50 z-[100] pointer-events-none transform -translate-x-2 group-hover/tooltip:translate-x-0 text-center">
+                                            Não é possível remover: Existem <strong class="text-brand-green">{{ product.proposals_count }} venda(s)</strong> usando este produto. Apenas o desative.
+                                            <div class="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-900 dark:bg-black border-t border-r border-slate-700/50 transform rotate-45"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -255,7 +278,7 @@ const contractNumberPreview = computed(() => {
                     </div>
 
                     <!-- Placeholder -->
-                    <button 
+                    <button v-if="can('configuracoes.produtos.gerenciar')"
                         @click="openCreateModal"
                         class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl h-full min-h-[220px] flex flex-col items-center justify-center p-8 group hover:border-brand-green/30 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30"
                     >
@@ -270,7 +293,7 @@ const contractNumberPreview = computed(() => {
         </div>
 
         <!-- Compact Edit/Create Modal -->
-        <Modal :show="showEditModal" @close="closeModal" maxWidth="3xl">
+        <Modal :show="showEditModal" @close="closeModal" maxWidth="3xl" :closeable="false">
             <div class="bg-white dark:bg-[#0f1219] rounded-[20px] overflow-hidden flex flex-col max-h-[90vh]">
                 <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
                     <div class="flex items-center gap-3">

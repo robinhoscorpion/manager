@@ -1,6 +1,11 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import Modal from '@/Components/Modal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
@@ -586,7 +591,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-if="!errors.opc_id"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.qualification" :options="qualifications.map(q => ({ label: q.code + ' - ' + q.name, value: q.code }))" label="Qualificação Atual" placeholder="SELECIONE" :error="errors.qualification" :disabled="isReadOnly || (form.status !== 'MESA' && form.status !== 'table' && form.status !== 'queue')" />
+                            <SearchableSelect v-model="form.qualification" :options="qualifications.map(q => ({ label: q.code + ' - ' + q.name, value: q.code }))" label="Qualificação Atual" placeholder="SELECIONE" :error="errors.qualification" :disabled="isReadOnly || !can('atendimentos.alterar_qualificacao')" />
                             <div class="h-[14px]" v-if="!errors.qualification"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
@@ -620,6 +625,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         {{ isReadOnly ? 'Fechar' : 'Cancelar Edição' }}
                     </button>
                     <button 
+                        v-if="can('atendimentos.editar')"
                         @click="isReadOnly ? (isReadOnly = false) : submit()"
                         class="order-1 sm:order-2 flex-[2] py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
                     >

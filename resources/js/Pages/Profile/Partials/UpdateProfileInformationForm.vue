@@ -1,5 +1,10 @@
 <script setup>
 import { ref, onUnmounted } from 'vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';

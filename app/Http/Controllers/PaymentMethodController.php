@@ -13,8 +13,14 @@ class PaymentMethodController extends Controller
      */
     public function index()
     {
+        $paymentMethods = PaymentMethod::all()->map(function ($pm) {
+            $pm->proposals_count = \App\Models\ProposalPayment::where('payment_method', $pm->name)->count() + 
+                                   \App\Models\Proposal::where('payment_method', $pm->name)->count();
+            return $pm;
+        });
+
         return Inertia::render('Admin/Settings/PaymentMethod/Index', [
-            'paymentMethods' => PaymentMethod::all()
+            'paymentMethods' => $paymentMethods
         ]);
     }
 
@@ -57,6 +63,13 @@ class PaymentMethodController extends Controller
      */
     public function destroy(PaymentMethod $paymentMethod)
     {
+        $hasProposals = \App\Models\Proposal::where('payment_method', $paymentMethod->name)->exists() || 
+                        \App\Models\ProposalPayment::where('payment_method', $paymentMethod->name)->exists();
+
+        if ($hasProposals) {
+            return redirect()->back()->with('error', 'Não é possível excluir esta forma de pagamento pois existem vendas vinculadas a ela. Você pode inativá-la para que não seja mais usada.');
+        }
+
         $paymentMethod->delete();
 
         return redirect()->back()->with('success', 'Forma de pagamento removida com sucesso.');

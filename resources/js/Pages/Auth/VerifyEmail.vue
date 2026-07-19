@@ -1,6 +1,11 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import '@/../css/login_style.css';
 
 const props = defineProps({

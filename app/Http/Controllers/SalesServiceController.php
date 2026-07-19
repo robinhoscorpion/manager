@@ -17,6 +17,18 @@ class SalesServiceController extends Controller
     {
         $query = SalesService::with(['client.address', 'proposal.payments', 'proposal.product', 'opcUser', 'linerUser', 'closerUser', 'mktUser']);
 
+        // Controle de Acesso Restrito (RBAC)
+        $user = auth()->user();
+        // Se o usuário não for admin e não tiver a permissão para ver todos os atendimentos
+        if (!$user->hasRole('admin') && !$user->hasPermission('atendimentos.ver_todos')) {
+            $query->where(function($q) use ($user) {
+                $q->where('opc_id', $user->id)
+                  ->orWhere('liner_id', $user->id)
+                  ->orWhere('closer_id', $user->id)
+                  ->orWhere('mkt_id', $user->id);
+            });
+        }
+
         // Filtro de Busca (Local)
         if ($request->filled('search')) {
             $search = $request->search;
@@ -292,6 +304,10 @@ class SalesServiceController extends Controller
 
     public function quickUpdate(Request $request, SalesService $service)
     {
+        if ($request->has('qualification') && !auth()->user()->can('atendimentos.alterar_qualificacao')) {
+            abort(403, 'Você não tem permissão para alterar a qualificação.');
+        }
+
         $validated = $request->validate([
             'qualification' => 'nullable|string',
             'status' => 'nullable|string',
@@ -463,11 +479,25 @@ class SalesServiceController extends Controller
 
         // 3. Processar cada item (Mail Merge)
         foreach ($items as $item) {
-            $content = $item->content;
-            foreach ($replacements as $tag => $val) {
-                $content = str_replace($tag, $val, $content);
+            if ($item->template_type === 'image') {
+                $metadata = is_array($item->metadata) ? $item->metadata : json_decode($item->metadata, true);
+                if (isset($metadata['elements']) && is_array($metadata['elements'])) {
+                    foreach ($metadata['elements'] as &$element) {
+                        $text = $element['content'] ?? '';
+                        foreach ($replacements as $tag => $val) {
+                            $text = str_replace($tag, $val, $text);
+                        }
+                        $element['content'] = $text;
+                    }
+                }
+                $item->processed_metadata = $metadata;
+            } else {
+                $content = $item->content;
+                foreach ($replacements as $tag => $val) {
+                    $content = str_replace($tag, $val, $content);
+                }
+                $item->processed_content = $content;
             }
-            $item->processed_content = $content;
         }
 
         return view('pdf.complimentary-item', [

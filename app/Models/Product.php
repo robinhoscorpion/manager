@@ -49,4 +49,9 @@ class Product extends Model
     {
         return $this->belongsTo(ContractTemplate::class);
     }
+
+    public function proposals()
+    {
+        return $this->hasMany(Proposal::class);
+    }
 }

@@ -71,7 +71,22 @@
 
         @foreach($items as $item)
             <div class="content-area" style="{{ !$loop->last ? 'page-break-after: always;' : '' }}">
-                {!! $item->processed_content !!}
+                @if($item->template_type === 'image')
+                    <div style="position: relative; width: 794px; min-height: 1123px; margin: 0 auto; background-color: #fff; overflow: hidden; page-break-inside: avoid;">
+                        @if($item->file_path)
+                            <img src="{{ asset('storage/' . $item->file_path) }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" />
+                        @endif
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;">
+                            @if(isset($item->processed_metadata['elements']) && is_array($item->processed_metadata['elements']))
+                                @foreach($item->processed_metadata['elements'] as $el)
+                                    <div style="position: absolute; left: {{ $el['x'] ?? 0 }}px; top: {{ $el['y'] ?? 0 }}px; font-size: {{ $el['fontSize'] ?? 16 }}px; color: {{ $el['color'] ?? '#000000' }}; font-weight: {{ $el['fontWeight'] ?? 'normal' }}; text-align: {{ $el['textAlign'] ?? 'left' }}; width: {{ isset($el['width']) && $el['width'] ? $el['width'].'px' : 'auto' }}; white-space: pre-wrap; font-family: Arial, sans-serif;">{{ $el['content'] ?? '' }}</div>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    {!! $item->processed_content !!}
+                @endif
             </div>
         @endforeach
 

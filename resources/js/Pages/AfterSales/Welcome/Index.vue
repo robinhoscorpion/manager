@@ -1,5 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
+
+const can = (permission) => {
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
+};
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
@@ -235,7 +240,7 @@ const sendEmail = () => {
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50">
                             <tr v-for="client in filteredClients" :key="client.id" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="px-3 py-2">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2" v-if="can('pos_venda.boas_vindas.gerenciar')">
                                         <div class="w-6 h-6 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
                                             {{ client.name.charAt(0) }}
                                         </div>
