@@ -52,6 +52,7 @@ class DashboardController extends Controller
         // Rankings
         $rankingPromotores = [];
         $rankingConsultores = [];
+        $rankingSupervisores = [];
 
         foreach ($monthlyProposals as $proposal) {
             $service = $proposal->salesService;
@@ -71,23 +72,37 @@ class DashboardController extends Controller
                     $rankingPromotores[$id]['total'] += $val;
                 }
 
-                // Consultores (Closer)
-                if ($service->closerUser) {
-                    $id = $service->closer_id;
+                // Consultores (Liner)
+                if ($service->linerUser) {
+                    $id = $service->liner_id;
                     if (!isset($rankingConsultores[$id])) {
                         $rankingConsultores[$id] = [
+                            'name' => $service->linerUser->name,
+                            'avatar' => $service->linerUser->profile_photo_url,
+                            'total' => 0
+                        ];
+                    }
+                    $rankingConsultores[$id]['total'] += $val;
+                }
+                
+                // Supervisores (Closer)
+                if ($service->closerUser) {
+                    $id = $service->closer_id;
+                    if (!isset($rankingSupervisores[$id])) {
+                        $rankingSupervisores[$id] = [
                             'name' => $service->closerUser->name,
                             'avatar' => $service->closerUser->profile_photo_url,
                             'total' => 0
                         ];
                     }
-                    $rankingConsultores[$id]['total'] += $val;
+                    $rankingSupervisores[$id]['total'] += $val;
                 }
             }
         }
 
         usort($rankingPromotores, fn($a, $b) => $b['total'] <=> $a['total']);
         usort($rankingConsultores, fn($a, $b) => $b['total'] <=> $a['total']);
+        usort($rankingSupervisores, fn($a, $b) => $b['total'] <=> $a['total']);
 
         $formatRanking = function($list) {
             return array_map(function($item) {
@@ -105,6 +120,7 @@ class DashboardController extends Controller
             'chart_services_data' => array_values($servicesPerDay),
             'ranking_promotores' => $formatRanking($rankingPromotores),
             'ranking_consultores' => $formatRanking($rankingConsultores),
+            'ranking_supervisores' => $formatRanking($rankingSupervisores),
         ]);
     }
 }

@@ -31,6 +31,10 @@ const props = defineProps({
     ranking_consultores: {
         type: Array,
         default: () => []
+    },
+    ranking_supervisores: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -343,7 +347,7 @@ const chartData = computed(() => {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <RankingCard title="Promotores" :sellers="ranking_promotores" :header-color="'bg-indigo-500'" />
                 <RankingCard title="Consultores" :sellers="ranking_consultores" :header-color="'bg-violet-500'" />
-                <RankingCard title="Supervisores" :sellers="rankingSellers" :header-color="'bg-purple-600'" />
+                <RankingCard title="Supervisores" :sellers="ranking_supervisores" :header-color="'bg-purple-600'" />
             </div>
         </div>
     </AuthenticatedLayout>
