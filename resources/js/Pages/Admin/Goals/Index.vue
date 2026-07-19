@@ -84,6 +84,18 @@ const getMonthName = (monthNumber) => {
     date.setMonth(monthNumber - 1);
     return date.toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
 };
+
+const maskCurrency = (value) => {
+    if (!value && value !== 0) return '';
+    let val = value.toString().replace(/\D/g, '');
+    val = (val / 100).toFixed(2);
+    return val.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const onRevenueInput = (e) => {
+    let raw = e.target.value.replace(/\D/g, '');
+    form.revenue_target = raw ? parseFloat(raw) / 100 : 0;
+};
 </script>
 
 <template>
@@ -239,7 +251,7 @@ const getMonthName = (monthNumber) => {
 
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Faturamento Alvo (R$)</label>
-                            <input v-model="form.revenue_target" type="number" step="0.01" min="0" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400">
+                            <input :value="maskCurrency(form.revenue_target)" @input="onRevenueInput" type="text" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400">
                             <InputError :message="form.errors.revenue_target" class="mt-2" />
                         </div>
 
