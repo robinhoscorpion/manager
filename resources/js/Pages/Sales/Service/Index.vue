@@ -35,8 +35,7 @@ watch(() => props.services, (newServices) => {
 }, { deep: true });
 
 const can = (permission) => {
-    const permissions = usePage().props.auth.permissions || [];
-    return permissions.includes(permission);
+    return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
 };
 
 const selectedLocation = ref('Todos');
