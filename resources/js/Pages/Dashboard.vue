@@ -106,7 +106,11 @@ const sourcesLeadsData = {
 
 const chartData = computed(() => {
     return {
-        labels: Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0')),
+        labels: Array.from({ length: daysInMonth }, (_, i) => {
+            const day = (i + 1).toString().padStart(2, '0');
+            const month = (new Date().getMonth() + 1).toString().padStart(2, '0');
+            return `${day}/${month}`;
+        }),
         datasets: [
             {
                 label: 'Vendas',
