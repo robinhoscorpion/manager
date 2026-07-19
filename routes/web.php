@@ -72,6 +72,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'index'])->name('admin.settings.columns.index')->middleware('permission:configuracoes.colunas.acessar');
     Route::put('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'update'])->name('admin.settings.columns.update')->middleware('permission:configuracoes.colunas.gerenciar');
 
+    // Metas da Plataforma
+    Route::resource('admin/platform-goals', \App\Http\Controllers\Admin\PlatformGoalController::class)
+        ->only(['index', 'show'])
+        ->names('admin.platform_goals')
+        ->middleware('permission:configuracoes.metas.acessar');
+    Route::resource('admin/platform-goals', \App\Http\Controllers\Admin\PlatformGoalController::class)
+        ->except(['index', 'show'])
+        ->names('admin.platform_goals')
+        ->middleware('permission:configuracoes.metas.gerenciar');
+
     // Propostas
     Route::post('/propostas', [\App\Http\Controllers\ProposalController::class, 'store'])->name('sales.propostas.store')->middleware('permission:atendimentos.editar');
     Route::put('/propostas/{proposal}', [\App\Http\Controllers\ProposalController::class, 'update'])->name('sales.propostas.update')->middleware('permission:atendimentos.editar');

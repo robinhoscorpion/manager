@@ -101,6 +101,9 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Acessar Cortesias', 'slug' => 'configuracoes.cortesias.acessar', 'group' => 'Configurações'],
             ['name' => 'Gerenciar Cortesias', 'slug' => 'configuracoes.cortesias.gerenciar', 'group' => 'Configurações'],
             
+            ['name' => 'Acessar Metas da Plataforma', 'slug' => 'configuracoes.metas.acessar', 'group' => 'Configurações'],
+            ['name' => 'Gerenciar Metas da Plataforma', 'slug' => 'configuracoes.metas.gerenciar', 'group' => 'Configurações'],
+            
             ['name' => 'Acessar Logs do Sistema', 'slug' => 'configuracoes.logs.acessar', 'group' => 'Configurações'],
         ];
 

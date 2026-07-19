@@ -256,7 +256,7 @@ const toggleSidebar = () => {
                         <span>Cargos</span>
                     </Link>
 
-                    <div v-if="hasAnyPermission(['configuracoes.colunas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
+                    <div v-if="hasAnyPermission(['configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleConfig">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,6 +306,10 @@ const toggleSidebar = () => {
                             <Link v-if="can('configuracoes.logs.acessar')" :href="route('admin.audit-logs.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.audit-logs.index') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.audit-logs.index') ? 'opacity-100' : 'opacity-30'"></div>
                                 Logs do Sistema
+                            </Link>
+                            <Link v-if="can('configuracoes.metas.acessar')" :href="route('admin.platform_goals.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.platform_goals.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.platform_goals.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Metas da Plataforma
                             </Link>
                         </div>
                     </div>
