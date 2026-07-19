@@ -120,6 +120,17 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Não é possível remover o único usuário.');
         }
  
+        // Check if user is linked to any sales service
+        $hasServices = \App\Models\SalesService::where('opc_id', $user->id)
+            ->orWhere('liner_id', $user->id)
+            ->orWhere('closer_id', $user->id)
+            ->orWhere('mkt_id', $user->id)
+            ->exists();
+
+        if ($hasServices) {
+            return redirect()->back()->with('error', 'Este usuário está vinculado a um ou mais atendimentos e não pode ser excluído.');
+        }
+
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
