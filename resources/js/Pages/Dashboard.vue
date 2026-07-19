@@ -20,6 +20,8 @@ const can = (permission) => {
 
 const currentMonthName = new Date().toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
 const currentYear = new Date().getFullYear();
+const currentDay = new Date().getDate();
+const daysInMonth = new Date(currentYear, new Date().getMonth() + 1, 0).getDate();
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -33,6 +35,10 @@ const goalPercentage = computed(() => {
     if (revenueTarget.value <= 0) return 0;
     return Math.min(100, Math.round((props.total_sales_revenue / revenueTarget.value) * 100));
 });
+
+const dailyGoal = computed(() => daysInMonth > 0 ? (revenueTarget.value / daysInMonth) : 0);
+const dailyAverage = computed(() => currentDay > 0 ? (props.total_sales_revenue / currentDay) : 0);
+const isDailyGoalExceeded = computed(() => dailyAverage.value >= dailyGoal.value);
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
@@ -218,7 +224,11 @@ const chartData = {
                 </template>
             </StatCard>
 
-            <StatCard title="Meta/Dia (Superada)" value="R$ 291.762" trend="+15,8%" :trend-up="true">
+            <StatCard 
+                :title="revenueTarget > 0 ? (isDailyGoalExceeded ? 'Meta/Dia (Superada)' : 'Meta/Dia (Abaixo)') : 'Meta/Dia'" 
+                :value="formatCurrency(dailyGoal)" 
+                :trend="revenueTarget > 0 ? (isDailyGoalExceeded ? 'Dentro do ideal' : 'Abaixo do ideal') : ''" 
+                :trend-up="isDailyGoalExceeded">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
