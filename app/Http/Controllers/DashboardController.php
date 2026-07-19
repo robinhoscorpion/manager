@@ -47,10 +47,13 @@ class DashboardController extends Controller
             $servicesPerDay[$day]++;
         }
 
+        $totalServicesCount = $monthlyServices->count();
+
         return Inertia::render('Dashboard', [
             'current_goal' => $currentGoal,
             'total_sales_revenue' => $totalSalesRevenue,
             'total_contracts' => $totalContracts,
+            'total_services' => $totalServicesCount,
             'chart_sales_data' => array_values($salesPerDay),
             'chart_services_data' => array_values($servicesPerDay),
         ]);
