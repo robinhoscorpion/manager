@@ -4,6 +4,14 @@ import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     current_goal: Object,
+    total_sales_revenue: {
+        type: Number,
+        default: 0
+    },
+    total_contracts: {
+        type: Number,
+        default: 0
+    }
 });
 
 const can = (permission) => {
@@ -20,14 +28,10 @@ const formatCurrency = (value) => {
 const revenueTarget = computed(() => props.current_goal ? props.current_goal.revenue_target : 0);
 const contractsTarget = computed(() => props.current_goal ? props.current_goal.contracts_target : 0);
 
-// Valores mockados de vendas atuais (futuramente vindo do backend)
-const totalSalesRevenue = ref(1840150); 
-const totalContracts = ref(142); // Novos Sócios
-
-const remainingBalance = computed(() => Math.max(0, revenueTarget.value - totalSalesRevenue.value));
+const remainingBalance = computed(() => Math.max(0, revenueTarget.value - props.total_sales_revenue));
 const goalPercentage = computed(() => {
     if (revenueTarget.value <= 0) return 0;
-    return Math.min(100, Math.round((totalSalesRevenue.value / revenueTarget.value) * 100));
+    return Math.min(100, Math.round((props.total_sales_revenue / revenueTarget.value) * 100));
 });
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -198,7 +202,7 @@ const chartData = {
                 </template>
             </StatCard>
 
-            <StatCard title="Valor Vendido" :value="formatCurrency(totalSalesRevenue)" trend="+4,3%" :trend-up="true">
+            <StatCard title="Valor Vendido" :value="formatCurrency(total_sales_revenue)" trend="+4,3%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -248,7 +252,7 @@ const chartData = {
 
         <!-- ── Secondary KPI Cards (Atendimentos & Sócios) ── -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-2">
-            <StatCard title="Total de Vendas" :value="formatCurrency(totalSalesRevenue)" trend="+8,4%" :trend-up="true">
+            <StatCard title="Total de Vendas" :value="formatCurrency(total_sales_revenue)" trend="+8,4%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -256,7 +260,7 @@ const chartData = {
                 </template>
             </StatCard>
 
-            <StatCard title="Novos Sócios" :value="totalContracts.toString()" trend="+12,5%" :trend-up="true">
+            <StatCard title="Novos Sócios" :value="total_contracts.toString()" trend="+12,5%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
