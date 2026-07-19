@@ -86,15 +86,13 @@ const getMonthName = (monthNumber) => {
 };
 
 const maskCurrency = (value) => {
-    if (!value && value !== 0) return '';
-    let val = value.toString().replace(/\D/g, '');
-    val = (val / 100).toFixed(2);
-    return val.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    if (value === null || value === undefined) return '';
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 };
 
 const onRevenueInput = (e) => {
-    let raw = e.target.value.replace(/\D/g, '');
-    form.revenue_target = raw ? parseFloat(raw) / 100 : 0;
+    let val = e.target.value.replace(/\D/g, '');
+    form.revenue_target = val ? parseFloat(val) / 100 : 0;
 };
 </script>
 
