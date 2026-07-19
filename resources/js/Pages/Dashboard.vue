@@ -1,9 +1,34 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
+const props = defineProps({
+    current_goal: Object,
+});
 
 const can = (permission) => {
     return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
 };
+
+const currentMonthName = new Date().toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
+const currentYear = new Date().getFullYear();
+
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+};
+
+const revenueTarget = computed(() => props.current_goal ? props.current_goal.revenue_target : 0);
+const contractsTarget = computed(() => props.current_goal ? props.current_goal.contracts_target : 0);
+
+// Valores mockados de vendas atuais (futuramente vindo do backend)
+const totalSalesRevenue = ref(1840150); 
+const totalContracts = ref(142); // Novos Sócios
+
+const remainingBalance = computed(() => Math.max(0, revenueTarget.value - totalSalesRevenue.value));
+const goalPercentage = computed(() => {
+    if (revenueTarget.value <= 0) return 0;
+    return Math.min(100, Math.round((totalSalesRevenue.value / revenueTarget.value) * 100));
+});
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -109,7 +134,7 @@ const chartData = {
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Março 2026
+                        {{ currentMonthName }} {{ currentYear }}
                     </div>
                     <h1 class="dash-title">Dashboard</h1>
                     <p class="dash-subtitle">Visão geral de performance da Sala de Vendas</p>
@@ -165,7 +190,7 @@ const chartData = {
 
         <!-- ── KPI Cards ────────────────────────────────────── -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-1">
-            <StatCard title="Meta Total" value="R$ 3.000.000" trend="+12,5%" :trend-up="true">
+            <StatCard title="Meta Total" :value="formatCurrency(revenueTarget)" trend="+12,5%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -173,7 +198,7 @@ const chartData = {
                 </template>
             </StatCard>
 
-            <StatCard title="Valor Vendido" value="R$ 1.840.150" trend="+4,3%" :trend-up="true">
+            <StatCard title="Valor Vendido" :value="formatCurrency(totalSalesRevenue)" trend="+4,3%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -181,7 +206,7 @@ const chartData = {
                 </template>
             </StatCard>
 
-            <StatCard title="Saldo Restante" value="R$ 1.159.850" trend="-2,1%" :trend-up="false">
+            <StatCard title="Saldo Restante" :value="formatCurrency(remainingBalance)" trend="-2,1%" :trend-up="false">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -218,12 +243,12 @@ const chartData = {
             </div>
 
             <SalesChart :data="chartData" />
-            <GoalProgress :percentage="61" />
+            <GoalProgress :percentage="goalPercentage" />
         </div>
 
         <!-- ── Secondary KPI Cards (Atendimentos & Sócios) ── -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-2">
-            <StatCard title="Total de Vendas" value="R$ 1.840.150" trend="+8,4%" :trend-up="true">
+            <StatCard title="Total de Vendas" :value="formatCurrency(totalSalesRevenue)" trend="+8,4%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -231,7 +256,7 @@ const chartData = {
                 </template>
             </StatCard>
 
-            <StatCard title="Novos Sócios" value="142" trend="+12,5%" :trend-up="true">
+            <StatCard title="Novos Sócios" :value="totalContracts.toString()" trend="+12,5%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
