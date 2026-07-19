@@ -11,6 +11,14 @@ const props = defineProps({
     total_contracts: {
         type: Number,
         default: 0
+    },
+    chart_sales_data: {
+        type: Array,
+        default: () => []
+    },
+    chart_services_data: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -96,36 +104,38 @@ const sourcesLeadsData = {
     }]
 };
 
-const chartData = {
-    labels: Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0')),
-    datasets: [
-        {
-            label: 'Vendas',
-            data: [1, 4, 1, 2, 5, 3, 2, 3, 4, 4, 6, 5, 7, 2, 3, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.08)',
-            fill: true,
-            tension: 0.4,
-            pointBackgroundColor: '#6366f1',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-        },
-        {
-            label: 'Atendimentos',
-            data: [7, 25, 6, 4, 8, 14, 6, 8, 16, 18, 17, 19, 16, 3, 6, 25, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            borderColor: '#a78bfa',
-            backgroundColor: 'transparent',
-            tension: 0.4,
-            pointBackgroundColor: '#a78bfa',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-        }
-    ]
-};
+const chartData = computed(() => {
+    return {
+        labels: Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0')),
+        datasets: [
+            {
+                label: 'Vendas',
+                data: props.chart_sales_data.length ? props.chart_sales_data : Array(daysInMonth).fill(0),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+            },
+            {
+                label: 'Atendimentos',
+                data: props.chart_services_data.length ? props.chart_services_data : Array(daysInMonth).fill(0),
+                borderColor: '#a78bfa',
+                backgroundColor: 'transparent',
+                tension: 0.4,
+                pointBackgroundColor: '#a78bfa',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+            }
+        ]
+    };
+});
 </script>
 
 <template>
