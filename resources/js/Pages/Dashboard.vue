@@ -23,6 +23,14 @@ const props = defineProps({
     total_services: {
         type: Number,
         default: 0
+    },
+    ranking_promotores: {
+        type: Array,
+        default: () => []
+    },
+    ranking_consultores: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -71,9 +79,7 @@ import RankingCard from '@/Components/Dashboard/RankingCard.vue';
 const activeTab = ref('vendas');
 
 const rankingSellers = [
-    { name: 'Ricardo Santos', avatar: 'images/dashboard/avatar_illu1.png', value: 'R$ 840.000' },
-    { name: 'Juliana Lima', avatar: 'images/dashboard/avatar_illu2.png', value: 'R$ 620.000' },
-    { name: 'Marcos Vinicius', avatar: 'images/dashboard/avatar_illu3.png', value: 'R$ 410.000' },
+    { name: 'Em breve', avatar: 'https://ui-avatars.com/api/?name=S&color=7F9CF5&background=EBF4FF', value: 'R$ 0,00' }
 ];
 
 const consultantsData = [
@@ -335,8 +341,8 @@ const chartData = computed(() => {
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <RankingCard title="Promotores" :sellers="rankingSellers" :header-color="'bg-indigo-500'" />
-                <RankingCard title="Consultores" :sellers="rankingSellers" :header-color="'bg-violet-500'" />
+                <RankingCard title="Promotores" :sellers="ranking_promotores" :header-color="'bg-indigo-500'" />
+                <RankingCard title="Consultores" :sellers="ranking_consultores" :header-color="'bg-violet-500'" />
                 <RankingCard title="Supervisores" :sellers="rankingSellers" :header-color="'bg-purple-600'" />
             </div>
         </div>
