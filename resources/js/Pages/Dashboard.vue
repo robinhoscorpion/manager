@@ -31,7 +31,7 @@ const goalPercentage = computed(() => {
 });
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
 import SalesChart from '@/Components/Dashboard/SalesChart.vue';
 import GoalProgress from '@/Components/Dashboard/GoalProgress.vue';
