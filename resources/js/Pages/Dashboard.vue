@@ -52,6 +52,12 @@ const dailyGoal = computed(() => daysInMonth > 0 ? (revenueTarget.value / daysIn
 const dailyAverage = computed(() => currentDay > 0 ? (props.total_sales_revenue / currentDay) : 0);
 const isDailyGoalExceeded = computed(() => dailyAverage.value >= dailyGoal.value);
 
+const conversionRate = computed(() => {
+    if (props.total_services <= 0) return 0;
+    return (props.total_contracts / props.total_services) * 100;
+});
+const formatConversionRate = (val) => val.toFixed(1).replace('.', ',') + '%';
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
@@ -304,7 +310,7 @@ const chartData = computed(() => {
                 </template>
             </StatCard>
 
-            <StatCard title="Aproveitamento" value="43,8%" trend="+5,2%" :trend-up="true">
+            <StatCard title="Aproveitamento" :value="formatConversionRate(conversionRate)" trend="+5,2%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
