@@ -38,7 +38,7 @@ foreach ($permissions as $p) {
         
         // Vincular ao admin
         if ($adminRole) {
-            DB::table('permission_role')->insert([
+            DB::table('role_permission')->insert([
                 'permission_id' => $id,
                 'role_id' => $adminRole->id
             ]);
@@ -49,13 +49,13 @@ foreach ($permissions as $p) {
         
         // Garantir que o admin tem o vinculo
         if ($adminRole) {
-            $hasLink = DB::table('permission_role')
+            $hasLink = DB::table('role_permission')
                 ->where('permission_id', $existing->id)
                 ->where('role_id', $adminRole->id)
                 ->exists();
                 
             if (!$hasLink) {
-                DB::table('permission_role')->insert([
+                DB::table('role_permission')->insert([
                     'permission_id' => $existing->id,
                     'role_id' => $adminRole->id
                 ]);
