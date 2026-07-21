@@ -26,14 +26,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Funcionários
-    Route::resource('employees', EmployeeController::class)->only(['index', 'show'])->middleware('permission:funcionarios.acessar');
     Route::resource('employees', EmployeeController::class)->except(['index', 'show', 'destroy'])->middleware('permission:funcionarios.gerenciar');
+    Route::resource('employees', EmployeeController::class)->only(['index', 'show'])->middleware('permission:funcionarios.acessar');
     Route::resource('employees', EmployeeController::class)->only(['destroy'])->middleware('permission:funcionarios.deletar');
     Route::post('/employees/convert/{user}', [EmployeeController::class, 'convertFromUser'])->name('employees.convert')->middleware('permission:funcionarios.gerenciar');
     
     // Usuários
-    Route::resource('users', UserController::class)->only(['index', 'show'])->middleware('permission:usuarios.acessar');
     Route::resource('users', UserController::class)->except(['index', 'show', 'destroy'])->middleware('permission:usuarios.gerenciar');
+    Route::resource('users', UserController::class)->only(['index', 'show'])->middleware('permission:usuarios.acessar');
     Route::resource('users', UserController::class)->only(['destroy'])->middleware('permission:usuarios.deletar');
     Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:usuarios.gerenciar');
 
@@ -41,8 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index')->middleware('permission:configuracoes.logs.acessar');
 
     // Roles & Permissions
-    Route::resource('roles', RoleController::class)->only(['index', 'show'])->middleware('permission:cargos.acessar');
     Route::resource('roles', RoleController::class)->except(['index', 'show'])->middleware('permission:cargos.gerenciar');
+    Route::resource('roles', RoleController::class)->only(['index', 'show'])->middleware('permission:cargos.acessar');
     Route::post('/roles/{role}/permissions', [RoleController::class, 'updatePermissions'])->name('roles.permissions.update')->middleware('permission:cargos.gerenciar');
 
     // Sala de Vendas - Agendamentos
