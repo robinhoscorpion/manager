@@ -155,7 +155,7 @@ class SalesServiceController extends Controller
             'email' => 'E-mail',
             'quantidadeFilhos' => 'Quantidade de Filhos',
             'tempoJuntos' => 'Tempo Juntos',
-            'rendaFamiliar' => 'Renda Familiar',
+            'rendaFamiliar' => 'Renda Mensal',
             'cep' => 'CEP',
             'rua' => 'Rua',
             'bairro' => 'Bairro',

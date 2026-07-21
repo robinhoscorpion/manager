@@ -544,7 +544,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
 
                         <div class="col-span-12" :class="(form.temConjuge && form.tipoRelacionamento === 'Casal/Namorados') ? 'sm:col-span-6' : 'sm:col-span-12'" flex flex-col>
-                            <SearchableSelect v-model="form.rendaFamiliar" :options="incomes" label="Renda Familiar Mensal" placeholder="SELECIONE A FAIXA DE RENDA" :error="errors.rendaFamiliar" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.rendaFamiliar" :options="incomes" label="Renda Mensal" placeholder="SELECIONE A FAIXA DE RENDA" :error="errors.rendaFamiliar" :disabled="isReadOnly" />
                             <div class="h-[14px]" v-if="!errors.rendaFamiliar"></div>
                         </div>
                     </div>
