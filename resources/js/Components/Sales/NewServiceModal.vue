@@ -366,7 +366,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
-                                {{ !isEdit ? 'Novo Atendimento Prime' : (isReadOnly ? 'Atendimento (Visualização)' : 'Atendimento (Edição)') }}
+                                {{ !isEdit ? 'Novo Atendimento' : (isReadOnly ? 'Atendimento (Visualização)' : 'Atendimento (Edição)') }}
                             </h2>
                             <p class="text-[9px] text-brand-green/60 font-bold uppercase tracking-widest mt-0.5">
                                 {{ !isEdit ? 'Ficha de Qualificação Completa' : (isReadOnly ? 'Detalhamento do Registro' : 'Edição de Dados cadastrados') }}
