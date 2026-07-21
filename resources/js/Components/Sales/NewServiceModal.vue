@@ -36,6 +36,12 @@ const isEdit = computed(() => !!props.initialData);
 const isReadOnly = ref(true);
 const showProposalModal = ref(false);
 
+const promoters = computed(() => {
+    return props.availableAvatars
+        .filter(av => av.roles.some(r => ['promotor', 'opc'].includes(r.toLowerCase())))
+        .map(av => ({ label: av.name, value: av.id }));
+});
+
 const form = ref({
     date: new Date().toLocaleDateString('pt-BR'),
     time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h',
@@ -587,7 +593,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-if="!errors.local"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.opc_id" :options="availableAvatars.map(av => ({ label: av.name, value: av.id }))" label="Promotor Responsável" placeholder="NENHUM" :error="errors.opc_id" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.opc_id" :options="promoters" label="Promotor Responsável" placeholder="NENHUM" :error="errors.opc_id" :disabled="isReadOnly" />
                             <div class="h-[14px]" v-if="!errors.opc_id"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
