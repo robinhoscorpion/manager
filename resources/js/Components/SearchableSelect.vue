@@ -20,6 +20,10 @@ const props = defineProps({
     multiple: {
         type: Boolean,
         default: false
+    },
+    required: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -93,7 +97,7 @@ onUnmounted(() => {
 <template>
     <div class="relative w-full" ref="container">
         <label v-if="label" class="text-[9px] font-black text-slate-500 dark:text-gray-500 uppercase tracking-widest px-1 block mb-1 h-[11px] leading-none">
-            {{ label }}
+            {{ label }} <span v-if="required" class="text-red-500">*</span>
         </label>
         
         <div 

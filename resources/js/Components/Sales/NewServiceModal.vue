@@ -269,6 +269,17 @@ const close = () => {
     emit('close');
 };
 
+const scrollToError = () => {
+    import('vue').then(({ nextTick }) => {
+        nextTick(() => {
+            const firstErrorEl = document.querySelector('.border-red-500\\/50, .text-red-500');
+            if (firstErrorEl) {
+                firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    });
+};
+
 const submit = () => {
     // Sincroniza o campo clients para a tabela principal
     form.value.clients = form.value.nome;
@@ -280,6 +291,12 @@ const submit = () => {
         router.put(route('sales.atendimentos.update', props.initialData.id), form.value, {
             onSuccess: () => {
                 close();
+            },
+            onError: () => {
+                scrollToError();
+            },
+            onError: () => {
+                scrollToError();
             },
         });
     } else {
@@ -400,7 +417,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
 
                     <div class="grid grid-cols-12 gap-x-4 gap-y-2">
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome Completo</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome Completo <span class="text-red-500">*</span></label>
                             <input v-model="form.nome" type="text" placeholder="NOME DO TITULAR" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.nome ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.nome">{{ errors.nome[0] }}</p>
                             <div class="h-[14px]" v-else></div>
@@ -418,11 +435,11 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <SearchableSelect v-model="form.nacionalidade" :options="nationalities" label="Nacionalidade" placeholder="SELECIONE" :error="errors.nacionalidade" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.nacionalidade" :options="nationalities" label="Nacionalidade" placeholder="SELECIONE" :error="errors.nacionalidade" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.nacionalidade"></div>
                         </div>
                         <div class="col-span-6 sm:col-span-4 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento <span class="text-red-500">*</span></label>
                             <input v-model="form.dataNascimento" @change="calculateAge(form.dataNascimento, 'idade')" type="date" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.dataNascimento ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.dataNascimento">{{ errors.dataNascimento[0] }}</p>
                             <div class="h-[14px]" v-else></div>
@@ -443,7 +460,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     </div>
                     <div class="grid grid-cols-12 gap-x-4 gap-y-2">
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Celular Principal</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Celular Principal <span class="text-red-500">*</span></label>
                             <input :value="form.celular1" @input="onInputMask($event, 'celular1', 'phone')" type="text" placeholder="(00) 00000-0000" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.celular1 ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.celular1">{{ errors.celular1[0] }}</p>
                             <div class="h-[14px]" v-else></div>
@@ -454,17 +471,17 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">E-mail</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">E-mail <span class="text-red-500">*</span></label>
                             <input v-model="form.email" type="email" placeholder="exemplo@email.com" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.email ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
                             <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.email">{{ errors.email[0] }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
-                            <SearchableSelect v-model="form.profissao" :options="professions" label="Profissão" placeholder="SELECIONE" :error="errors.profissao" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.profissao" :options="professions" label="Profissão" placeholder="SELECIONE" :error="errors.profissao" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.profissao"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <SearchableSelect v-model="form.estadoCivil" :options="maritals" label="Estado Civil" :error="errors.estadoCivil" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.estadoCivil" :options="maritals" label="Estado Civil" :error="errors.estadoCivil" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.estadoCivil"></div>
                         </div>
                             <!-- tempoJuntos movido para baixo -->
@@ -490,11 +507,11 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <!-- Dados do Acompanhante (Condicional) -->
                         <div v-if="form.temConjuge" class="col-span-12 grid grid-cols-12 gap-x-4 gap-y-2 p-4 bg-white dark:bg-slate-900 rounded-[16px] border border-brand-green/20 dark:border-brand-green/20 animate-in fade-in slide-in-from-top-2">
                             <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.tipoRelacionamento" :options="relationships" label="Tipo de Relação" placeholder="SELECIONE" :error="errors.tipoRelacionamento" :disabled="isReadOnly" />
+                                <SearchableSelect v-model="form.tipoRelacionamento" :options="relationships" label="Tipo de Relação" placeholder="SELECIONE" :error="errors.tipoRelacionamento" :disabled="isReadOnly"  required />
                                 <div class="h-[14px]" v-if="!errors.tipoRelacionamento"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-9 flex flex-col">
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome do 2º Titular / Acompanhante</label>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome do 2º Titular / Acompanhante <span class="text-red-500">*</span></label>
                                 <input v-model="form.nomeConjuge" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                                 <div class="h-[14px]"></div>
                             </div>
@@ -509,7 +526,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-6 sm:col-span-3 flex flex-col">
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento</label>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento <span class="text-red-500">*</span></label>
                                 <input v-model="form.dataNascimentoConjuge" @change="calculateAge(form.dataNascimentoConjuge, 'idadeConjuge')" type="date" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                                 <div class="h-[14px]"></div>
                             </div>
@@ -519,15 +536,15 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-4 flex flex-col">
-                                <SearchableSelect v-model="form.nacionalidadeConjuge" :options="nationalities" label="Nacionalidade" placeholder="SELECIONE" :disabled="isReadOnly" />
+                                <SearchableSelect v-model="form.nacionalidadeConjuge" :options="nationalities" label="Nacionalidade" placeholder="SELECIONE" :disabled="isReadOnly"  required />
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil" :disabled="isReadOnly" />
+                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil" :disabled="isReadOnly"  required />
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
-                                <SearchableSelect v-model="form.profissaoConjuge" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly" />
+                                <SearchableSelect v-model="form.profissaoConjuge" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly"  required />
                                 <div class="h-[14px]"></div>
                             </div>
                         </div>
@@ -539,7 +556,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
                         
                         <div class="col-span-12 sm:col-span-3 flex flex-col" v-if="form.temConjuge && form.tipoRelacionamento === 'Casal/Namorados'">
-                            <SearchableSelect v-model="form.tempoJuntos" :options="togetherOptions" label="Tempo Juntos" placeholder="TEMPO..." :error="errors.tempoJuntos" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.tempoJuntos" :options="togetherOptions" label="Tempo Juntos" placeholder="TEMPO..." :error="errors.tempoJuntos" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.tempoJuntos"></div>
                         </div>
 
@@ -559,7 +576,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     
                     <div class="grid grid-cols-12 gap-x-4 gap-y-2">
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">CEP</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">CEP <span class="text-red-500">*</span></label>
                             <div class="relative h-[38px]">
                                 <input :value="form.cep" @input="onInputMask($event, 'cep', 'cep')" @blur="lookupCEP" type="text" placeholder="00000-000" :disabled="isReadOnly" class="w-full h-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-9 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                                 <div class="absolute right-3 top-1/2 -translate-y-1/2">
@@ -590,12 +607,12 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Bairro</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Bairro <span class="text-red-500">*</span></label>
                             <input v-model="form.bairro" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                             <div class="h-[14px]"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Cidade</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Cidade <span class="text-red-500">*</span></label>
                             <input v-model="form.cidade" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                             <div class="h-[14px]"></div>
                         </div>
@@ -605,19 +622,19 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
                         
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.local" :options="locations" label="Local de Atendimento" :error="errors.local" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.local" :options="locations" label="Local de Atendimento" :error="errors.local" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.local"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.opc_id" :options="promoters" label="Promotor Responsável" placeholder="NENHUM" :error="errors.opc_id" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.opc_id" :options="promoters" label="Promotor Responsável" placeholder="NENHUM" :error="errors.opc_id" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.opc_id"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.qualification" :options="qualifications.map(q => ({ label: q.code + ' - ' + q.name, value: q.code }))" label="Qualificação Atual" placeholder="SELECIONE" :error="errors.qualification" :disabled="isReadOnly || !can('atendimentos.alterar_qualificacao')" />
+                            <SearchableSelect v-model="form.qualification" :options="qualifications.map(q => ({ label: q.code + ' - ' + q.name, value: q.code }))" label="Qualificação Atual" placeholder="SELECIONE" :error="errors.qualification" :disabled="isReadOnly || !can('atendimentos.alterar_qualificacao')"  required />
                             <div class="h-[14px]" v-if="!errors.qualification"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.cortesia" :options="giftOptions" label="Cortesias Entregues" placeholder="SELECIONE" multiple :error="errors.cortesia" :disabled="isReadOnly" />
+                            <SearchableSelect v-model="form.cortesia" :options="giftOptions" label="Cortesias Entregues" placeholder="SELECIONE" multiple :error="errors.cortesia" :disabled="isReadOnly" required />
                             <div class="h-[14px]" v-if="!errors.cortesia"></div>
                         </div>
                     </div>
