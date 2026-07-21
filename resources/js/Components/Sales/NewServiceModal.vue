@@ -468,7 +468,6 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-if="!errors.estadoCivil"></div>
                         </div>
                             <!-- tempoJuntos movido para baixo -->
-                        </div>
                     </div>
                 </section>
 
