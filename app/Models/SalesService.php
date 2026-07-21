@@ -36,6 +36,7 @@ class SalesService extends Model
         'qualification',
         'status',
         'tem_conjuge',
+        'tipo_relacionamento',
         'nome_conjuge',
         'cpf_conjuge',
         'rg_conjuge',

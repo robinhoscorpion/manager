@@ -94,9 +94,10 @@ class SalesServiceController extends Controller
             'email' => 'required|email|max:255',
             
             // Família
-            'quantidadeFilhos' => 'required|integer|min:0',
-            'tempoJuntos' => 'required|string',
-            'rendaFamiliar' => 'required|string',
+            'quantidadeFilhos' => 'nullable|integer|min:0',
+            'tempoJuntos' => 'nullable|string',
+            'rendaFamiliar' => 'nullable|string',
+            'tipoRelacionamento' => 'nullable|string',
             
             // Endereço
             'cep' => 'required|string',
@@ -117,11 +118,16 @@ class SalesServiceController extends Controller
             'temConjuge' => 'boolean',
         ];
 
-        // Validação Condicional do Cônjuge
+        // Validação Condicional do Acompanhante
         if ($request->temConjuge) {
             $rules['nomeConjuge'] = 'required|string|max:255';
             $rules['dataNascimentoConjuge'] = 'required|date';
             $rules['profissaoConjuge'] = 'required|string';
+            $rules['tipoRelacionamento'] = 'required|string';
+            
+            if ($request->tipoRelacionamento === 'Casal/Namorados') {
+                $rules['tempoJuntos'] = 'required|string';
+            }
         }
 
         $messages = [
@@ -204,8 +210,9 @@ class SalesServiceController extends Controller
                 'qualification' => $request->qualification,
                 'status' => SalesService::STATUS_MESA,
                 
-                // Cônjuge
+                // Acompanhante
                 'tem_conjuge' => $request->temConjuge,
+                'tipo_relacionamento' => $request->tipoRelacionamento,
                 'nome_conjuge' => $request->nomeConjuge,
                 'cpf_conjuge' => $request->cpfConjuge,
                 'rg_conjuge' => $request->rgConjuge,
@@ -278,6 +285,7 @@ class SalesServiceController extends Controller
                 'qualification' => $request->qualification,
                 'status' => $request->status,
                 'tem_conjuge' => $request->temConjuge,
+                'tipo_relacionamento' => $request->tipoRelacionamento,
                 'nome_conjuge' => $request->nomeConjuge,
                 'cpf_conjuge' => $request->cpfConjuge,
                 'rg_conjuge' => $request->rgConjuge,
