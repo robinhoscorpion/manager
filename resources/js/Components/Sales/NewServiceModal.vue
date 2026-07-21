@@ -532,7 +532,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             </div>
                         </div>
 
-                        <div class="col-span-12 sm:col-span-3 flex flex-col">
+                        <div class="col-span-12 sm:col-span-3 flex flex-col" v-if="form.temConjuge && form.tipoRelacionamento === 'Casal/Namorados'">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Quantidade de Filhos</label>
                             <input v-model="form.quantidadeFilhos" type="number" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm">
                             <div class="h-[14px]"></div>
@@ -542,12 +542,8 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <SearchableSelect v-model="form.tempoJuntos" :options="togetherOptions" label="Tempo Juntos" placeholder="TEMPO..." :error="errors.tempoJuntos" :disabled="isReadOnly" />
                             <div class="h-[14px]" v-if="!errors.tempoJuntos"></div>
                         </div>
-                        <div class="col-span-12 sm:col-span-3 flex flex-col" v-else-if="!form.temConjuge">
-                            <SearchableSelect v-model="form.tempoJuntos" :options="togetherOptions" label="Tempo Juntos" placeholder="TEMPO..." :error="errors.tempoJuntos" :disabled="isReadOnly" />
-                            <div class="h-[14px]" v-if="!errors.tempoJuntos"></div>
-                        </div>
 
-                        <div class="col-span-12" :class="((form.temConjuge && form.tipoRelacionamento === 'Casal/Namorados') || !form.temConjuge) ? 'sm:col-span-6' : 'sm:col-span-9'" flex flex-col>
+                        <div class="col-span-12" :class="(form.temConjuge && form.tipoRelacionamento === 'Casal/Namorados') ? 'sm:col-span-6' : 'sm:col-span-12'" flex flex-col>
                             <SearchableSelect v-model="form.rendaFamiliar" :options="incomes" label="Renda Familiar Mensal" placeholder="SELECIONE A FAIXA DE RENDA" :error="errors.rendaFamiliar" :disabled="isReadOnly" />
                             <div class="h-[14px]" v-if="!errors.rendaFamiliar"></div>
                         </div>
