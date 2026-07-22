@@ -43,7 +43,7 @@ class ProposalController extends Controller
             $contractNumber = '';
 
             do {
-                $sequence = str_pad($product->current_sequence, 5, '0', STR_PAD_LEFT);
+                $sequence = $product->current_sequence;
                 switch ($product->contract_format) {
                     case 'prefix_sep_seq':
                         $contractNumber = ($product->contract_prefix ? $product->contract_prefix . '-' : '') . $sequence;
@@ -60,8 +60,8 @@ class ProposalController extends Controller
                 // Verifica se já existe
                 $exists = \App\Models\Proposal::where('contract_number', $contractNumber)->exists();
                 if ($exists) {
-                    $product->current_sequence++;
-                    // Não salva ainda, salvará no final ou deixaremos em memória até o $product->increment
+                    $product->incrementSequence();
+                    // Não salva ainda, salvará no final ou deixaremos em memória até o $product->save()
                 }
             } while ($exists);
 
@@ -77,7 +77,7 @@ class ProposalController extends Controller
             }
 
             // Salvar a nova sequência (mesmo que tenha precisado pular números para evitar colisão)
-            $product->current_sequence++;
+            $product->incrementSequence();
             $product->save();
 
             // Auto-qualificar atendimento como Q e alterar status para Proposta ao gerar proposta

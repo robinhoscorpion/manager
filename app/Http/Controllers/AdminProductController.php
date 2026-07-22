@@ -51,7 +51,7 @@ class AdminProductController extends Controller
             'description' => 'nullable|string',
             'contract_prefix' => 'nullable|string',
             'contract_format' => 'required|in:prefix_sep_seq,prefix_seq,seq_only',
-            'current_sequence' => 'required|integer|min:1',
+            'current_sequence' => 'required|string|max:255',
             'proposal_template_id' => 'nullable|exists:proposal_templates,id',
             'contract_template_id' => 'nullable|exists:contract_templates,id',
         ]);
@@ -98,7 +98,7 @@ class AdminProductController extends Controller
             'description' => 'nullable|string',
             'contract_prefix' => 'nullable|string',
             'contract_format' => 'required|in:prefix_sep_seq,prefix_seq,seq_only',
-            'current_sequence' => 'required|integer|min:1',
+            'current_sequence' => 'required|string|max:255',
             'proposal_template_id' => 'nullable|exists:proposal_templates,id',
             'contract_template_id' => 'nullable|exists:contract_templates,id',
         ]);

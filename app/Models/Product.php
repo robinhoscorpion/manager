@@ -54,4 +54,15 @@ class Product extends Model
     {
         return $this->hasMany(Proposal::class);
     }
+
+    public function incrementSequence()
+    {
+        $oldSeq = $this->current_sequence;
+        if (is_numeric($oldSeq)) {
+            $length = strlen($oldSeq);
+            $this->current_sequence = str_pad((int)$oldSeq + 1, $length, '0', STR_PAD_LEFT);
+        } else {
+            $this->current_sequence++;
+        }
+    }
 }
