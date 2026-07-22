@@ -329,28 +329,17 @@ const getAllowedStatuses = (currentStatus) => {
     const val = currentStatus.toLowerCase();
     const allowed = [];
 
-    // FILA -> MESA, FINALIZADO
+    // FILA -> MESA, FINALIZADO (Legacy)
     if (val === 'queue' || val === 'fila') {
         allowed.push(SERVICE_STATUS.MESA, SERVICE_STATUS.FINALIZADO);
     }
-    // MESA -> FINALIZADO (PROPOSTA entra automaticamente via outro fluxo)
+    // MESA -> FINALIZADO
     else if (val === 'table' || val === 'mesa') {
         allowed.push(SERVICE_STATUS.FINALIZADO);
     }
-    // PROPOSTA -> PENDENTE, REPROVADO (APROVADO entra automaticamente)
-    else if (val === 'proposal' || val === 'proposta') {
-        allowed.push(SERVICE_STATUS.PENDENTE, SERVICE_STATUS.REPROVADO);
-    }
-    // PENDENTE -> Nenhum destino manual (APROVADO entra automaticamente)
-    else if (val === 'pending' || val === 'pendente') {
-        // Array fica vazio, bloqueando alterações manuais pelo modal.
-        // A mudança só ocorre ao aprovar/reprovar a proposta em sua respectiva tela.
-    }
-    // APROVADO -> PENDENTE, CANCELADO
-    else if (val === 'approved' || val === 'aprovado' || val === 'money' || val === 'venda') {
-        allowed.push(SERVICE_STATUS.PENDENTE, SERVICE_STATUS.CANCELADO);
-    }
-    // Estados Finais (REPROVADO, CANCELADO, FINALIZADO) - não permite sair (array fica vazio)
+    
+    // Qualquer outro status não permite alteração manual pelo modal de status.
+    // (Serão alterados via ações do sistema, como aprovar proposta, etc).
 
     return allowed.map(s => s.value);
 };
@@ -657,7 +646,9 @@ const hasCortesia = (cortesia) => {
                                         @click.stop="openStatusPicker(index)"
                                         class="inline-flex items-center gap-1.5 pl-2 pr-3 h-7 rounded-full select-none border text-[10px] font-black uppercase tracking-[0.12em] whitespace-nowrap transition-all"
                                         :class="[
-                                            can('atendimentos.gerenciar') ? 'cursor-pointer hover:scale-105 hover:shadow-sm' : 'cursor-default',
+                                            can('atendimentos.gerenciar') && ['table', 'mesa', 'queue', 'fila'].includes(item.status?.toLowerCase()) 
+                                                ? 'cursor-pointer hover:scale-105 hover:shadow-sm' 
+                                                : 'cursor-default',
                                             {
                                             'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20 text-orange-600 dark:text-orange-400': item.status === 'queue' || item.status === 'fila',
                                             'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400': item.status === 'table' || item.status === 'mesa',
