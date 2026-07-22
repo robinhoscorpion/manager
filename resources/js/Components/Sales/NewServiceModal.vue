@@ -288,6 +288,11 @@ const submit = () => {
         form.value.clients += ' & ' + form.value.nomeConjuge;
     }
 
+    // Se o número não for informado, cadastra como SN
+    if (!form.value.numero || form.value.numero.trim() === '') {
+        form.value.numero = 'SN';
+    }
+
     processing.value = true;
     
     if (isEdit.value) {
