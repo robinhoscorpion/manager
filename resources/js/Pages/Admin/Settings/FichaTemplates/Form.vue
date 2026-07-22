@@ -96,9 +96,21 @@ const submit = () => {
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4">Variáveis Disponíveis</h3>
                             <p class="text-xs text-slate-500 mb-4">Clique na variável para copiar. Utilize estas chaves dentro do HTML para substituir dinamicamente pelos dados da venda.</p>
                             
-                            <div class="space-y-2">
+                            <div class="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{lead_id}}</span>
+                                </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{nome_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{data_nascimento_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{ocupacao_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{area_cliente}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{cpf_cliente}}</span>
@@ -110,13 +122,58 @@ const submit = () => {
                                     <span class="text-brand-green" v-pre>{{celular_cliente}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{nome_conjuge}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{data_nascimento_conjuge}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{ocupacao_conjuge}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{area_conjuge}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{qtd_filhos}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{nomes_filhos}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{endereco_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{bairro_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{cidade_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{uf_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{cep_cliente}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{data_atendimento}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{hora_entrada}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{hora_saida}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{local_atendimento}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{promotor}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{consultor}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{supervisor}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{brindes}}</span>

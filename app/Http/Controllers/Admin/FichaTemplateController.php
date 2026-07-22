@@ -77,15 +77,35 @@ class FichaTemplateController extends Controller
         $html = $fichaTemplate->content;
         
         $replacements = [
+            '{{lead_id}}' => '9999',
+            '{{hora_entrada}}' => '10:00',
+            '{{hora_saida}}' => '12:00',
             '{{nome_cliente}}' => 'João da Silva (Exemplo)',
+            '{{data_nascimento_cliente}}' => '01/01/1980',
+            '{{ocupacao_cliente}}' => 'Engenheiro',
+            '{{area_cliente}}' => 'Exemplo',
             '{{cpf_cliente}}' => '123.456.789-00',
             '{{email_cliente}}' => 'joao.exemplo@email.com',
             '{{celular_cliente}}' => '(11) 99999-9999',
+            '{{nome_conjuge}}' => 'Maria Souza da Silva',
+            '{{data_nascimento_conjuge}}' => '15/05/1982',
+            '{{ocupacao_conjuge}}' => 'Arquiteta',
+            '{{area_conjuge}}' => 'Exemplo',
+            '{{qtd_filhos}}' => '2',
+            '{{nomes_filhos}}' => 'Pedro, Ana',
+            '{{endereco_cliente}}' => 'Rua Exemplo, 123',
+            '{{bairro_cliente}}' => 'Centro',
+            '{{cidade_cliente}}' => 'São Paulo',
+            '{{uf_cliente}}' => 'SP',
+            '{{cep_cliente}}' => '01000-000',
+            '{{consultor}}' => 'Consultor Exemplo',
+            '{{supervisor}}' => 'Supervisor Exemplo',
             '{{data_atendimento}}' => date('d/m/Y'),
             '{{local_atendimento}}' => 'Escritório Matriz',
             '{{promotor}}' => 'Promotor Exemplo',
             '{{brindes}}' => 'Kit Boas Vindas, Garrafa Térmica',
         ];
+
         
         foreach ($replacements as $tag => $val) {
             $html = str_replace($tag, $val, $html);

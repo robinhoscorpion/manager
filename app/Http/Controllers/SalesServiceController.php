@@ -21,24 +21,24 @@ class SalesServiceController extends Controller
         $user = auth()->user();
         // Se o usuário não for admin e não tiver a permissão para ver todos os atendimentos
         if (!$user->hasRole('admin') && !$user->hasPermission('atendimentos.ver_todos')) {
-            $query->where(function($q) use ($user) {
+            $query->where(function ($q) use ($user) {
                 $q->where('opc_id', $user->id)
-                  ->orWhere('liner_id', $user->id)
-                  ->orWhere('closer_id', $user->id)
-                  ->orWhere('mkt_id', $user->id);
+                    ->orWhere('liner_id', $user->id)
+                    ->orWhere('closer_id', $user->id)
+                    ->orWhere('mkt_id', $user->id);
             });
         }
 
         // Filtro de Busca (Local)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('client', function($cq) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('client', function ($cq) use ($search) {
                     $cq->where('nome', 'like', "%{$search}%")
-                       ->orWhere('cpf', 'like', "%{$search}%")
-                       ->orWhere('email', 'like', "%{$search}%")
-                       ->orWhere('celular1', 'like', "%{$search}%");
-                })->orWhereHas('proposal', function($pq) use ($search) {
+                        ->orWhere('cpf', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('celular1', 'like', "%{$search}%");
+                })->orWhereHas('proposal', function ($pq) use ($search) {
                     $pq->where('contract_number', 'like', "%{$search}%");
                 });
             });
@@ -81,7 +81,7 @@ class SalesServiceController extends Controller
             'local' => 'required|string',
             'opc_id' => 'required|exists:users,id',
             'qualification' => 'required|string',
-            
+
             // Titular
             'nome' => 'required|string|max:255',
             'cpf' => 'nullable|string|max:14',
@@ -92,13 +92,13 @@ class SalesServiceController extends Controller
             'estadoCivil' => 'required|string',
             'celular1' => 'required|string',
             'email' => 'required|email|max:255',
-            
+
             // Família
             'quantidadeFilhos' => 'nullable|integer|min:0',
             'tempoJuntos' => 'nullable|string',
             'rendaFamiliar' => 'nullable|string',
             'tipoRelacionamento' => 'nullable|string',
-            
+
             // Endereço
             'cep' => 'required|string',
             'rua' => 'required|string',
@@ -106,10 +106,10 @@ class SalesServiceController extends Controller
             'numero' => 'required|string',
             'cidade' => 'required|string',
             'estado' => 'required|string',
-            
+
             // Logística
             'cortesia' => 'required|array',
-            
+
             // Opcionais
             'celular2' => 'nullable|string',
             'complemento' => 'nullable|string',
@@ -124,7 +124,7 @@ class SalesServiceController extends Controller
             $rules['dataNascimentoConjuge'] = 'required|date';
             $rules['profissaoConjuge'] = 'required|string';
             $rules['tipoRelacionamento'] = 'required|string';
-            
+
             if ($request->tipoRelacionamento === 'Casal/Namorados') {
                 $rules['tempoJuntos'] = 'required|string';
             }
@@ -170,7 +170,7 @@ class SalesServiceController extends Controller
 
         $request->validate($rules, $messages, $attributes);
 
-        DB::transaction(function() use ($request) {
+        DB::transaction(function () use ($request) {
             // 1. Criar Cliente
             $client = Client::create([
                 'nome' => $request->nome,
@@ -209,7 +209,7 @@ class SalesServiceController extends Controller
                 'opc' => $request->opc_id ? true : false,
                 'qualification' => $request->qualification,
                 'status' => SalesService::STATUS_MESA,
-                
+
                 // Acompanhante
                 'tem_conjuge' => $request->temConjuge,
                 'tipo_relacionamento' => $request->tipoRelacionamento,
@@ -221,12 +221,12 @@ class SalesServiceController extends Controller
                 'idade_conjuge' => $request->idadeConjuge, // Assuming 'idadeConjuge' is passed or calculated
                 'profissao_conjuge' => $request->profissaoConjuge,
                 'estado_civil_conjuge' => $request->estadoCivilConjuge,
-                
+
                 // Família
                 'quantidade_filhos' => $request->quantidadeFilhos,
                 'tempo_juntos' => $request->tempoJuntos,
                 'renda_familiar' => $request->rendaFamiliar,
-                
+
                 // Logística
                 'cortesia' => $request->cortesia,
                 'observacoes' => $request->observacoes,
@@ -328,7 +328,7 @@ class SalesServiceController extends Controller
         ]);
 
         $service->update($validated);
-        
+
         // Sincronizar Cancelamento com a Proposta
         if ($service->status === SalesService::STATUS_CANCELADO && $service->proposal) {
             $service->proposal->update(['status' => 'cancelled']);
@@ -364,8 +364,8 @@ class SalesServiceController extends Controller
     public function show(SalesService $service)
     {
         $service->load([
-            'client.address', 
-            'proposal.payments', 
+            'client.address',
+            'proposal.payments',
             'proposal.bills',
             'proposal.product.proposalTemplate',
             'proposal.product.contractTemplate',
@@ -384,24 +384,24 @@ class SalesServiceController extends Controller
     public function globalSearch(Request $request)
     {
         $search = $request->query('q');
-        
+
         if (empty($search)) {
             return response()->json([]);
         }
 
         $results = SalesService::with(['client', 'proposal'])
-            ->whereHas('client', function($q) use ($search) {
+            ->whereHas('client', function ($q) use ($search) {
                 $q->where('nome', 'like', "%{$search}%")
-                  ->orWhere('cpf', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('celular1', 'like', "%{$search}%");
+                    ->orWhere('cpf', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('celular1', 'like', "%{$search}%");
             })
-            ->orWhereHas('proposal', function($q) use ($search) {
+            ->orWhereHas('proposal', function ($q) use ($search) {
                 $q->where('contract_number', 'like', "%{$search}%");
             })
             ->limit(10)
             ->get()
-            ->map(function($service) {
+            ->map(function ($service) {
                 return [
                     'id' => $service->id,
                     'title' => $service->client?->nome ?? 'Cliente não identificado',
@@ -440,9 +440,10 @@ class SalesServiceController extends Controller
 
         // 2. Variáveis suportadas (Mail Merge Engine)
         $client = $service->client;
-        
-        $parseDate = function($date) {
-            if (!$date) return null;
+
+        $parseDate = function ($date) {
+            if (!$date)
+                return null;
             try {
                 if (str_contains($date, '/')) {
                     return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
@@ -460,19 +461,27 @@ class SalesServiceController extends Controller
             '[EMAIL]' => $client ? $client->email : '',
             '[CELULAR]' => $client ? $client->celular1 : '',
             '[PROFISSAO]' => $client ? $client->profissao : '',
-            
+
             // Cônjuge
             '[NOME_CONJUGE]' => $service->nome_conjuge ?? '',
             '[DATA_NASCIMENTO_CONJUGE]' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
             '[PROFISSAO_CONJUGE]' => $service->profissao_conjuge ?? '',
-            
+
             // Serviço
             '[DATA]' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '[HORA]' => $service->time ?? '',
             '[LOCAL]' => $service->local ?? '',
             '[OBSERVACOES]' => $service->observacoes ?? '',
             '[ID_ATENDIMENTO]' => str_pad($service->id, 5, '0', STR_PAD_LEFT),
+            '[PROMOTOR]' => $service->opcUser?->name ?? 'Não informado',
+            '[CONSULTOR]' => $service->linerUser?->name ?? 'Não informado',
+            '[SUPERVISOR]' => $service->closerUser?->name ?? 'Não informado',
         ];
+
+        // QR Code Data
+        $qrData = "Cliente: " . ($client ? $client->nome : 'N/A') . " | CPF: " . ($client ? $client->cpf : 'N/A') . " | Atendimento: CO-" . str_pad($service->id, 5, '0', STR_PAD_LEFT);
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=85x85&data=" . urlencode($qrData);
+        $replacements['[QR_CODE]'] = '<img src="' . $qrUrl . '" class="qr-code-img" alt="QR Code" >';
 
         // Endereço
         if ($client && $client->address) {
@@ -522,8 +531,9 @@ class SalesServiceController extends Controller
         $client = $service->client;
         $client->load('address');
 
-        $parseDate = function($date) {
-            if (!$date) return null;
+        $parseDate = function ($date) {
+            if (!$date)
+                return null;
             try {
                 if (str_contains($date, '/')) {
                     return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
@@ -544,24 +554,43 @@ class SalesServiceController extends Controller
         if (!$template) {
             $template = \App\Models\FichaTemplate::where('is_active', true)->first();
         }
-        
+
         if ($template && !empty($template->content)) {
             $html = $template->content;
             $replacements = [
-                '{{nome_cliente}}' => $client->nome,
+                '{{lead_id}}' => str_pad($service->id, 4, '0', STR_PAD_LEFT),
+                '{{hora_entrada}}' => $service->time ? date('H:i', strtotime($service->time)) : '',
+                '{{hora_saida}}' => '',
+                '{{nome_cliente}}' => $client->nome ?? '',
+                '{{data_nascimento_cliente}}' => $formattedDates['client_birth'],
+                '{{ocupacao_cliente}}' => $client->profissao ?? '',
+                '{{area_cliente}}' => '',
                 '{{cpf_cliente}}' => $client->cpf ?? 'N/A',
                 '{{email_cliente}}' => $client->email ?? 'N/A',
                 '{{celular_cliente}}' => $client->celular1 ?? 'N/A',
+                '{{nome_conjuge}}' => $service->nome_conjuge ?? '',
+                '{{data_nascimento_conjuge}}' => $formattedDates['spouse_birth'],
+                '{{ocupacao_conjuge}}' => $service->profissao_conjuge ?? '',
+                '{{area_conjuge}}' => '',
+                '{{qtd_filhos}}' => $service->quantidade_filhos ?? '',
+                '{{nomes_filhos}}' => '',
+                '{{endereco_cliente}}' => trim(($client->address->rua ?? '') . ' ' . ($client->address->numero ?? '') . ' ' . ($client->address->complemento ?? '')),
+                '{{bairro_cliente}}' => $client->address->bairro ?? '',
+                '{{cidade_cliente}}' => $client->address->cidade ?? '',
+                '{{uf_cliente}}' => $client->address->estado ?? '',
+                '{{cep_cliente}}' => $client->address->cep ?? '',
+                '{{consultor}}' => $service->linerUser?->name ?? '',
+                '{{supervisor}}' => $service->closerUser?->name ?? '',
                 '{{data_atendimento}}' => $formattedDates['service_date'],
                 '{{local_atendimento}}' => $service->local ?? 'N/A',
-                '{{promotor}}' => $service->opc_avatar ?? 'Não informado',
+                '{{promotor}}' => $service->opcUser?->name ?? 'Não informado',
                 '{{brindes}}' => is_array($service->cortesia) ? implode(', ', $service->cortesia) : ($service->cortesia ?: 'Nenhum'),
             ];
-            
+
             foreach ($replacements as $tag => $val) {
                 $html = str_replace($tag, $val, $html);
             }
-            
+
             return view('pdf.custom-sheet', ['html' => $html]);
         }
 
@@ -574,14 +603,14 @@ class SalesServiceController extends Controller
     public function pdfProposta(SalesService $service)
     {
         $service->load(['client.address', 'proposal.product.proposalTemplate', 'proposal.payments', 'opcUser', 'closerUser', 'linerUser']);
-        
+
         $proposal = $service->proposal;
         if (!$proposal) {
             return redirect()->back()->with('error', 'Este atendimento ainda não possui uma proposta gerada.');
         }
 
         $template = $proposal->product?->proposalTemplate;
-        
+
         // Se não houver template para o produto, tenta usar um ativo padrão
         if (!$template) {
             $template = \App\Models\ProposalTemplate::where('is_active', true)->first();
@@ -600,9 +629,10 @@ class SalesServiceController extends Controller
         }
 
         $client = $service->client;
-        
-        $parseDate = function($date) {
-            if (!$date) return null;
+
+        $parseDate = function ($date) {
+            if (!$date)
+                return null;
             try {
                 if (str_contains($date, '/')) {
                     return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
@@ -613,10 +643,12 @@ class SalesServiceController extends Controller
             }
         };
 
-        $buildPaymentSummary = function($category) use ($proposal) {
-            if (!$proposal || !$proposal->payments) return '';
+        $buildPaymentSummary = function ($category) use ($proposal) {
+            if (!$proposal || !$proposal->payments)
+                return '';
             $payments = $proposal->payments->where('category', $category);
-            if ($payments->isEmpty()) return '';
+            if ($payments->isEmpty())
+                return '';
             $lines = [];
             foreach ($payments as $payment) {
                 $start = $payment->start_date ? \Carbon\Carbon::parse($payment->start_date)->format('d/m/Y') : 'A combinar';
@@ -687,8 +719,8 @@ class SalesServiceController extends Controller
                 $proposal->payments->where('category', 'saldo')->first()?->payment_method
             ]))),
             '${CONTRATO_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
-            '${CONTRATO_DATA_EXTENSO}' => ($service->date && ($d = $parseDate($service->date))) 
-                ? $d->format('d') . ' de ' . ucfirst($d->locale('pt_BR')->translatedFormat('F')) . ' de ' . $d->format('Y') 
+            '${CONTRATO_DATA_EXTENSO}' => ($service->date && ($d = $parseDate($service->date)))
+                ? $d->format('d') . ' de ' . ucfirst($d->locale('pt_BR')->translatedFormat('F')) . ' de ' . $d->format('Y')
                 : date('d') . ' de ' . ucfirst(\Carbon\Carbon::now()->locale('pt_BR')->translatedFormat('F')) . ' de ' . date('Y'),
             '${EMPRESA_EMAIL}' => 'contato@itacare.com.br',
             '${EMPRESA_WHATSAPP}' => '(73) 9999-8888',
@@ -704,7 +736,7 @@ class SalesServiceController extends Controller
             '${PROPOSTA_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
-        
+
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
             $templateProcessor->setValue($cleanTag, $value);
@@ -749,14 +781,14 @@ class SalesServiceController extends Controller
     public function pdfContrato(SalesService $service)
     {
         $service->load(['client.address', 'proposal.product.contractTemplate', 'proposal.payments', 'opcUser', 'closerUser', 'linerUser']);
-        
+
         $proposal = $service->proposal;
         if (!$proposal) {
             return redirect()->back()->with('error', 'Este atendimento ainda não possui uma proposta gerada para o contrato.');
         }
 
         $template = $proposal->product?->contractTemplate;
-        
+
         // Se o produto não tiver contrato, usa o Global Padrão
         if (!$template) {
             $template = \App\Models\ContractTemplate::where('is_default', true)->first();
@@ -775,9 +807,10 @@ class SalesServiceController extends Controller
         }
 
         $client = $service->client;
-        
-        $parseDate = function($date) {
-            if (!$date) return null;
+
+        $parseDate = function ($date) {
+            if (!$date)
+                return null;
             try {
                 if (str_contains($date, '/')) {
                     return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
@@ -788,10 +821,12 @@ class SalesServiceController extends Controller
             }
         };
 
-        $buildPaymentSummary = function($category) use ($proposal) {
-            if (!$proposal || !$proposal->payments) return '';
+        $buildPaymentSummary = function ($category) use ($proposal) {
+            if (!$proposal || !$proposal->payments)
+                return '';
             $payments = $proposal->payments->where('category', $category);
-            if ($payments->isEmpty()) return '';
+            if ($payments->isEmpty())
+                return '';
             $lines = [];
             foreach ($payments as $payment) {
                 $start = $payment->start_date ? \Carbon\Carbon::parse($payment->start_date)->format('d/m/Y') : 'A combinar';
@@ -815,7 +850,7 @@ class SalesServiceController extends Controller
             '${CLIENTE_CIDADE_UF}' => ($client && $client->address) ? "{$client->address->cidade} / {$client->address->estado}" : '',
 
             '${CONJUNGE_NOME}' => $service->nome_conjuge ?? '',
-            '${CONJUNGE_CPF}' => $service->cpf_conjuge ?? '', 
+            '${CONJUNGE_CPF}' => $service->cpf_conjuge ?? '',
             '${CONJUNGE_RG}' => $service->rg_conjuge ?? '',
             '${CONJUNGE_NASCIMENTO}' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
             '${CONJUNGE_ESTADO_CIVIL}' => $service->estado_civil_conjuge ?? '',
@@ -862,8 +897,8 @@ class SalesServiceController extends Controller
                 $proposal->payments->where('category', 'saldo')->first()?->payment_method
             ]))),
             '${CONTRATO_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
-            '${CONTRATO_DATA_EXTENSO}' => ($service->date && ($d = $parseDate($service->date))) 
-                ? $d->format('d') . ' de ' . ucfirst($d->locale('pt_BR')->translatedFormat('F')) . ' de ' . $d->format('Y') 
+            '${CONTRATO_DATA_EXTENSO}' => ($service->date && ($d = $parseDate($service->date)))
+                ? $d->format('d') . ' de ' . ucfirst($d->locale('pt_BR')->translatedFormat('F')) . ' de ' . $d->format('Y')
                 : date('d') . ' de ' . ucfirst(\Carbon\Carbon::now()->locale('pt_BR')->translatedFormat('F')) . ' de ' . date('Y'),
             '${EMPRESA_EMAIL}' => 'contato@itacare.com.br',
             '${EMPRESA_WHATSAPP}' => '(73) 9999-8888',
@@ -879,7 +914,7 @@ class SalesServiceController extends Controller
             '${PROPOSTA_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${USUARIO_IMPRESSAO}' => auth()->user()->name ?? 'Administrador',
         ];
-        
+
         foreach ($mockData as $tag => $value) {
             $cleanTag = str_replace(['${', '}'], '', $tag);
             $templateProcessor->setValue($cleanTag, $value);
@@ -923,14 +958,14 @@ class SalesServiceController extends Controller
     public function pdfRci(SalesService $service)
     {
         $service->load(['client.address', 'proposal.product.proposalTemplate']);
-        
+
         $proposal = $service->proposal;
         if (!$proposal) {
             return redirect()->back()->with('error', 'Este atendimento ainda não possui uma proposta gerada para o RCI.');
         }
 
         $template = $proposal->product?->proposalTemplate;
-        
+
         if (!$template) {
             $template = \App\Models\ProposalTemplate::where('is_active', true)->first();
         }
@@ -940,9 +975,10 @@ class SalesServiceController extends Controller
         }
 
         $client = $service->client;
-        
-        $parseDate = function($date) {
-            if (!$date) return null;
+
+        $parseDate = function ($date) {
+            if (!$date)
+                return null;
             try {
                 if (str_contains($date, '/')) {
                     return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
@@ -960,12 +996,12 @@ class SalesServiceController extends Controller
             '[EMAIL]' => $client ? $client->email : '',
             '[CELULAR]' => $client ? $client->celular1 : '',
             '[PROFISSAO]' => $client ? $client->profissao : '',
-            
+
             // Cônjuge
             '[NOME_CONJUGE]' => $service->nome_conjuge ?? '',
             '[DATA_NASCIMENTO_CONJUGE]' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
             '[PROFISSAO_CONJUGE]' => $service->profissao_conjuge ?? '',
-            
+
             // Serviço
             '[DATA]' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '[HORA]' => $service->time ?? '',
@@ -1006,14 +1042,14 @@ class SalesServiceController extends Controller
     public function pdfChecklist(SalesService $service)
     {
         $service->load(['client.address', 'proposal.product.proposalTemplate']);
-        
+
         $proposal = $service->proposal;
         if (!$proposal) {
             return redirect()->back()->with('error', 'Este atendimento ainda não possui uma proposta gerada para o Checklist.');
         }
 
         $template = $proposal->product?->proposalTemplate;
-        
+
         if (!$template) {
             $template = \App\Models\ProposalTemplate::where('is_active', true)->first();
         }
@@ -1023,9 +1059,10 @@ class SalesServiceController extends Controller
         }
 
         $client = $service->client;
-        
-        $parseDate = function($date) {
-            if (!$date) return null;
+
+        $parseDate = function ($date) {
+            if (!$date)
+                return null;
             try {
                 if (str_contains($date, '/')) {
                     return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
@@ -1043,12 +1080,12 @@ class SalesServiceController extends Controller
             '[EMAIL]' => $client ? $client->email : '',
             '[CELULAR]' => $client ? $client->celular1 : '',
             '[PROFISSAO]' => $client ? $client->profissao : '',
-            
+
             // Cônjuge
             '[NOME_CONJUGE]' => $service->nome_conjuge ?? '',
             '[DATA_NASCIMENTO_CONJUGE]' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
             '[PROFISSAO_CONJUGE]' => $service->profissao_conjuge ?? '',
-            
+
             // Serviço
             '[DATA]' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '[HORA]' => $service->time ?? '',

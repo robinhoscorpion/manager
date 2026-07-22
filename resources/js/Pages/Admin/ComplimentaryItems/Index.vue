@@ -84,7 +84,10 @@ const mockData = {
     '[CEP]': '01001-000',
     '[RUA]': 'Praça da Sé Principal',
     '[NUMERO]': '123',
-    '[QR_CODE]': '[QR_CODE]'
+    '[QR_CODE]': '<img src="https://api.qrserver.com/v1/create-qr-code/?size=85x85&data=Preview" class="qr-code-img" alt="QR Code" >',
+    '[PROMOTOR]': 'João Promotor',
+    '[CONSULTOR]': 'Maria Consultora',
+    '[SUPERVISOR]': 'Pedro Supervisor'
 };
 
 const parsedPreviewContent = computed(() => {
@@ -416,6 +419,9 @@ const closeModal = () => {
                             <code class="px-2 py-1.5 bg-slate-50 dark:bg-[#0d1117] text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-[10px] text-[10px] font-bold select-all text-center">[CEP]</code>
                             <code class="px-2 py-1.5 bg-slate-50 dark:bg-[#0d1117] text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-[10px] text-[10px] font-bold select-all text-center">[RUA]</code>
                             <code class="px-2 py-1.5 bg-slate-50 dark:bg-[#0d1117] text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-[10px] text-[10px] font-bold select-all text-center">[NUMERO]</code>
+                            <code class="px-2 py-1.5 bg-slate-50 dark:bg-[#0d1117] text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 rounded-[10px] text-[10px] font-bold select-all text-center">[PROMOTOR]</code>
+                            <code class="px-2 py-1.5 bg-slate-50 dark:bg-[#0d1117] text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 rounded-[10px] text-[10px] font-bold select-all text-center">[CONSULTOR]</code>
+                            <code class="px-2 py-1.5 bg-slate-50 dark:bg-[#0d1117] text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 rounded-[10px] text-[10px] font-bold select-all text-center">[SUPERVISOR]</code>
                         </div>
                     </div>
 
