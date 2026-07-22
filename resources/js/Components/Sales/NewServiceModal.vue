@@ -419,19 +419,19 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome Completo <span class="text-red-500">*</span></label>
                             <input v-model="form.nome" type="text" placeholder="NOME DO TITULAR" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.nome ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
-                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.nome">{{ errors.nome[0] }}</p>
+                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.nome">{{ errors.nome }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">{{ form.isEstrangeiro ? 'Documento / Passaporte' : 'CPF (Opcional)' }}</label>
                             <input :value="form.cpf" @input="onInputMask($event, 'cpf', 'cpf')" type="text" :placeholder="form.isEstrangeiro ? 'DOCUMENTO' : '000.000.000-00'" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.cpf ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
-                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.cpf">{{ errors.cpf[0] }}</p>
+                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.cpf">{{ errors.cpf }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-3 flex flex-col">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">RG (Opcional)</label>
                             <input v-model="form.rg" type="text" placeholder="RG" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase" :class="errors.rg ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
-                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.rg">{{ errors.rg[0] }}</p>
+                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.rg">{{ errors.rg }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
@@ -441,7 +441,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <div class="col-span-6 sm:col-span-4 flex flex-col">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nascimento <span class="text-red-500">*</span></label>
                             <input v-model="form.dataNascimento" @change="calculateAge(form.dataNascimento, 'idade')" type="date" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.dataNascimento ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
-                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.dataNascimento">{{ errors.dataNascimento[0] }}</p>
+                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.dataNascimento">{{ errors.dataNascimento }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-6 sm:col-span-4 flex flex-col">
@@ -462,7 +462,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Celular Principal <span class="text-red-500">*</span></label>
                             <input :value="form.celular1" @input="onInputMask($event, 'celular1', 'phone')" type="text" placeholder="(00) 00000-0000" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.celular1 ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
-                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.celular1">{{ errors.celular1[0] }}</p>
+                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.celular1">{{ errors.celular1 }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
@@ -473,7 +473,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">E-mail <span class="text-red-500">*</span></label>
                             <input v-model="form.email" type="email" placeholder="exemplo@email.com" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm" :class="errors.email ? 'border-red-500/50 dark:border-red-500/50' : 'border-slate-200 dark:border-slate-700'">
-                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.email">{{ errors.email[0] }}</p>
+                            <p class="h-[14px] text-[10px] text-red-500 font-bold uppercase mt-1 px-1 transition-all" v-if="errors.email">{{ errors.email }}</p>
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
