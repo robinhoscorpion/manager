@@ -44,6 +44,7 @@ const errors = computed(() => usePage().props.errors);
 const isEdit = computed(() => !!props.initialData);
 const isReadOnly = ref(true);
 const showProposalModal = ref(false);
+const processing = ref(false);
 
 const promoters = computed(() => {
     return props.availableAvatars
@@ -287,6 +288,8 @@ const submit = () => {
         form.value.clients += ' & ' + form.value.nomeConjuge;
     }
 
+    processing.value = true;
+    
     if (isEdit.value) {
         router.put(route('sales.atendimentos.update', props.initialData.id), form.value, {
             onSuccess: () => {
@@ -295,15 +298,21 @@ const submit = () => {
             onError: () => {
                 scrollToError();
             },
-            onError: () => {
-                scrollToError();
-            },
+            onFinish: () => {
+                processing.value = false;
+            }
         });
     } else {
         router.post(route('sales.atendimentos.store'), form.value, {
             onSuccess: () => {
                 close();
             },
+            onError: () => {
+                scrollToError();
+            },
+            onFinish: () => {
+                processing.value = false;
+            }
         });
     }
 };
@@ -666,9 +675,11 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     <button 
                         v-if="can('atendimentos.editar')"
                         @click="isReadOnly ? (isReadOnly = false) : submit()"
+                        :disabled="processing"
                         class="order-1 sm:order-2 flex-[2] py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
                     >
-                        {{ isReadOnly ? 'Editar Atendimento' : 'Salvar Alterações' }}
+                        <svg v-if="processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        {{ processing ? 'Salvando...' : (isReadOnly ? 'Editar Atendimento' : 'Salvar Alterações') }}
                     </button>
                     <!-- Botão de Proposta -->
                     <button 
@@ -693,9 +704,11 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     </button>
                     <button 
                         @click="submit"
+                        :disabled="processing"
                         class="order-1 sm:order-2 flex-[2] py-3 bg-brand-green hover:bg-brand-green/90 text-white rounded-[12px] font-bold uppercase text-[10px] tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
                     >
-                        Cadastrar Atendimento
+                        <svg v-if="processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        {{ processing ? 'Cadastrando...' : 'Cadastrar Atendimento' }}
                     </button>
                 </div>
             </div>
