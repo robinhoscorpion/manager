@@ -26,7 +26,7 @@ class ContractTemplateController extends Controller
             'is_default' => 'boolean',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
-            'file' => 'nullable|file|mimes:docx|max:10240', // 10MB max
+            'file' => 'nullable|file|max:10240', // 10MB max
         ]);
 
         if ($request->hasFile('file')) {
@@ -59,7 +59,7 @@ class ContractTemplateController extends Controller
             'is_default' => 'boolean',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
-            'file' => 'nullable|file|mimes:docx|max:10240',
+            'file' => 'nullable|file|max:10240',
         ]);
 
         if ($request->hasFile('file')) {

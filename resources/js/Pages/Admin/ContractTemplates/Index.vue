@@ -371,6 +371,7 @@ const closeModal = () => {
                         <div class="col-span-3 space-y-1.5">
                             <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1 text-left block">Título do Contrato</label>
                             <input v-model="form.name" type="text" required class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: Contrato Padrão de Time-Sharing">
+                            <p class="text-red-500 text-[10px] mt-1 font-bold" v-if="form.errors.name">{{ form.errors.name }}</p>
                         </div>
                         <div class="flex items-end">
                             <div class="w-full flex items-center gap-3 bg-white dark:bg-slate-800/50 p-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 h-[42px] shadow-sm">
@@ -451,6 +452,7 @@ const closeModal = () => {
                                 <p class="text-xs text-slate-400 mt-1" v-if="editingItem?.original_filename && !form.file">Arquivo atual: {{ editingItem.original_filename }}</p>
                             </div>
                         </div>
+                        <p class="text-red-500 text-[10px] mt-1 font-bold text-center" v-if="form.errors.file">{{ form.errors.file }}</p>
                     </div>
 
                     <!-- Magic Tags Cheatsheet -->
