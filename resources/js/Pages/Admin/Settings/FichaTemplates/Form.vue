@@ -11,13 +11,20 @@ const props = defineProps({
 });
 
 const form = useForm({
+    name: props.template?.name || '',
+    is_default: props.template?.is_default || false,
+    is_active: props.template?.is_active ?? true,
     content: props.template?.content || ''
 });
 
 const extensions = [html(), oneDark];
 
 const submit = () => {
-    form.put(route('admin.settings.ficha_template.update'));
+    if (props.template?.id) {
+        form.put(route('admin.settings.ficha_templates.update', props.template.id));
+    } else {
+        form.post(route('admin.settings.ficha_templates.store'));
+    }
 };
 </script>
 
@@ -52,6 +59,21 @@ const submit = () => {
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 space-y-6">
                         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="p-4 border-b border-slate-200 dark:border-slate-800">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome do Modelo</label>
+                                        <input type="text" v-model="form.name" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm focus:border-brand-green focus:ring-brand-green" required />
+                                        <div v-if="form.errors.name" class="mt-1 text-sm text-red-600">{{ form.errors.name }}</div>
+                                    </div>
+                                    <div class="flex items-center pt-6">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" v-model="form.is_default" class="rounded border-slate-300 text-brand-green focus:ring-brand-green">
+                                            <span class="text-sm text-slate-700 dark:text-slate-300">Definir como Modelo Padrão</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">Editor HTML</h3>
                             </div>

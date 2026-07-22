@@ -3,36 +3,72 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setting;
+use App\Models\FichaTemplate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class FichaTemplateController extends Controller
 {
-    public function edit()
+    public function index()
     {
-        $setting = Setting::where('key', 'ficha_atendimento_template')->first();
-        
-        $template = $setting ? $setting->value : [
-            'content' => '<h1>Ficha de Atendimento</h1><p>Cliente: {{cliente_nome}}</p>'
-        ];
-
-        return Inertia::render('Admin/Settings/FichaTemplate', [
-            'template' => $template
+        return Inertia::render('Admin/Settings/FichaTemplates/Index', [
+            'templates' => FichaTemplate::orderBy('name')->get()
         ]);
     }
 
-    public function update(Request $request)
+    public function create()
+    {
+        return Inertia::render('Admin/Settings/FichaTemplates/Form', [
+            'template' => null
+        ]);
+    }
+
+    public function store(Request $request)
     {
         $validated = $request->validate([
+            'name' => 'required|string|max:255',
             'content' => 'required|string',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
-        Setting::updateOrCreate(
-            ['key' => 'ficha_atendimento_template'],
-            ['value' => ['content' => $validated['content']]]
-        );
+        if ($request->is_default) {
+            FichaTemplate::where('is_default', true)->update(['is_default' => false]);
+        }
 
-        return redirect()->back()->with('success', 'Ficha de Atendimento atualizada com sucesso!');
+        FichaTemplate::create($validated);
+
+        return redirect()->route('admin.settings.ficha_templates.index')->with('success', 'Modelo de ficha criado com sucesso!');
+    }
+
+    public function edit(FichaTemplate $fichaTemplate)
+    {
+        return Inertia::render('Admin/Settings/FichaTemplates/Form', [
+            'template' => $fichaTemplate
+        ]);
+    }
+
+    public function update(Request $request, FichaTemplate $fichaTemplate)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'required|string',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
+        ]);
+
+        if ($request->is_default && !$fichaTemplate->is_default) {
+            FichaTemplate::where('id', '!=', $fichaTemplate->id)->update(['is_default' => false]);
+        }
+
+        $fichaTemplate->update($validated);
+
+        return redirect()->route('admin.settings.ficha_templates.index')->with('success', 'Modelo de ficha atualizado com sucesso!');
+    }
+
+    public function destroy(FichaTemplate $fichaTemplate)
+    {
+        $fichaTemplate->delete();
+        return redirect()->back()->with('success', 'Modelo excluído com sucesso!');
     }
 }

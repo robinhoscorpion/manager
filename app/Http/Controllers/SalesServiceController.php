@@ -540,10 +540,13 @@ class SalesServiceController extends Controller
             'spouse_birth' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '-',
         ];
 
-        $setting = \App\Models\Setting::where('key', 'ficha_atendimento_template')->first();
+        $template = \App\Models\FichaTemplate::where('is_default', true)->first();
+        if (!$template) {
+            $template = \App\Models\FichaTemplate::where('is_active', true)->first();
+        }
         
-        if ($setting && !empty($setting->value['content'])) {
-            $html = $setting->value['content'];
+        if ($template && !empty($template->content)) {
+            $html = $template->content;
             $replacements = [
                 '{{nome_cliente}}' => $client->nome,
                 '{{cpf_cliente}}' => $client->cpf ?? 'N/A',
