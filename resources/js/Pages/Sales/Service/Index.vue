@@ -654,8 +654,11 @@ const hasCortesia = (cortesia) => {
                                  <!-- Status -->
                                  <div v-if="columnSettings.status" class="w-36 flex justify-center relative">
                                     <div
-                                        class="inline-flex items-center gap-1.5 pl-2 pr-3 h-7 rounded-full cursor-default select-none border text-[10px] font-black uppercase tracking-[0.12em] whitespace-nowrap transition-none"
-                                        :class="{
+                                        @click.stop="openStatusPicker(index)"
+                                        class="inline-flex items-center gap-1.5 pl-2 pr-3 h-7 rounded-full select-none border text-[10px] font-black uppercase tracking-[0.12em] whitespace-nowrap transition-all"
+                                        :class="[
+                                            can('atendimentos.gerenciar') ? 'cursor-pointer hover:scale-105 hover:shadow-sm' : 'cursor-default',
+                                            {
                                             'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20 text-orange-600 dark:text-orange-400': item.status === 'queue' || item.status === 'fila',
                                             'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400': item.status === 'table' || item.status === 'mesa',
                                             'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/20 text-purple-600 dark:text-purple-400': item.status === 'proposal' || item.status === 'proposta',
@@ -664,7 +667,8 @@ const hasCortesia = (cortesia) => {
                                             'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400': item.status === 'rejected' || item.status === 'reprovado',
                                             'bg-blue-50 dark:bg-blue-600/10 border-blue-200 dark:border-blue-600/20 text-blue-600 dark:text-blue-400': item.status === 'completed' || item.status === 'finalizado',
                                             'bg-slate-50 dark:bg-slate-500/10 border-slate-200 dark:border-slate-500/20 text-slate-500 dark:text-slate-400': item.status === 'cancelled' || item.status === 'cancelado',
-                                        }"
+                                        }
+                                        ]"
                                     >
                                         <!-- Ícone por status -->
                                         <span class="w-4 h-4 flex items-center justify-center shrink-0">
