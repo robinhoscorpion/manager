@@ -454,8 +454,16 @@ class SalesServiceController extends Controller
             }
         };
 
+        $primeiroSegundoNome = '';
+        if ($client && $client->nome) {
+            $parts = explode(' ', trim($client->nome));
+            $primeiroSegundoNome = $parts[0] . (isset($parts[1]) ? ' ' . $parts[1] : '');
+        }
+
         $replacements = [
             '[NOME_TITULAR]' => $client ? $client->nome : '',
+            '[NOME_CURTO]' => $primeiroSegundoNome,
+            '[DATA_IMPRESSAO]' => date('d/m/Y'),
             '[DATA_NASCIMENTO]' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
             '[CPF]' => $client ? $client->cpf : '',
             '[EMAIL]' => $client ? $client->email : '',
