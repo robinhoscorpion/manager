@@ -1,13 +1,4 @@
 export const SERVICE_STATUS = {
-    FILA: {
-        value: 'queue',
-        label: 'FILA',
-        color: 'bg-orange-500',
-        textColor: 'text-orange-500 dark:text-orange-400',
-        bgColor: 'bg-orange-50 dark:bg-orange-500/10',
-        borderColor: 'border-orange-500/30',
-        icon: 'users'
-    },
     MESA: {
         value: 'table',
         label: 'MESA',
@@ -79,7 +70,7 @@ export const getStatusMetadata = (statusValue) => {
     const val = statusValue.toLowerCase();
 
     // Mapping English values to their descriptors
-    if (val === 'queue' || val === 'fila') return SERVICE_STATUS.FILA;
+    if (val === 'queue' || val === 'fila') return SERVICE_STATUS.MESA;
     if (val === 'table' || val === 'mesa') return SERVICE_STATUS.MESA;
     if (val === 'rejected' || val === 'reprovado') return SERVICE_STATUS.REPROVADO;
     if (val === 'cancelled' || val === 'cancelado' || val === 'door') return SERVICE_STATUS.CANCELADO;

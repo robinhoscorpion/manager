@@ -116,13 +116,13 @@ class ScheduleController extends Controller
                     'time' => $schedule->time ?? '00:00',
                     'clients' => $schedule->name,
                     'local' => 'SALA',
-                    'status' => 'fila', // Using 'fila' instead of 'queue' to align with UI labels
+                    'status' => 'table', // Using 'table' as 'fila' was removed
                     'qualification' => 'Q',
                     'observacoes' => $schedule->observations,
                 ]);
             });
 
-            return back()->with('success', 'Status atualizado e Ficha de Atendimento gerada na Fila!');
+            return back()->with('success', 'Status atualizado e Ficha de Atendimento gerada na Mesa!');
         }
 
         return back()->with('success', 'Status atualizado com sucesso!');

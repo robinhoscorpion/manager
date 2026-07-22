@@ -59,7 +59,7 @@ const form = ref({
     local: 'hotel',
     opc_id: null,
     qualification: 'Q',
-    status: 'queue',
+    status: 'table',
     
     // Novas informações do Titular
     isEstrangeiro: false,
@@ -167,7 +167,7 @@ watch(() => props.initialData, (newVal) => {
         Object.assign(form.value, {
             date: new Date().toLocaleDateString('pt-BR'),
             time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h',
-            clients: '', local: 'hotel', opc_id: null, qualification: 'Q', status: 'queue',
+            clients: '', local: 'hotel', opc_id: null, qualification: 'Q', status: 'table',
             isEstrangeiro: false, nome: '', cpf: '', rg: '', nacionalidade: 'Brasileira', dataNascimento: '', idade: '', profissao: '', estadoCivil: 'solteiro', celular1: '', celular2: '', email: '',
             temConjuge: false, tipoRelacionamento: 'Casal/Namorados', nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira', dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: 'solteiro',
             quantidadeFilhos: 0, tempoJuntos: '', rendaFamiliar: '',
