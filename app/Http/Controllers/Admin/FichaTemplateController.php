@@ -71,4 +71,26 @@ class FichaTemplateController extends Controller
         $fichaTemplate->delete();
         return redirect()->back()->with('success', 'Modelo excluído com sucesso!');
     }
+
+    public function previewPdf(FichaTemplate $fichaTemplate)
+    {
+        $html = $fichaTemplate->content;
+        
+        $replacements = [
+            '{{nome_cliente}}' => 'João da Silva (Exemplo)',
+            '{{cpf_cliente}}' => '123.456.789-00',
+            '{{email_cliente}}' => 'joao.exemplo@email.com',
+            '{{celular_cliente}}' => '(11) 99999-9999',
+            '{{data_atendimento}}' => date('d/m/Y'),
+            '{{local_atendimento}}' => 'Escritório Matriz',
+            '{{promotor}}' => 'Promotor Exemplo',
+            '{{brindes}}' => 'Kit Boas Vindas, Garrafa Térmica',
+        ];
+        
+        foreach ($replacements as $tag => $val) {
+            $html = str_replace($tag, $val, $html);
+        }
+        
+        return view('pdf.custom-sheet', ['html' => $html]);
+    }
 }

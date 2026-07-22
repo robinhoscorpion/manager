@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'index'])->name('admin.settings.columns.index')->middleware('permission:configuracoes.colunas.acessar');
     Route::put('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'update'])->name('admin.settings.columns.update')->middleware('permission:configuracoes.colunas.gerenciar');
 
+    Route::get('configuracoes/ficha-templates/{ficha_template}/preview-pdf', [\App\Http\Controllers\Admin\FichaTemplateController::class, 'previewPdf'])->name('admin.settings.ficha_templates.preview_pdf')->middleware('permission:configuracoes.modelos_contrato.acessar');
     Route::resource('configuracoes/ficha-templates', \App\Http\Controllers\Admin\FichaTemplateController::class)->names('admin.settings.ficha_templates')->middleware('permission:configuracoes.modelos_contrato.acessar');
 
     // Metas da Plataforma
