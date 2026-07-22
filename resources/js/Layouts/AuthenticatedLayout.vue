@@ -275,6 +275,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.columns.index') ? 'opacity-100' : 'opacity-30'"></div>
                                 Colunas do Dashboard
                             </Link>
+                            <Link v-if="can('configuracoes.modelos_contrato.acessar')" :href="route('admin.settings.ficha_template.edit')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.ficha_template.edit') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.ficha_template.edit') ? 'opacity-100' : 'opacity-30'"></div>
+                                Ficha de Atendimento
+                            </Link>
                             <Link v-if="can('configuracoes.modelos_proposta.acessar')" :href="route('admin.proposal_templates.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.proposal_templates.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.proposal_templates.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Modelos de Proposta

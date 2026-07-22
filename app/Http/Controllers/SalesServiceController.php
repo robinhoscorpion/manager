@@ -540,6 +540,28 @@ class SalesServiceController extends Controller
             'spouse_birth' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '-',
         ];
 
+        $setting = \App\Models\Setting::where('key', 'ficha_atendimento_template')->first();
+        
+        if ($setting && !empty($setting->value['content'])) {
+            $html = $setting->value['content'];
+            $replacements = [
+                '{{nome_cliente}}' => $client->nome,
+                '{{cpf_cliente}}' => $client->cpf ?? 'N/A',
+                '{{email_cliente}}' => $client->email ?? 'N/A',
+                '{{celular_cliente}}' => $client->celular1 ?? 'N/A',
+                '{{data_atendimento}}' => $formattedDates['service_date'],
+                '{{local_atendimento}}' => $service->local ?? 'N/A',
+                '{{promotor}}' => $service->opc_avatar ?? 'Não informado',
+                '{{brindes}}' => is_array($service->cortesia) ? implode(', ', $service->cortesia) : ($service->cortesia ?: 'Nenhum'),
+            ];
+            
+            foreach ($replacements as $tag => $val) {
+                $html = str_replace($tag, $val, $html);
+            }
+            
+            return view('pdf.custom-sheet', ['html' => $html]);
+        }
+
         return view('pdf.service-sheet', array_merge(compact('service', 'client'), $formattedDates));
     }
 

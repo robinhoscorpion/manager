@@ -73,6 +73,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'index'])->name('admin.settings.columns.index')->middleware('permission:configuracoes.colunas.acessar');
     Route::put('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'update'])->name('admin.settings.columns.update')->middleware('permission:configuracoes.colunas.gerenciar');
 
+    Route::get('/configuracoes/ficha-atendimento', [\App\Http\Controllers\Admin\FichaTemplateController::class, 'edit'])->name('admin.settings.ficha_template.edit')->middleware('permission:configuracoes.modelos_contrato.acessar');
+    Route::put('/configuracoes/ficha-atendimento', [\App\Http\Controllers\Admin\FichaTemplateController::class, 'update'])->name('admin.settings.ficha_template.update')->middleware('permission:configuracoes.modelos_contrato.gerenciar');
+
     // Metas da Plataforma
     Route::resource('admin/platform-goals', \App\Http\Controllers\Admin\PlatformGoalController::class)
         ->only(['index', 'show'])
