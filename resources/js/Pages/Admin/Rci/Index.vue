@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
 import axios from 'axios';
@@ -44,10 +44,15 @@ const isMapperOpen = ref(false);
 const activeTemplate = ref(null);
 const mappingConfig = ref([]);
 const isSavingMapping = ref(false);
+const pdfContainer = ref(null);
+
+// Drag & Drop State
+const isDragging = ref(false);
+const draggedMarkerIndex = ref(null);
+const activeMarkerId = ref(null);
 
 const openMapper = (template) => {
     activeTemplate.value = template;
-    // Carrega o config existente ou array vazio
     mappingConfig.value = template.mapping_config ? JSON.parse(JSON.stringify(template.mapping_config)) : [];
     isMapperOpen.value = true;
 };
@@ -56,19 +61,23 @@ const closeMapper = () => {
     isMapperOpen.value = false;
     activeTemplate.value = null;
     mappingConfig.value = [];
+    activeMarkerId.value = null;
 };
 
 const handlePdfClick = (e) => {
+    // Se clicou direto num marcador, não cria novo
+    if (e.target.closest('.rci-marker')) return;
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     
-    // Proporção A4 (210mm x 297mm)
     const xMm = (clickX / rect.width) * 210;
     const yMm = (clickY / rect.height) * 297;
     
+    const newId = Date.now();
     mappingConfig.value.push({
-        id: Date.now(),
+        id: newId,
         tag: '${NOVO_CAMPO}',
         x: xMm,
         y: yMm,
@@ -76,7 +85,52 @@ const handlePdfClick = (e) => {
         fontSize: 9,
         uppercase: false,
     });
+    
+    activateMarker(newId);
 };
+
+const activateMarker = (id) => {
+    activeMarkerId.value = id;
+    nextTick(() => {
+        const el = document.getElementById('config-marker-' + id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+};
+
+const startDrag = (e, index) => {
+    isDragging.value = true;
+    draggedMarkerIndex.value = index;
+    activateMarker(mappingConfig.value[index].id);
+};
+
+const onDrag = (e) => {
+    if (!isDragging.value || draggedMarkerIndex.value === null || !pdfContainer.value) return;
+    
+    const rect = pdfContainer.value.getBoundingClientRect();
+    let moveX = e.clientX - rect.left;
+    let moveY = e.clientY - rect.top;
+    
+    moveX = Math.max(0, Math.min(moveX, rect.width));
+    moveY = Math.max(0, Math.min(moveY, rect.height));
+
+    mappingConfig.value[draggedMarkerIndex.value].x = (moveX / rect.width) * 210;
+    mappingConfig.value[draggedMarkerIndex.value].y = (moveY / rect.height) * 297;
+};
+
+const endDrag = () => {
+    isDragging.value = false;
+    draggedMarkerIndex.value = null;
+};
+
+onMounted(() => {
+    window.addEventListener('mousemove', onDrag);
+    window.addEventListener('mouseup', endDrag);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('mousemove', onDrag);
+    window.removeEventListener('mouseup', endDrag);
+});
 
 const removeMarker = (index) => {
     mappingConfig.value.splice(index, 1);
@@ -348,8 +402,12 @@ const executeDelete = () => {
                     </div>
                     
                     <!-- Lista de Marcadores -->
-                    <div v-for="(marker, index) in mappingConfig" :key="marker.id" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl relative group">
-                        <button @click="removeMarker(index)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10">
+                    <div v-for="(marker, index) in mappingConfig" :key="marker.id" 
+                         :id="'config-marker-' + marker.id"
+                         @click="activateMarker(marker.id)"
+                         :class="['p-3 rounded-xl relative group cursor-pointer transition-all border', 
+                                  activeMarkerId === marker.id ? 'bg-brand-green/10 border-brand-green ring-1 ring-brand-green' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700']">
+                        <button @click.stop="removeMarker(index)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10 hover:scale-110">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                         
@@ -387,7 +445,7 @@ const executeDelete = () => {
 
             <!-- Workspace -->
             <div class="flex-1 relative overflow-auto bg-slate-200/50 dark:bg-[#0f1219] p-8 flex justify-center items-start">
-                <div class="relative shadow-2xl bg-white" style="max-width: 1000px; width: 100%;">
+                <div class="relative shadow-2xl bg-white" style="max-width: 1000px; width: 100%;" ref="pdfContainer">
                     <!-- Renderiza a imagem gerada pelo ghostscript -->
                     <img 
                         v-if="activeTemplate.preview_image_path"
@@ -406,17 +464,29 @@ const executeDelete = () => {
                     <div 
                         v-for="(marker, index) in mappingConfig" 
                         :key="marker.id"
-                        class="absolute flex items-center pointer-events-none"
+                        class="absolute flex items-center rci-marker cursor-move group select-none transition-all duration-75"
+                        @mousedown.stop.prevent="startDrag($event, index)"
+                        :class="{ 'z-20 scale-105': activeMarkerId === marker.id, 'z-10': activeMarkerId !== marker.id }"
                         :style="{ 
                             left: (marker.x / 210 * 100) + '%', 
                             top: (marker.y / 297 * 100) + '%',
                             transform: 'translate(0, -100%)' // Alinha a base do texto com o clique
                         }"
                     >
-                        <div class="w-2 h-2 rounded-full bg-red-500 -ml-1 shadow-md z-10 border border-white"></div>
-                        <div class="ml-1 px-1.5 py-0.5 bg-brand-green/90 text-white font-mono rounded text-[10px] whitespace-nowrap shadow-sm backdrop-blur-sm">
+                        <div class="w-3 h-3 rounded-full -ml-1.5 shadow-md border-2 border-white flex-shrink-0 transition-colors"
+                             :class="activeMarkerId === marker.id ? 'bg-brand-green' : 'bg-red-500'"></div>
+                        
+                        <div class="ml-1 px-2 py-1 text-white font-mono rounded text-[10px] whitespace-nowrap shadow-sm backdrop-blur-sm transition-colors border"
+                             :class="activeMarkerId === marker.id ? 'bg-brand-green border-brand-green' : 'bg-slate-900/80 border-slate-700'">
                             {{ marker.tag }}
                         </div>
+
+                        <!-- Delete button on hover/active -->
+                        <button @click.stop.prevent="removeMarker(index)" 
+                                class="absolute -top-3 -right-3 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110"
+                                :class="{ 'opacity-100': activeMarkerId === marker.id }">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
                 </div>
             </div>
