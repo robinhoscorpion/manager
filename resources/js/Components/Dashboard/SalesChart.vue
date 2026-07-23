@@ -67,11 +67,11 @@ const chartOptions = {
     scales: {
         y: {
             grid: {
-                color: 'rgba(255, 255, 255, 0.03)',
+                color: 'rgba(148, 163, 184, 0.15)',
                 drawBorder: false
             },
             ticks: {
-                color: 'rgba(255, 255, 255, 0.3)',
+                color: '#94a3b8',
                 font: { family: "'Inter', sans-serif", size: 10 },
                 padding: 10,
                 callback: (value) => value === 0 ? '0' : value
@@ -81,7 +81,7 @@ const chartOptions = {
         x: {
             grid: { display: false },
             ticks: {
-                color: 'rgba(255, 255, 255, 0.3)',
+                color: '#94a3b8',
                 font: { family: "'Inter', sans-serif", size: 10 },
                 padding: 10
             }

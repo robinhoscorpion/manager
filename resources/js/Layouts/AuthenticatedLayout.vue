@@ -287,6 +287,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.contract_templates.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Modelos de Contrato
                             </Link>
+                            <Link v-if="can('configuracoes.modelos_contrato.acessar')" :href="route('admin.rci.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.rci.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.rci.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Modelo RCI
+                            </Link>
                             <Link v-if="can('configuracoes.produtos.acessar')" :href="route('admin.products.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.products.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.products.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Gestão de Produtos

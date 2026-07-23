@@ -62,7 +62,7 @@ defineProps({
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 24px;
+    padding: 20px;
     box-shadow: var(--shadow-card);
     transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
     position: relative;
@@ -76,17 +76,17 @@ defineProps({
 }
 
 .stat-label {
-    font-size: 12px;
+    font-size: 10.5px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .stat-value {
     font-family: var(--font-heading);
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 800;
     line-height: 1.1;
     color: var(--text-main);
@@ -96,17 +96,17 @@ defineProps({
 .stat-footer {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 14px;
+    gap: 6px;
+    margin-top: 12px;
 }
 
 .trend-pill {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 3px 8px;
+    padding: 2.5px 6px;
     border-radius: 6px;
-    font-size: 11.5px;
+    font-size: 10px;
     font-weight: 700;
 }
 
@@ -131,15 +131,15 @@ defineProps({
 }
 
 .stat-trend-label {
-    font-size: 11.5px;
+    font-size: 10.5px;
     font-weight: 500;
     color: var(--text-muted);
 }
 
 .stat-icon-box {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     background: var(--primary-light);
     border: 1px solid var(--primary-border);
     display: flex;

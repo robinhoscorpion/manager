@@ -127,9 +127,7 @@ const sourcesLeadsData = {
 const chartData = computed(() => {
     return {
         labels: Array.from({ length: daysInMonth }, (_, i) => {
-            const day = (i + 1).toString().padStart(2, '0');
-            const month = (new Date().getMonth() + 1).toString().padStart(2, '0');
-            return `${day}/${month}`;
+            return (i + 1).toString().padStart(2, '0');
         }),
         datasets: [
             {
@@ -233,7 +231,7 @@ const chartData = computed(() => {
 
 
         <!-- ── KPI Cards ────────────────────────────────────── -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-1">
             <StatCard title="Meta Total" :value="formatCurrency(revenueTarget)" trend="+12,5%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,7 +293,7 @@ const chartData = computed(() => {
         </div>
 
         <!-- ── Secondary KPI Cards (Atendimentos & Sócios) ── -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-2">
             <StatCard title="Total de Vendas" :value="formatCurrency(total_sales_revenue)" trend="+8,4%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,7 +342,7 @@ const chartData = computed(() => {
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
                 <RankingCard title="Promotores" :sellers="ranking_promotores" :header-color="'bg-indigo-500'" />
                 <RankingCard title="Consultores" :sellers="ranking_consultores" :header-color="'bg-violet-500'" />
                 <RankingCard title="Supervisores" :sellers="ranking_supervisores" :header-color="'bg-purple-600'" />

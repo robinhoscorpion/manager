@@ -50,14 +50,14 @@ class PlatformGoalController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PlatformGoal $goal)
+    public function update(Request $request, PlatformGoal $platform_goal)
     {
         $request->validate([
             'revenue_target' => ['required', 'numeric', 'min:0'],
             'contracts_target' => ['required', 'integer', 'min:0'],
         ]);
 
-        $goal->update([
+        $platform_goal->update([
             'revenue_target' => $request->revenue_target,
             'contracts_target' => $request->contracts_target,
         ]);
@@ -68,9 +68,9 @@ class PlatformGoalController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PlatformGoal $goal)
+    public function destroy(PlatformGoal $platform_goal)
     {
-        $goal->delete();
+        $platform_goal->delete();
         return redirect()->back()->with('message', 'Meta removida com sucesso!');
     }
 }

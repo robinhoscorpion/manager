@@ -81,29 +81,29 @@ const hasCortesia = (cortesia) => {
 </script>
 
 <template>
-    <Modal :show="show" @close="emit('close')" max-width="md">
+    <Modal :show="show" @close="emit('close')" max-width="sm">
         <!-- Actions Grid View -->
-        <div v-if="viewMode === 'actions'" class="p-6 md:p-8 bg-white dark:bg-[#0f1219] border border-slate-200 dark:border-slate-800 rounded-[20px] relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl">
+        <div v-if="viewMode === 'actions'" class="p-5 md:p-6 bg-white dark:bg-[#0f1219] border border-slate-200 dark:border-slate-800 rounded-[20px] relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl">
             <!-- Background Glow -->
             <div class="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 dark:bg-brand-green/10 rounded-full blur-[60px] pointer-events-none"></div>
             
             <div class="relative">
-                <div class="flex items-center justify-between mb-8">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                        <span class="w-1.5 h-5 bg-brand-green rounded-full shadow-sm"></span>
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-brand-green rounded-full shadow-sm"></span>
                         Central de Documentos
                     </h3>
-                    <button @click="emit('close')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button @click="emit('close')" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6">
-                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cliente Selecionado</p>
-                    <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{{ service?.client?.nome }}</p>
+                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 mb-4">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Cliente Selecionado</p>
+                    <p class="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">{{ service?.client?.nome }}</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-2">
                     <button 
                         v-for="action in actions" 
                         :key="action.id"
@@ -111,20 +111,20 @@ const hasCortesia = (cortesia) => {
                         :disabled="(!action.route && action.id !== 'delete') || 
                                    (action.id === 'cortesia' && !hasCortesia(service?.cortesia)) ||
                                    (['proposal', 'contract', 'rci', 'checklist'].includes(action.id) && !service?.proposal)"
-                        class="group relative p-4 rounded-xl border transition-all flex flex-col items-center gap-3 text-center disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
+                        class="group relative p-3 rounded-xl border transition-all flex flex-col items-center gap-2 text-center disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
                         :class="[
                             ((action.route || action.id === 'delete') && !(['proposal', 'contract', 'rci', 'checklist'].includes(action.id) && !service?.proposal)) ? (action.color + ' ' + action.hover + ' hover:scale-[1.02]') : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-600'
                         ]"
                     >
-                        <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">
+                        <div class="text-xl mb-0.5 group-hover:scale-110 transition-transform">
                             {{ action.icon }}
                         </div>
-                        <span class="text-[9px] font-black uppercase tracking-widest leading-tight">
+                        <span class="text-[8px] font-black uppercase tracking-widest leading-tight">
                             {{ action.label }}
                         </span>
                         
                         <!-- Status Badge -->
-                        <span v-if="!action.route && action.id !== 'delete'" class="absolute top-1.5 right-1.5 text-[6px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 uppercase tracking-widest">
+                        <span v-if="!action.route && action.id !== 'delete'" class="absolute top-1.5 right-1.5 text-[5px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 px-1 py-0.5 rounded border border-slate-300 dark:border-slate-700 uppercase tracking-widest">
                             Bloqueado
                         </span>
 

@@ -86,6 +86,26 @@ Route::middleware('auth')->group(function () {
         ->names('admin.platform_goals')
         ->middleware('permission:configuracoes.metas.gerenciar');
 
+    // Modelo RCI
+    Route::get('admin/modelo-rci', [\App\Http\Controllers\Admin\RciController::class, 'index'])
+        ->name('admin.rci.index')
+        ->middleware('permission:configuracoes.modelos_contrato.acessar');
+    Route::post('admin/modelo-rci', [\App\Http\Controllers\Admin\RciController::class, 'store'])
+        ->name('admin.rci.store')
+        ->middleware('permission:configuracoes.modelos_contrato.acessar');
+    Route::post('admin/modelo-rci/{template}/set-default', [\App\Http\Controllers\Admin\RciController::class, 'setAsDefault'])
+        ->name('admin.rci.set_default')
+        ->middleware('permission:configuracoes.modelos_contrato.acessar');
+    Route::post('admin/modelo-rci/{template}/mapping', [\App\Http\Controllers\Admin\RciController::class, 'updateMapping'])
+        ->name('admin.rci.update_mapping')
+        ->middleware('permission:configuracoes.modelos_contrato.acessar');
+    Route::delete('admin/modelo-rci/{template}', [\App\Http\Controllers\Admin\RciController::class, 'destroy'])
+        ->name('admin.rci.destroy')
+        ->middleware('permission:configuracoes.modelos_contrato.acessar');
+    Route::post('admin/modelo-rci/gerar', [\App\Http\Controllers\Admin\RciController::class, 'generate'])
+        ->name('admin.rci.generate')
+        ->middleware('permission:configuracoes.modelos_contrato.acessar');
+
     // Propostas
     Route::post('/propostas', [\App\Http\Controllers\ProposalController::class, 'store'])->name('sales.propostas.store')->middleware('permission:atendimentos.editar');
     Route::put('/propostas/{proposal}', [\App\Http\Controllers\ProposalController::class, 'update'])->name('sales.propostas.update')->middleware('permission:atendimentos.editar');
