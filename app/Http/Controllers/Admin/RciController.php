@@ -30,80 +30,15 @@ class RciController extends Controller
         $file = $request->file('file');
         
         $relativePath = $file->store('rci_templates');
-        $absolutePath = storage_path('app/' . $relativePath);
-
-        $outputFileName = 'rci_templates/gs_' . time() . '_' . $file->getClientOriginalName();
-        $outputAbsolutePath = storage_path('app/' . $outputFileName);
-
-        // 1. Converter PDF para 1.4
-        $gsPath = 'C:\\Program Files\\gs\\gs10.01.2\\bin\\gswin64c.exe';
         
-        $commandPdf = [
-            $gsPath,
-            '-sDEVICE=pdfwrite',
-            '-dCompatibilityLevel=1.4',
-            '-dProcessColorModel=/DeviceRGB',
-            '-dColorConversionStrategy=/RGB',
-            '-dPreserveOverprintSettings=true',
-            '-dNOPAUSE',
-            '-dQUIET',
-            '-dBATCH',
-            '-sOutputFile=' . $outputAbsolutePath,
-            $absolutePath
-        ];
-
-        try {
-            $processPdf = new Process($commandPdf);
-            $processPdf->setTimeout(60);
-            $processPdf->run();
-
-            if ($processPdf->isSuccessful() && file_exists($outputAbsolutePath)) {
-                Storage::delete($relativePath);
-                $finalPath = $outputFileName;
-            } else {
-                $finalPath = $relativePath;
-            }
-        } catch (\Exception $e) {
-            $finalPath = $relativePath;
-        }
-
-        // 2. Extrair a Primeira Página como JPG
-        $previewFileName = 'rci_templates/preview_' . time() . '.jpg';
-        $previewAbsolutePath = storage_path('app/public/' . $previewFileName);
-        
-        // Garante que o diretório public existe
-        if (!Storage::disk('public')->exists('rci_templates')) {
-            Storage::disk('public')->makeDirectory('rci_templates');
-        }
-
-        $commandImg = [
-            $gsPath,
-            '-sDEVICE=jpeg',
-            '-dFirstPage=1',
-            '-dLastPage=1',
-            '-r150', // 150 DPI para boa resolução sem pesar
-            '-dNOPAUSE',
-            '-dQUIET',
-            '-dBATCH',
-            '-sOutputFile=' . $previewAbsolutePath,
-            storage_path('app/' . $finalPath)
-        ];
-
-        try {
-            $processImg = new Process($commandImg);
-            $processImg->setTimeout(60);
-            $processImg->run();
-            
-            $previewPath = $processImg->isSuccessful() ? 'storage/' . $previewFileName : null;
-        } catch (\Exception $e) {
-            $previewPath = null;
-        }
+        // Agora não usamos mais Ghostscript no backend, apenas salvamos o arquivo.
+        // O preview será renderizado diretamente pelo navegador no frontend (via pdf.js).
 
         RciTemplate::create([
             'name' => $validated['name'],
-            'file_path' => $finalPath,
+            'file_path' => $relativePath,
             'is_default' => $isFirst,
-            'preview_image_path' => $previewPath,
+            'preview_image_path' => null,
             'mapping_config' => [] // array vazio
         ]);
 
@@ -220,5 +155,14 @@ class RciController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $fileName . '"'
         ]);
+    }
+
+    public function getFile(RciTemplate $template)
+    {
+        $path = storage_path('app/' . $template->file_path);
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->file($path);
     }
 }

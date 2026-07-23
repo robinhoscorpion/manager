@@ -5,6 +5,10 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
 import axios from 'axios';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configura o worker do PDF.js via CDN (para evitar problemas de build do Vite com workers locais)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 const props = defineProps({
     templates: Array
@@ -50,11 +54,46 @@ const pdfContainer = ref(null);
 const isDragging = ref(false);
 const draggedMarkerIndex = ref(null);
 const activeMarkerId = ref(null);
+const pdfCanvas = ref(null);
+const isLoadingPdf = ref(false);
+const pdfRenderError = ref(false);
 
-const openMapper = (template) => {
+const openMapper = async (template) => {
     activeTemplate.value = template;
     mappingConfig.value = template.mapping_config ? JSON.parse(JSON.stringify(template.mapping_config)) : [];
     isMapperOpen.value = true;
+    pdfRenderError.value = false;
+    
+    // Renderiza o PDF via pdf.js
+    await nextTick();
+    if (pdfCanvas.value) {
+        isLoadingPdf.value = true;
+        try {
+            const url = route('admin.rci.file', template.id);
+            const loadingTask = pdfjsLib.getDocument(url);
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            
+            // Renderiza com escala alta para boa qualidade (retina)
+            const viewport = page.getViewport({ scale: 2.5 });
+            
+            const canvas = pdfCanvas.value;
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+        } catch (error) {
+            console.error("Erro ao renderizar PDF:", error);
+            pdfRenderError.value = true;
+        } finally {
+            isLoadingPdf.value = false;
+        }
+    }
 };
 
 const closeMapper = () => {
@@ -447,18 +486,27 @@ const executeDelete = () => {
             <!-- Workspace -->
             <div class="flex-1 relative overflow-auto bg-slate-200/50 dark:bg-[#0f1219] p-8 flex justify-center items-start">
                 <div class="relative shadow-2xl bg-white" style="max-width: 1000px; width: 100%;" ref="pdfContainer">
-                    <!-- Renderiza a imagem gerada pelo ghostscript -->
-                    <img 
-                        v-if="activeTemplate.preview_image_path"
-                        :src="'/' + activeTemplate.preview_image_path" 
+                    
+                    <!-- Loading State -->
+                    <div v-if="isLoadingPdf" class="absolute inset-0 bg-white/80 z-50 flex items-center justify-center backdrop-blur-sm">
+                        <div class="flex flex-col items-center text-brand-green">
+                            <svg class="w-8 h-8 animate-spin mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span class="font-bold text-sm">Carregando visualização do PDF...</span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas do PDF (Renderizado via pdf.js) -->
+                    <canvas 
+                        ref="pdfCanvas" 
                         @click="handlePdfClick"
-                        class="w-full h-auto cursor-crosshair border border-slate-300" 
-                        alt="Preview do PDF"
-                        draggable="false"
-                    />
-                    <div v-else class="w-full aspect-[1/1.414] bg-white border border-slate-300 flex items-center justify-center flex-col p-8 text-center cursor-crosshair" @click="handlePdfClick">
-                        <p class="text-red-500 font-bold mb-2">Sem Imagem de Fundo</p>
-                        <p class="text-sm text-slate-500">O Ghostscript falhou ao gerar o JPG deste arquivo ou o sistema não suporta. O mapeamento ainda funciona com a tela em branco, mas pode ser difícil acertar as posições "no escuro". (Você pode recadastrar o arquivo para tentar novamente).</p>
+                        class="w-full h-auto cursor-crosshair border border-slate-300"
+                        style="display: block;"
+                    ></canvas>
+                    
+                    <!-- Error State -->
+                    <div v-if="pdfRenderError" class="absolute inset-0 bg-white flex items-center justify-center flex-col p-8 text-center cursor-crosshair" @click="handlePdfClick">
+                        <p class="text-red-500 font-bold mb-2">Erro ao carregar o PDF</p>
+                        <p class="text-sm text-slate-500">Não foi possível carregar a visualização do arquivo PDF. O mapeamento ainda funciona com a tela em branco, mas pode ser difícil acertar as posições.</p>
                     </div>
 
                     <!-- Overlay markers -->
