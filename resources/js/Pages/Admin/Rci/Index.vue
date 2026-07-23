@@ -383,7 +383,8 @@ const executeDelete = () => {
         </Modal>
 
         <!-- MAPPER MODAL (FULL SCREEN) -->
-        <div v-if="isMapperOpen" class="fixed inset-0 z-50 flex bg-slate-100 dark:bg-slate-900 overflow-hidden">
+        <Teleport to="body">
+            <div v-if="isMapperOpen" class="fixed inset-0 z-[9999] flex bg-slate-100 dark:bg-slate-900 overflow-hidden">
             <!-- Sidebar -->
             <div class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shadow-xl z-10">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
@@ -490,7 +491,8 @@ const executeDelete = () => {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </Teleport>
 
         <!-- MODAL DE TESTE DO MAPEADOR -->
         <Modal :show="isTestModalOpen" @close="closeTestModal" maxWidth="md">
