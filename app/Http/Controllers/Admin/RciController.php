@@ -159,7 +159,7 @@ class RciController extends Controller
 
     public function getFile(RciTemplate $template)
     {
-        $path = storage_path('app/' . $template->file_path);
+        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($template->file_path);
         if (!file_exists($path)) {
             abort(404);
         }

@@ -6,9 +6,10 @@ import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
 import axios from 'axios';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
-// Configura o worker do PDF.js via CDN (para evitar problemas de build do Vite com workers locais)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// Configura o worker do PDF.js via Vite local, evitando problemas de CDN ou versões mismatch.
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const props = defineProps({
     templates: Array
