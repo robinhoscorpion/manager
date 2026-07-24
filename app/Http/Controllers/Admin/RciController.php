@@ -161,7 +161,7 @@ class RciController extends Controller
             @unlink($jsonPath);
 
             if (!$process->isSuccessful()) {
-                throw new \Exception('Erro ao executar o preenchimento do PDF: ' . $process->getErrorOutput());
+                throw new \Exception('Erro ao executar o preenchimento do PDF: ' . $process->getErrorOutput() . ' | STDOUT: ' . $process->getOutput());
             }
 
             if (file_exists($outputPath)) {
