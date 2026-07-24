@@ -157,7 +157,8 @@ class RciController extends Controller
             file_put_contents($jsonPath, json_encode($pdfFieldsData));
 
             $scriptPath = base_path('fill_pdf_fields.py');
-            $process = new Process(['python', $scriptPath, $pdfPath, $outputPath, $jsonPath]);
+            $pythonPath = env('PYTHON_PATH', 'python');
+            $process = new Process([$pythonPath, $scriptPath, $pdfPath, $outputPath, $jsonPath]);
             $process->run();
             
             @unlink($jsonPath);
@@ -231,7 +232,8 @@ class RciController extends Controller
             file_put_contents($jsonPath, json_encode($pdfFieldsData));
 
             $scriptPath = base_path('fill_pdf_fields.py');
-            $process = new Process(['python', $scriptPath, $pdfPath, $outputPath, $jsonPath]);
+            $pythonPath = env('PYTHON_PATH', 'python');
+            $process = new Process([$pythonPath, $scriptPath, $pdfPath, $outputPath, $jsonPath]);
             $process->run();
             
             @unlink($jsonPath);
@@ -269,7 +271,8 @@ class RciController extends Controller
 
         $scriptPath = base_path('extract_pdf_fields.cjs');
         
-        $process = new Process(['C:\\Program Files\\nodejs\\node.exe', $scriptPath, $path]);
+        $nodePath = env('NODE_PATH', 'node');
+        $process = new Process([$nodePath, $scriptPath, $path]);
         $process->run();
 
         \Log::info('getFields Process Output: ' . $process->getOutput());
