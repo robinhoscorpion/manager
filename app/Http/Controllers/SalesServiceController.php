@@ -965,83 +965,125 @@ class SalesServiceController extends Controller
      */
     public function pdfRci(SalesService $service)
     {
-        $service->load(['client.address', 'proposal.product.proposalTemplate']);
-
-        $proposal = $service->proposal;
-        if (!$proposal) {
-            return redirect()->back()->with('error', 'Este atendimento ainda não possui uma proposta gerada para o RCI.');
-        }
-
-        $template = $proposal->product?->proposalTemplate;
-
-        if (!$template) {
-            $template = \App\Models\ProposalTemplate::where('is_active', true)->first();
-        }
-
-        if (!$template) {
-            abort(404, 'Nenhum modelo de proposta/rci configurado no sistema.');
-        }
-
+        $service->load(['client.address', 'proposal.product']);
         $client = $service->client;
+        $proposal = $service->proposal;
+
+        $template = \App\Models\RciTemplate::where('is_default', true)->first();
+
+        if (!$template || !$template->mapping_config) {
+            return redirect()->back()->with('error', 'Nenhum template RCI padrão configurado ou mapeado no sistema.');
+        }
+
+        $pdfPath = \Illuminate\Support\Facades\Storage::path($template->file_path);
+        
+        if (!file_exists($pdfPath)) {
+            \Log::error('RCI PDF not found at: ' . $pdfPath);
+            return redirect()->back()->with('error', 'Arquivo PDF do modelo RCI não encontrado no servidor ('.$pdfPath.').');
+        }
 
         $parseDate = function ($date) {
-            if (!$date)
-                return null;
+            if (!$date) return null;
             try {
-                if (str_contains($date, '/')) {
-                    return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
-                }
+                if (str_contains($date, '/')) return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
                 return \Carbon\Carbon::parse($date);
-            } catch (\Exception $e) {
-                return null;
-            }
+            } catch (\Exception $e) { return null; }
         };
 
-        $replacements = [
-            '[NOME_TITULAR]' => $client ? $client->nome : '',
-            '[DATA_NASCIMENTO]' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
-            '[CPF]' => $client ? $client->cpf : '',
-            '[EMAIL]' => $client ? $client->email : '',
-            '[CELULAR]' => $client ? $client->celular1 : '',
-            '[PROFISSAO]' => $client ? $client->profissao : '',
+        // Extrai primeiro/sobrenome
+        $clientePrimeiroNome = $client->nome;
+        $clienteSobrenome = '';
+        if (strpos($client->nome, ' ') !== false) {
+            $clientePrimeiroNome = explode(' ', $client->nome)[0];
+            $clienteSobrenome = substr(strstr($client->nome, ' '), 1);
+        }
 
-            // Cônjuge
-            '[NOME_CONJUGE]' => $service->nome_conjuge ?? '',
-            '[DATA_NASCIMENTO_CONJUGE]' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
-            '[PROFISSAO_CONJUGE]' => $service->profissao_conjuge ?? '',
+        $conjugePrimeiroNome = $service->nome_conjuge ?? '';
+        $conjugeSobrenome = '';
+        if ($service->nome_conjuge && strpos($service->nome_conjuge, ' ') !== false) {
+            $conjugePrimeiroNome = explode(' ', $service->nome_conjuge)[0];
+            $conjugeSobrenome = substr(strstr($service->nome_conjuge, ' '), 1);
+        }
 
-            // Serviço
-            '[DATA]' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
-            '[HORA]' => $service->time ?? '',
-            '[LOCAL]' => $service->local ?? '',
-            '[ID_ATENDIMENTO]' => str_pad($service->id, 5, '0', STR_PAD_LEFT),
-
-            // Proposta / Produto
-            '[PRODUTO_NOME]' => $proposal->product?->name ?? 'Produto não especificado',
-            '[VALOR_TOTAL]' => $proposal->total_value ? 'R$ ' . number_format($proposal->total_value, 2, ',', '.') : 'R$ 0,00',
-            '[NUMERO_CONTRATO]' => $proposal->contract_number ?? 'S/N',
+        $realDataMapping = [
+            'cliente_nome' => $client->nome ?? '',
+            'cliente_primeiro_nome' => $clientePrimeiroNome,
+            'cliente_sobrenome' => $clienteSobrenome,
+            'cliente_cpf_cnpj' => $client->cpf ?? '',
+            'cliente_rg' => $client->rg ?? '',
+            'cliente_data_nascimento' => ($client && $client->data_nascimento && ($d = $parseDate($client->data_nascimento))) ? $d->format('d/m/Y') : '',
+            'cliente_nacionalidade' => $client->nacionalidade ?? '',
+            'cliente_endereco' => $client->address ? ($client->address->rua . ', ' . $client->address->numero . ($client->address->complemento ? ' - ' . $client->address->complemento : '')) : '',
+            'cliente_cidade' => $client->address->cidade ?? '',
+            'cliente_estado' => $client->address->estado ?? '',
+            'cliente_cep' => $client->address->cep ?? '',
+            'cliente_telefone' => $client->celular1 ?? '',
+            
+            // Dados do Cônjuge (2º Titular)
+            'conjuge_nome' => $service->nome_conjuge ?? '',
+            'conjuge_primeiro_nome' => $conjugePrimeiroNome,
+            'conjuge_sobrenome' => $conjugeSobrenome,
+            'conjuge_cpf' => $service->cpf_conjuge ?? '',
+            'conjuge_rg' => $service->rg_conjuge ?? '',
+            'conjuge_data_nascimento' => ($service->data_nascimento_conjuge && ($d = $parseDate($service->data_nascimento_conjuge))) ? $d->format('d/m/Y') : '',
+            'conjuge_nacionalidade' => $service->nacionalidade_conjuge ?? '',
+            
+            'contrato_numero' => $proposal ? $proposal->contract_number : '',
+            'data_assinatura' => date('d/m/Y'),
+            'venda_valor_total' => $proposal && $proposal->total_value ? 'R$ ' . number_format($proposal->total_value, 2, ',', '.') : '',
+            'servico_nome' => $proposal && $proposal->product ? $proposal->product->name : '',
         ];
 
-        // Endereço
-        if ($client && $client->address) {
-            $addr = $client->address;
-            $replacements['[CEP]'] = $addr->cep ?? '';
-            $replacements['[RUA]'] = $addr->rua ?? '';
-            $replacements['[NUMERO]'] = $addr->numero ?? '';
-            $replacements['[BAIRRO]'] = $addr->bairro ?? '';
-            $replacements['[CIDADE]'] = $addr->cidade ?? '';
-            $replacements['[ESTADO]'] = $addr->estado ?? '';
+        $mappingConfig = is_string($template->mapping_config) ? json_decode($template->mapping_config, true) : $template->mapping_config;
+        
+        $pdfFieldsData = [];
+        if (is_array($mappingConfig)) {
+            foreach ($mappingConfig as $mapping) {
+                $pdfFieldName = $mapping['pdf_field'] ?? null;
+                $systemVar = $mapping['system_var'] ?? null;
+                
+                if ($pdfFieldName && $systemVar) {
+                    if (str_starts_with($systemVar, 'CUSTOM:')) {
+                        $pdfFieldsData[$pdfFieldName] = substr($systemVar, 7);
+                    } else {
+                        $pdfFieldsData[$pdfFieldName] = $realDataMapping[$systemVar] ?? '';
+                    }
+                }
+            }
         }
 
-        $content = $template->content;
-        foreach ($replacements as $tag => $val) {
-            $content = str_replace($tag, $val, $content);
-        }
+        try {
+            $outputFilename = 'rci_atendimento_' . $service->id . '_' . time() . '.pdf';
+            $outputPath = storage_path('app/public/temp/' . $outputFilename);
+            $jsonFilename = 'rci_data_' . time() . '_' . rand(1000, 9999) . '.json';
+            $jsonPath = storage_path('app/public/temp/' . $jsonFilename);
+            
+            if (!file_exists(storage_path('app/public/temp'))) {
+                mkdir(storage_path('app/public/temp'), 0755, true);
+            }
+            
+            file_put_contents($jsonPath, json_encode($pdfFieldsData));
 
-        return view('pdf.rci', [
-            'service' => $service,
-            'content' => $content
-        ]);
+            $scriptPath = base_path('fill_pdf_fields.py');
+            $process = new \Symfony\Component\Process\Process(['python', $scriptPath, $pdfPath, $outputPath, $jsonPath]);
+            $process->run();
+            
+            @unlink($jsonPath);
+
+            if (!$process->isSuccessful()) {
+                \Log::error('Erro ao gerar RCI (Python): ' . $process->getErrorOutput());
+                return redirect()->back()->with('error', 'Falha ao processar o PDF. Verifique os logs.');
+            }
+
+            return response()->file($outputPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $outputFilename . '"'
+            ])->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao gerar RCI: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro inesperado ao gerar PDF: ' . $e->getMessage());
+        }
     }
 
     /**

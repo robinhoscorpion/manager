@@ -86,16 +86,105 @@ class RciController extends Controller
         return redirect()->back()->with('success', 'Modelo excluído com sucesso.');
     }
 
+    public function preview(Request $request, RciTemplate $template)
+    {
+        $pdfPath = \Illuminate\Support\Facades\Storage::disk('local')->path($template->file_path);
+        
+        if (!file_exists($pdfPath)) {
+            return abort(404, 'Arquivo base do modelo não encontrado no servidor.');
+        }
+
+        // Usa o mapeamento vindo do request, ou fallback para o do banco
+        $mappingConfig = $request->input('mapping_config', $template->mapping_config ?? []);
+        
+        // Generate realistic fake data
+        $fakeDataMapping = [
+            'cliente_nome' => 'João da Silva Sauro',
+            'cliente_primeiro_nome' => 'João',
+            'cliente_sobrenome' => 'da Silva Sauro',
+            'cliente_cpf_cnpj' => '123.456.789-00',
+            'cliente_rg' => 'MG-12.345.678',
+            'cliente_data_nascimento' => '15/08/1985',
+            'cliente_nacionalidade' => 'Brasileira',
+            'cliente_endereco' => 'Rua das Flores, 123, Apto 45',
+            'cliente_cidade' => 'Belo Horizonte',
+            'cliente_estado' => 'SP',
+            'cliente_cep' => '01234-567',
+            'cliente_telefone' => '(11) 98765-4321',
+            
+            // Dados do Cônjuge (2º Titular)
+            'conjuge_nome' => 'Maria Oliveira Sauro',
+            'conjuge_primeiro_nome' => 'Maria',
+            'conjuge_sobrenome' => 'Oliveira Sauro',
+            'conjuge_cpf' => '987.654.321-11',
+            'conjuge_rg' => 'SP-98.765.432',
+            'conjuge_data_nascimento' => '22/11/1988',
+            'conjuge_nacionalidade' => 'Brasileira',
+            
+            'contrato_numero' => 'CT-' . date('Y') . '-' . rand(1000, 9999),
+            'data_assinatura' => date('d/m/Y'),
+            'venda_valor_total' => 'R$ 15.000,00',
+            'servico_nome' => 'Plano Férias Ouro',
+            'forma_pagamento' => 'Cartão de Crédito - 12x',
+            'resort_nome' => 'Resort Paraíso Tropical',
+            'resort_id' => 'RPT-998877',
+        ];
+        
+        $pdfFieldsData = [];
+        foreach ($mappingConfig as $mapping) {
+            $pdfFieldName = $mapping['pdf_field'] ?? null;
+            $systemVar = $mapping['system_var'] ?? null;
+            
+            if ($pdfFieldName && $systemVar) {
+                if (str_starts_with($systemVar, 'CUSTOM:')) {
+                    $pdfFieldsData[$pdfFieldName] = substr($systemVar, 7);
+                } else {
+                    $pdfFieldsData[$pdfFieldName] = $fakeDataMapping[$systemVar] ?? 'Dado Simulado';
+                }
+            }
+        }
+
+        try {
+            $outputFilename = 'rci_preview_' . time() . '_' . rand(1000, 9999) . '.pdf';
+            $outputPath = storage_path('app/public/temp/' . $outputFilename);
+            $jsonFilename = 'rci_data_' . time() . '_' . rand(1000, 9999) . '.json';
+            $jsonPath = storage_path('app/public/temp/' . $jsonFilename);
+            
+            if (!file_exists(storage_path('app/public/temp'))) {
+                mkdir(storage_path('app/public/temp'), 0755, true);
+            }
+            
+            file_put_contents($jsonPath, json_encode($pdfFieldsData));
+
+            $scriptPath = base_path('fill_pdf_fields.py');
+            $process = new Process(['python', $scriptPath, $pdfPath, $outputPath, $jsonPath]);
+            $process->run();
+            
+            @unlink($jsonPath);
+
+            if (!$process->isSuccessful()) {
+                throw new \Exception('Erro ao executar o preenchimento do PDF: ' . $process->getErrorOutput());
+            }
+
+            if (file_exists($outputPath)) {
+                return response()->file($outputPath)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('O arquivo final não foi gerado.');
+            }
+        } catch (\Exception $e) {
+            \Log::error("Erro na geração de RCI (Preview): " . $e->getMessage());
+            return abort(500, "Erro ao gerar o PDF RCI: " . $e->getMessage());
+        }
+    }
+
     public function generate(Request $request)
     {
-        // Aceita as tags que o front enviar
         $request->validate([
-            'tags' => 'required|array', // ex: ['${CLIENTE_NOME}' => 'Joao']
+            'tags' => 'required|array',
         ]);
         
         $tagsData = $request->input('tags');
 
-        // Se for um teste do mapeador, ele pode mandar um template_id
         if ($request->has('template_id')) {
             $template = RciTemplate::findOrFail($request->template_id);
         } else {
@@ -105,64 +194,100 @@ class RciController extends Controller
             }
         }
 
-        $pdfPath = storage_path('app/' . $template->file_path);
+        $pdfPath = \Illuminate\Support\Facades\Storage::disk('local')->path($template->file_path);
         
         if (!file_exists($pdfPath)) {
             return abort(404, 'Arquivo base do modelo não encontrado no servidor.');
         }
 
         $mappingConfig = $template->mapping_config ?? [];
-
-        try {
-            $pdf = new Fpdi();
-            $pageCount = $pdf->setSourceFile($pdfPath);
+        
+        // Mapear os dados recebidos ($tagsData que possui as variáveis do sistema, ex: cliente_nome)
+        // para os campos reais do PDF (AcroForm), baseando-se no mapeamento do banco de dados.
+        $pdfFieldsData = [];
+        foreach ($mappingConfig as $mapping) {
+            $pdfFieldName = $mapping['pdf_field'] ?? null;
+            $systemVar = $mapping['system_var'] ?? null;
             
-            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                $templateId = $pdf->importPage($pageNo);
-                $size = $pdf->getTemplateSize($templateId);
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($templateId);
-
-                // Aplica as marcações dinâmicas para esta página
-                foreach ($mappingConfig as $marker) {
-                    $mPage = $marker['page'] ?? 1;
-                    if ($mPage == $pageNo) {
-                        $tag = $marker['tag'];
-                        if (isset($tagsData[$tag])) {
-                            $fontSize = $marker['fontSize'] ?? 9;
-                            $fontStyle = $marker['fontStyle'] ?? ''; // B, I, U
-                            $pdf->SetFont('Arial', $fontStyle, $fontSize);
-                            
-                            $pdf->SetXY($marker['x'], $marker['y']);
-                            // uppercase se configurado? Por padrão vamos deixar assim.
-                            // Mas na tela o usuario pode configurar uppercase
-                            $text = $tagsData[$tag];
-                            if (!empty($marker['uppercase'])) {
-                                $text = strtoupper($text);
-                            }
-                            $pdf->Write(0, utf8_decode($text));
-                        }
-                    }
+            if ($pdfFieldName && $systemVar) {
+                if (str_starts_with($systemVar, 'CUSTOM:')) {
+                    $pdfFieldsData[$pdfFieldName] = substr($systemVar, 7);
+                } elseif (isset($tagsData[$systemVar])) {
+                    $pdfFieldsData[$pdfFieldName] = $tagsData[$systemVar];
                 }
             }
-        } catch (\Exception $e) {
-            return abort(500, 'Erro ao processar o PDF: ' . $e->getMessage());
         }
 
-        $fileName = 'RCI_' . time() . '.pdf';
-        
-        return response($pdf->Output('I'), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $fileName . '"'
-        ]);
-    }
+        try {
+            $outputFilename = 'rci_generated_' . time() . '_' . rand(1000, 9999) . '.pdf';
+            $outputPath = storage_path('app/public/temp/' . $outputFilename);
+            $jsonFilename = 'rci_data_' . time() . '_' . rand(1000, 9999) . '.json';
+            $jsonPath = storage_path('app/public/temp/' . $jsonFilename);
+            
+            if (!file_exists(storage_path('app/public/temp'))) {
+                mkdir(storage_path('app/public/temp'), 0755, true);
+            }
+            
+            file_put_contents($jsonPath, json_encode($pdfFieldsData));
 
+            $scriptPath = base_path('fill_pdf_fields.py');
+            $process = new Process(['python', $scriptPath, $pdfPath, $outputPath, $jsonPath]);
+            $process->run();
+            
+            @unlink($jsonPath);
+
+            if (!$process->isSuccessful()) {
+                throw new \Exception('Erro ao executar o preenchimento do PDF: ' . $process->getErrorOutput());
+            }
+
+            if (file_exists($outputPath)) {
+                return response()->download($outputPath, 'RCI_Preenchido.pdf')->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('O arquivo final não foi gerado.');
+            }
+        } catch (\Exception $e) {
+            \Log::error("Erro na geração de RCI: " . $e->getMessage());
+            return abort(500, "Erro ao gerar o PDF RCI: " . $e->getMessage());
+        }
+    }
     public function getFile(RciTemplate $template)
     {
         $path = \Illuminate\Support\Facades\Storage::disk('local')->path($template->file_path);
         if (!file_exists($path)) {
-            abort(404);
+            return response()->json(['error' => 'File not found at: ' . $path], 404);
         }
         return response()->file($path);
+    }
+
+    public function getFields(RciTemplate $template)
+    {
+        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($template->file_path);
+        
+        if (!file_exists($path)) {
+            return response()->json(['error' => 'Arquivo PDF não encontrado no servidor.'], 404);
+        }
+
+        $scriptPath = base_path('extract_pdf_fields.cjs');
+        
+        $process = new Process(['C:\\Program Files\\nodejs\\node.exe', $scriptPath, $path]);
+        $process->run();
+
+        \Log::info('getFields Process Output: ' . $process->getOutput());
+        \Log::info('getFields Process Error: ' . $process->getErrorOutput());
+
+        if (!$process->isSuccessful()) {
+            return response()->json([
+                'error' => 'Erro ao extrair campos do PDF.',
+                'details' => $process->getErrorOutput()
+            ], 500);
+        }
+
+        $output = json_decode($process->getOutput(), true);
+        
+        if (isset($output['error'])) {
+            return response()->json(['error' => $output['error']], 500);
+        }
+
+        return response()->json(['fields' => $output['fields'] ?? []]);
     }
 }

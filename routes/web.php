@@ -100,6 +100,8 @@ Route::middleware('auth')->group(function () {
         ->name('admin.rci.update_mapping')
         ->middleware('permission:configuracoes.modelos_contrato.acessar');
     Route::get('admin/modelo-rci/{template}/file', [\App\Http\Controllers\Admin\RciController::class, 'getFile'])->name('admin.rci.file');
+    Route::post('admin/modelo-rci/{template}/preview', [\App\Http\Controllers\Admin\RciController::class, 'preview'])->name('admin.rci.preview');
+    Route::get('admin/modelo-rci/{template}/fields', [\App\Http\Controllers\Admin\RciController::class, 'getFields'])->name('admin.rci.fields');
     Route::delete('admin/modelo-rci/{template}', [\App\Http\Controllers\Admin\RciController::class, 'destroy'])
         ->name('admin.rci.destroy')
         ->middleware('permission:configuracoes.modelos_contrato.acessar');
