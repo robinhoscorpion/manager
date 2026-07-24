@@ -1065,13 +1065,14 @@ class SalesServiceController extends Controller
             file_put_contents($jsonPath, json_encode($pdfFieldsData));
 
             $scriptPath = base_path('fill_pdf_fields.py');
-            $process = new \Symfony\Component\Process\Process(['python', $scriptPath, $pdfPath, $outputPath, $jsonPath]);
+            $pythonPath = env('PYTHON_PATH', 'python');
+            $process = new \Symfony\Component\Process\Process([$pythonPath, $scriptPath, $pdfPath, $outputPath, $jsonPath]);
             $process->run();
             
             @unlink($jsonPath);
 
             if (!$process->isSuccessful()) {
-                \Log::error('Erro ao gerar RCI (Python): ' . $process->getErrorOutput());
+                \Log::error('Erro ao gerar RCI (Python): ' . $process->getErrorOutput() . ' | STDOUT: ' . $process->getOutput());
                 return redirect()->back()->with('error', 'Falha ao processar o PDF. Verifique os logs.');
             }
 
