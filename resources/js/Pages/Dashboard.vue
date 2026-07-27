@@ -329,7 +329,7 @@ const chartData = computed(() => {
 
 
         <!-- ── Informações dos Vendedores ────────────────── -->
-        <div class="animate-fade-in-up stagger-5">
+        <div v-if="false" class="animate-fade-in-up stagger-5">
             <div class="section-header">
                 <div>
                     <h2 class="section-title">Informações dos Vendedores</h2>
