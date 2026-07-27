@@ -26,6 +26,7 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Editar Atendimentos', 'slug' => 'atendimentos.editar', 'group' => 'Sala de Vendas'],
             ['name' => 'Excluir Atendimentos', 'slug' => 'atendimentos.deletar', 'group' => 'Sala de Vendas'],
             ['name' => 'Alterar Qualificação', 'slug' => 'atendimentos.alterar_qualificacao', 'group' => 'Sala de Vendas'],
+            ['name' => 'Alterar Status', 'slug' => 'atendimentos.mudar_status', 'group' => 'Sala de Vendas'],
 
             // ================= Financeiro =================
             ['name' => 'Acessar Recebíveis', 'slug' => 'recebiveis.acessar', 'group' => 'Financeiro'],

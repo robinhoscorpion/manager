@@ -345,7 +345,10 @@ const getAllowedStatuses = (currentStatus) => {
 };
 
 const openStatusPicker = (index) => {
-    if (!can('atendimentos.gerenciar')) return;
+    if (!can('atendimentos.mudar_status')) {
+        showNotification('Você não tem permissão para alterar o status.', 'error');
+        return;
+    }
     
     const currentStatus = serviceData.value[index].status;
     const allowed = getAllowedStatuses(currentStatus);
@@ -646,7 +649,7 @@ const hasCortesia = (cortesia) => {
                                         @click.stop="openStatusPicker(index)"
                                         class="inline-flex items-center gap-1.5 pl-2 pr-3 h-7 rounded-full select-none border text-[10px] font-black uppercase tracking-[0.12em] whitespace-nowrap transition-all"
                                         :class="[
-                                            can('atendimentos.gerenciar') && ['table', 'mesa', 'queue', 'fila'].includes(item.status?.toLowerCase()) 
+                                            can('atendimentos.mudar_status') && ['table', 'mesa', 'queue', 'fila'].includes(item.status?.toLowerCase()) 
                                                 ? 'cursor-pointer hover:scale-105 hover:shadow-sm' 
                                                 : 'cursor-default',
                                             {
