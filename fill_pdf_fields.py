@@ -19,8 +19,24 @@ def main():
         reader = PdfReader(input_pdf_path)
         writer = PdfWriter()
 
+        import re
+        
         # Add all pages to the writer
         writer.append(reader)
+
+        # Force fixed font size for all text fields to avoid auto-scaling issues
+        for page in writer.pages:
+            if "/Annots" in page:
+                for annot in page["/Annots"]:
+                    annot_obj = annot.get_object()
+                    # /FT = /Tx means Text Field
+                    if annot_obj.get("/FT") == "/Tx":
+                        da = annot_obj.get("/DA")
+                        if da:
+                            da_str = str(da)
+                            # Regex to match any number before 'Tf' (e.g. '0 Tf', '12 Tf', '0.0 Tf')
+                            new_da = re.sub(r'(\d+(?:\.\d+)?)\s+Tf', '10 Tf', da_str)
+                            annot_obj[pypdf.generic.NameObject("/DA")] = pypdf.generic.TextStringObject(new_da)
 
         # Iterate through all pages and update form fields with the dictionary
         for page in writer.pages:
@@ -31,8 +47,6 @@ def main():
                 pass
 
         # NeedAppearances flag tells the PDF viewer to render the field text properly
-        # pypdf does not set this automatically by default for some viewers, 
-        # but update_page_form_field_values usually bakes it or sets it if required.
         if "/AcroForm" in writer.root_object:
             writer.root_object["/AcroForm"][pypdf.generic.NameObject("/NeedAppearances")] = pypdf.generic.BooleanObject(True)
 
