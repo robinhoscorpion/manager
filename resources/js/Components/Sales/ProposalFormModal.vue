@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 
@@ -14,6 +14,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
+
+const can = (permission) => {
+    const roles = usePage().props.auth.roles || [];
+    if (roles.includes('admin')) return true;
+
+    const permissions = usePage().props.auth.permissions || [];
+    return permissions.includes(permission);
+};
 
 const products = ref([]);
 const isViewMode = ref(false);
@@ -566,7 +574,7 @@ const close = () => {
                 </div>
 
                 <button 
-                    v-if="isViewMode && service?.proposal?.status !== 'approved'"
+                    v-if="isViewMode && can('atendimentos.editar_contrato')"
                     @click="enableEdit"
                     class="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2"
                 >

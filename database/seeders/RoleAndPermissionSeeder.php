@@ -24,6 +24,7 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Ver Todos os Atendimentos', 'slug' => 'atendimentos.ver_todos', 'group' => 'Sala de Vendas'],
             ['name' => 'Criar Atendimentos', 'slug' => 'atendimentos.criar', 'group' => 'Sala de Vendas'],
             ['name' => 'Editar Atendimentos', 'slug' => 'atendimentos.editar', 'group' => 'Sala de Vendas'],
+            ['name' => 'Editar Contrato', 'slug' => 'atendimentos.editar_contrato', 'group' => 'Sala de Vendas'],
             ['name' => 'Excluir Atendimentos', 'slug' => 'atendimentos.deletar', 'group' => 'Sala de Vendas'],
             ['name' => 'Alterar Qualificação', 'slug' => 'atendimentos.alterar_qualificacao', 'group' => 'Sala de Vendas'],
             ['name' => 'Alterar Status', 'slug' => 'atendimentos.mudar_status', 'group' => 'Sala de Vendas'],
