@@ -16,11 +16,36 @@ import RichTextEditor from '@/Components/RichTextEditor.vue';
 
 const props = defineProps({
     protocols: Object,
-    metrics: Object,
     filters: Object,
+    metrics: Object,
+    subjects: {
+        type: Array,
+        default: () => []
+    }
 });
 
 const isCreateModalOpen = ref(false);
+const isDeleteModalOpen = ref(false);
+const protocolToDelete = ref(null);
+const deleteForm = useForm({});
+
+const confirmDelete = (protocol) => {
+    protocolToDelete.value = protocol;
+    isDeleteModalOpen.value = true;
+};
+
+const executeDelete = () => {
+    if (protocolToDelete.value) {
+        deleteForm.delete(route('after-sales.protocols.destroy', protocolToDelete.value.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                isDeleteModalOpen.value = false;
+                protocolToDelete.value = null;
+            }
+        });
+    }
+};
+
 const searchServiceQuery = ref('');
 const searchResults = ref([]);
 const isSearchingService = ref(false);
@@ -72,7 +97,7 @@ const searchService = debounce(async () => {
     
     isSearchingService.value = true;
     try {
-        const response = await axios.get(route('api.search.global'), { params: { q: searchServiceQuery.value } });
+        const response = await axios.get(route('api.search.global'), { params: { q: searchServiceQuery.value, require_contract: true } });
         searchResults.value = response.data;
     } catch (error) {
         console.error("Error searching services:", error);
@@ -187,11 +212,12 @@ const submitReply = (closeProtocol = false, withoutMessage = false) => {
 const todayDate = new Date().toISOString().split('T')[0];
 
 const form = ref({
-    start_date: props.filters.start_date || todayDate,
-    end_date: props.filters.end_date || todayDate,
-    status: props.filters.status || '',
-    priority: props.filters.priority || '',
-    search: props.filters.search || '',
+    search: props.filters?.search || '',
+    status: props.filters?.status || '',
+    priority: props.filters?.priority || '',
+    start_date: props.filters?.start_date || '',
+    end_date: props.filters?.end_date || '',
+    contract_number: props.filters?.contract_number || '',
 });
 
 const setDateRange = (days) => {
@@ -227,6 +253,7 @@ const clearFilters = () => {
         status: '',
         priority: '',
         search: '',
+        contract_number: '',
     };
     applyFilters();
 };
@@ -301,7 +328,7 @@ const isFullHtml = (html) => {
                     </div>
                 </div>
                 <div>
-                    <button @click="openCreateModal" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-brand-green hover:bg-emerald-600 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg shadow-brand-green/30 hover:-translate-y-0.5">
+                    <button v-if="can('pos_venda.protocolos.criar')" @click="openCreateModal" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-brand-green hover:bg-emerald-600 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg shadow-brand-green/30 hover:-translate-y-0.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                         Novo Protocolo
                     </button>
@@ -364,6 +391,11 @@ const isFullHtml = (html) => {
 
                     <!-- Other Filters Row -->
                     <div class="flex flex-wrap gap-4 items-end">
+                        <div class="flex-1 min-w-[120px] max-w-[160px]">
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Nº Contrato</label>
+                            <input type="text" v-model="form.contract_number" placeholder="Ex: 12345" class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all duration-300">
+                        </div>
+
                         <div class="flex-1 min-w-[140px] max-w-xs">
                             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Data Início</label>
                             <input type="date" v-model="form.start_date" class="w-full h-11 px-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all duration-300">
@@ -421,6 +453,7 @@ const isFullHtml = (html) => {
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Protocolo</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Data</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cliente</th>
+                                <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Contrato</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Assunto</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Prioridade</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Status</th>
@@ -450,10 +483,13 @@ const isFullHtml = (html) => {
                                 <td class="py-4 px-6 align-middle">
                                     <div class="flex flex-col justify-center">
                                         <div class="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-green transition-colors">{{ item.client_name }}</div>
-                                        <div v-if="item.contract_number" class="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                                            <span>Ctr <span class="text-slate-700 dark:text-slate-300 font-bold">#{{ item.contract_number }}</span></span>
-                                        </div>
                                     </div>
+                                </td>
+                                <td class="py-4 px-6 align-middle">
+                                    <span v-if="item.contract_number" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:border-slate-700 rounded-lg group-hover:border-brand-green/30 group-hover:bg-brand-green/5 transition-colors">
+                                        #{{ item.contract_number }}
+                                    </span>
+                                    <span v-else class="text-xs text-slate-400 dark:text-slate-500 italic">N/A</span>
                                 </td>
                                 <td class="py-4 px-6 align-middle">
                                     <div class="text-sm font-semibold text-slate-700 dark:text-slate-200 max-w-[200px] sm:max-w-xs truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
@@ -483,6 +519,11 @@ const isFullHtml = (html) => {
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
                                             </svg>
                                         </Link>
+                                        <button v-if="$page.props.auth.permissions.includes('pos_venda.protocolos.excluir')" @click="confirmDelete(item)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 bg-white hover:bg-red-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-red-500/20 dark:hover:text-red-400 dark:hover:border-red-500/30 transition-all duration-300 shadow-sm hover:shadow" title="Excluir Protocolo">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -804,9 +845,18 @@ const isFullHtml = (html) => {
 
                     <div v-if="selectedService" class="space-y-6 animate-fade-in-up mt-6">
                         <!-- Assunto -->
-                        <div class="group">
+                        <div class="group relative">
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider group-focus-within:text-brand-green transition-colors">Assunto <span class="text-red-500">*</span></label>
-                            <input type="text" v-model="createForm.subject" placeholder="Ex: Dúvida sobre pagamento, Cancelamento..." class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all shadow-sm" required>
+                            <select v-model="createForm.subject" class="w-full h-12 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all shadow-sm appearance-none" required>
+                                <option value="" disabled>Selecione um assunto...</option>
+                                <option v-for="subject in subjects" :key="subject.id" :value="subject.name">
+                                    {{ subject.name }}
+                                </option>
+                            </select>
+                            <!-- Ícone customizado pro select -->
+                            <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none mt-6">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
                             <div v-if="createForm.errors.subject" class="text-red-500 text-xs mt-1 font-medium">{{ createForm.errors.subject }}</div>
                         </div>
 
@@ -882,6 +932,35 @@ const isFullHtml = (html) => {
                         </svg>
                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                         Salvar Protocolo
+                    </button>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Delete Confirmation Modal -->
+        <Modal :show="isDeleteModalOpen" @close="isDeleteModalOpen = false" maxWidth="md">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full dark:bg-red-500/20 mb-4">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                
+                <h3 class="text-lg font-bold text-center text-slate-900 dark:text-white mb-2">Excluir Protocolo</h3>
+                <p class="text-sm text-center text-slate-500 dark:text-slate-400 mb-6">
+                    Tem certeza que deseja excluir o protocolo <span class="font-bold text-slate-700 dark:text-slate-300" v-if="protocolToDelete">#{{ protocolToDelete.protocol_number }}</span>? Esta ação não poderá ser desfeita.
+                </p>
+
+                <div class="flex items-center gap-3 w-full">
+                    <button @click="isDeleteModalOpen = false" class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors">
+                        Cancelar
+                    </button>
+                    <button @click="executeDelete" :disabled="deleteForm.processing" class="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2">
+                        <svg v-if="deleteForm.processing" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span v-else>Excluir Protocolo</span>
                     </button>
                 </div>
             </div>

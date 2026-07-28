@@ -63,7 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/atendimentos/{service}/contrato/pdf', [\App\Http\Controllers\SalesServiceController::class, 'pdfContrato'])->name('sales.atendimentos.contrato.pdf')->middleware('permission:atendimentos.acessar');
     Route::get('/atendimentos/{service}/rci/pdf', [\App\Http\Controllers\SalesServiceController::class, 'pdfRci'])->name('sales.atendimentos.rci.pdf')->middleware('permission:atendimentos.acessar');
     Route::get('/atendimentos/{service}/checklist/pdf', [\App\Http\Controllers\SalesServiceController::class, 'pdfChecklist'])->name('sales.atendimentos.checklist.pdf')->middleware('permission:atendimentos.acessar');
-    Route::post('/atendimentos/{service}/protocols', [\App\Http\Controllers\ProtocolController::class, 'store'])->name('sales.atendimentos.protocols.store')->middleware('permission:atendimentos.editar');
+    Route::post('/atendimentos/{service}/protocols', [\App\Http\Controllers\ProtocolController::class, 'store'])->name('sales.atendimentos.protocols.store')->middleware('permission:pos_venda.protocolos.criar');
     Route::patch('/protocols/{protocol}/status', [\App\Http\Controllers\ProtocolController::class, 'updateStatus'])->name('sales.protocols.status.update')->middleware('permission:atendimentos.editar');
     Route::post('/protocols/bulk-update', [\App\Http\Controllers\ProtocolController::class, 'bulkUpdate'])->name('sales.protocols.bulk-update')->middleware('permission:atendimentos.editar');
     Route::post('/protocols/{protocol}/replies', [\App\Http\Controllers\ProtocolReplyController::class, 'store'])->name('sales.protocols.replies.store')->middleware('permission:atendimentos.editar');
@@ -172,6 +172,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('admin/contract-templates', \App\Http\Controllers\Admin\ContractTemplateController::class)->only(['index', 'show'])->names('admin.contract_templates')->middleware('permission:configuracoes.modelos_contrato.acessar');
     Route::resource('admin/contract-templates', \App\Http\Controllers\Admin\ContractTemplateController::class)->except(['index', 'show'])->names('admin.contract_templates')->middleware('permission:configuracoes.modelos_contrato.gerenciar');
 
+
+    // Gestão de Assuntos de Protocolo
+    Route::get('admin/protocol-subjects', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'index'])->name('admin.protocol_subjects.index')->middleware('permission:configuracoes.assuntos_protocolo.acessar');
+    Route::post('admin/protocol-subjects', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'store'])->name('admin.protocol_subjects.store')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
+    Route::put('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'update'])->name('admin.protocol_subjects.update')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
+    Route::delete('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'destroy'])->name('admin.protocol_subjects.destroy')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
+
     // Módulo Financeiro
     Route::prefix('financeiro')->name('finance.')->group(function () {
         Route::get('/recebiveis', [\App\Http\Controllers\Finance\ReceivableController::class, 'index'])->name('receivables.index')->middleware('permission:recebiveis.acessar');
@@ -196,6 +203,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/aniversariantes', [\App\Http\Controllers\AfterSales\BirthdayController::class, 'index'])->name('birthdays.index')->middleware('permission:pos_venda.aniversariantes.acessar');
         
         Route::get('/protocolos', [\App\Http\Controllers\AfterSales\ProtocolController::class, 'index'])->name('protocols.index')->middleware('permission:pos_venda.protocolos.acessar');
+        Route::delete('/protocolos/{protocol}', [\App\Http\Controllers\AfterSales\ProtocolController::class, 'destroy'])->name('protocols.destroy')->middleware('permission:pos_venda.protocolos.excluir');
+
+        Route::get('/reservas', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'index'])->name('reservations.index')->middleware('permission:pos_venda.reservas.acessar');
+        Route::post('/reservas', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'store'])->name('reservations.store')->middleware('permission:pos_venda.reservas.gerenciar');
+        Route::put('/reservas/{reservation}', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'update'])->name('reservations.update')->middleware('permission:pos_venda.reservas.gerenciar');
+        Route::delete('/reservas/{reservation}', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'destroy'])->name('reservations.destroy')->middleware('permission:pos_venda.reservas.gerenciar');
     });
 
     // Busca Global

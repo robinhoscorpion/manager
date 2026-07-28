@@ -85,11 +85,7 @@ class SalesControlController extends Controller
         }
         $proposal->save();
 
-        return response()->json([
-            'success' => true, 
-            'audit_status' => $proposal->audit_status,
-            'audit_reason' => $proposal->audit_reason
-        ]);
+        return redirect()->back()->with('success', 'Status de auditoria atualizado com sucesso.');
     }
 
     public function saveConciliation(Request $request, Proposal $proposal)
@@ -106,6 +102,6 @@ class SalesControlController extends Controller
             'received_balance'
         ]));
 
-        return response()->json(['success' => true]);
+        return redirect()->back()->with('success', 'Valores de conciliação salvos com sucesso.');
     }
 }

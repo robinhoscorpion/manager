@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Protocol;
+use App\Models\ProtocolSubject;
 
 class ProtocolController extends Controller
 {
@@ -44,6 +45,13 @@ class ProtocolController extends Controller
             });
         }
 
+        if ($request->filled('contract_number')) {
+            $contractNumber = $request->contract_number;
+            $query->whereHas('service.proposal', function ($q) use ($contractNumber) {
+                $q->where('contract_number', 'like', "%{$contractNumber}%");
+            });
+        }
+
         $protocols = $query->orderBy('created_at', 'desc')->paginate(20)->through(function ($protocol) {
             return [
                 'id' => $protocol->id,
@@ -73,10 +81,20 @@ class ProtocolController extends Controller
             'pending' => Protocol::where('status', 'aberto')->orWhere('status', 'open')->count(),
         ];
 
+        $subjects = ProtocolSubject::where('active', true)->orderBy('name')->get();
+
         return Inertia::render('AfterSales/Protocol/Index', [
             'protocols' => $protocols,
             'metrics' => $metrics,
+            'subjects' => $subjects,
             'filters' => $request->only(['start_date', 'end_date', 'status', 'priority', 'search']),
         ]);
+    }
+
+    public function destroy(Protocol $protocol)
+    {
+        $protocol->delete();
+        
+        return redirect()->back()->with('success', 'Protocolo excluído com sucesso.');
     }
 }

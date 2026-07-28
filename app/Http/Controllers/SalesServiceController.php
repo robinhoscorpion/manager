@@ -384,22 +384,30 @@ class SalesServiceController extends Controller
     public function globalSearch(Request $request)
     {
         $search = $request->query('q');
+        $requireContract = $request->query('require_contract') === 'true';
 
         if (empty($search)) {
             return response()->json([]);
         }
 
-        $results = SalesService::with(['client', 'proposal'])
-            ->whereHas('client', function ($q) use ($search) {
-                $q->where('nome', 'like', "%{$search}%")
-                    ->orWhere('cpf', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('celular1', 'like', "%{$search}%");
-            })
-            ->orWhereHas('proposal', function ($q) use ($search) {
-                $q->where('contract_number', 'like', "%{$search}%");
-            })
-            ->limit(10)
+        $query = SalesService::with(['client', 'proposal'])
+            ->where(function ($q) use ($search) {
+                $q->whereHas('client', function ($cq) use ($search) {
+                    $cq->where('nome', 'like', "%{$search}%")
+                        ->orWhere('cpf', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('celular1', 'like', "%{$search}%");
+                })
+                ->orWhereHas('proposal', function ($pq) use ($search) {
+                    $pq->where('contract_number', 'like', "%{$search}%");
+                });
+            });
+
+        if ($requireContract) {
+            $query->has('proposal');
+        }
+
+        $results = $query->limit(10)
             ->get()
             ->map(function ($service) {
                 return [

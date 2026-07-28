@@ -41,19 +41,35 @@ const toggleRow = (proposal) => {
     } else {
         expandedRows.value.push(id);
         if (!conciliationForms.value[id]) {
+            // Calcular valores esperados baseados nos pagamentos da proposta
+            let expectedDown = 0;
+            let expectedTaxes = 0;
+            let expectedBalance = 0;
+            
+            if (proposal.payments) {
+                expectedDown = proposal.payments.filter(p => p.category === 'entrada').reduce((sum, p) => sum + parseFloat(p.total_value || 0), 0);
+                expectedTaxes = proposal.payments.filter(p => p.category === 'taxa_contrato').reduce((sum, p) => sum + parseFloat(p.total_value || 0), 0);
+                expectedBalance = proposal.payments.filter(p => p.category === 'saldo').reduce((sum, p) => sum + parseFloat(p.total_value || 0), 0);
+            }
+
             conciliationForms.value[id] = useForm({
-                received_down_payment: proposal.received_down_payment || '',
-                received_taxes: proposal.received_taxes || '',
-                received_balance: proposal.received_balance || ''
+                received_down_payment: proposal.received_down_payment !== null ? proposal.received_down_payment : (expectedDown || ''),
+                received_taxes: proposal.received_taxes !== null ? proposal.received_taxes : (expectedTaxes || ''),
+                received_balance: proposal.received_balance !== null ? proposal.received_balance : (expectedBalance || '')
             });
         }
     }
 };
 
 const saveConciliation = (proposalId) => {
-    conciliationForms.value[proposalId].patch(route('sales-control.conciliation', proposalId), {
+    conciliationForms.value[proposalId].patch(route('finance.sales-control.conciliation', proposalId), {
         preserveScroll: true
     });
+};
+
+const onConciliationInput = (e, proposalId, field) => {
+    let val = e.target.value.replace(/\D/g, '');
+    conciliationForms.value[proposalId][field] = parseFloat(val) / 100;
 };
 
 const auditForm = useForm({
@@ -356,15 +372,15 @@ const hasDiscrepancy = (proposal) => {
                                                     <div v-if="conciliationForms[proposal.id]" class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                                                         <div class="flex items-center justify-between gap-2">
                                                             <span class="text-slate-600 dark:text-slate-400">Entrada Recebida</span>
-                                                            <input type="number" step="0.01" v-model="conciliationForms[proposal.id].received_down_payment" class="w-24 text-right bg-slate-50 dark:bg-[#0f1219] border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-1 focus:ring-brand-green/20" placeholder="0.00">
+                                                            <input type="text" :value="formatCurrency(conciliationForms[proposal.id].received_down_payment).replace('R$', '').trim()" @input="onConciliationInput($event, proposal.id, 'received_down_payment')" class="w-24 text-right bg-slate-50 dark:bg-[#0f1219] border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-1 focus:ring-brand-green/20" placeholder="0,00">
                                                         </div>
                                                         <div class="flex items-center justify-between gap-2">
                                                             <span class="text-slate-600 dark:text-slate-400">Taxa Recebida</span>
-                                                            <input type="number" step="0.01" v-model="conciliationForms[proposal.id].received_taxes" class="w-24 text-right bg-slate-50 dark:bg-[#0f1219] border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-1 focus:ring-brand-green/20" placeholder="0.00">
+                                                            <input type="text" :value="formatCurrency(conciliationForms[proposal.id].received_taxes).replace('R$', '').trim()" @input="onConciliationInput($event, proposal.id, 'received_taxes')" class="w-24 text-right bg-slate-50 dark:bg-[#0f1219] border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-1 focus:ring-brand-green/20" placeholder="0,00">
                                                         </div>
                                                         <div class="flex items-center justify-between gap-2">
                                                             <span class="text-slate-600 dark:text-slate-400">Saldo Confirmado</span>
-                                                            <input type="number" step="0.01" v-model="conciliationForms[proposal.id].received_balance" class="w-24 text-right bg-slate-50 dark:bg-[#0f1219] border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-1 focus:ring-brand-green/20" placeholder="0.00">
+                                                            <input type="text" :value="formatCurrency(conciliationForms[proposal.id].received_balance).replace('R$', '').trim()" @input="onConciliationInput($event, proposal.id, 'received_balance')" class="w-24 text-right bg-slate-50 dark:bg-[#0f1219] border border-slate-200 dark:border-slate-700 rounded-lg text-xs p-1 focus:ring-brand-green/20" placeholder="0,00">
                                                         </div>
                                                         
                                                         <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">

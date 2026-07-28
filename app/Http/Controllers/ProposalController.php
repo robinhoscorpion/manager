@@ -68,6 +68,11 @@ class ProposalController extends Controller
             $validated['contract_number'] = $contractNumber;
             // O payment_method original foi removido da proposta e passado para os pagamentos individuais
 
+            // Calcular Valores da Proposta (Ignorando Taxa de Manutenção para o Valor Bruto)
+            $validated['base_value'] = $validated['total_value']; // Total Base (Entrada + Saldo)
+            $validated['taxes'] = collect($validated['payments'])->where('category', 'taxa_contrato')->sum('total_value');
+            $validated['gross_value'] = $validated['base_value'] + $validated['taxes'];
+
             // Criar Proposta
             $proposal = Proposal::create($validated);
 
@@ -117,10 +122,18 @@ class ProposalController extends Controller
         }
 
         DB::transaction(function () use ($validated, $proposal) {
+            // Calcular Valores da Proposta (Ignorando Taxa de Manutenção para o Valor Bruto)
+            $baseValue = $validated['total_value'];
+            $taxes = collect($validated['payments'])->where('category', 'taxa_contrato')->sum('total_value');
+            $grossValue = $baseValue + $taxes;
+
             // Atualiza dados básicos
             $proposal->update([
                 'product_id' => $validated['product_id'],
                 'total_value' => $validated['total_value'],
+                'base_value' => $baseValue,
+                'taxes' => $taxes,
+                'gross_value' => $grossValue,
                 'quantity' => $validated['quantity'],
                 'observations' => $validated['observations'],
             ]);

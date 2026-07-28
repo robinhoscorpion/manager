@@ -162,7 +162,7 @@ const toggleSidebar = () => {
                     </div>
 
                     <!-- Pós-venda Group -->
-                    <div v-if="hasAnyPermission(['pos_venda.boas_vindas.acessar', 'pos_venda.gestao_contratos.acessar', 'pos_venda.protocolos.acessar', 'pos_venda.onboarding.acessar', 'pos_venda.pendencias.acessar', 'pos_venda.treinamentos.acessar', 'pos_venda.acompanhamentos.acessar', 'pos_venda.campanhas.acessar', 'pos_venda.aniversariantes.acessar'])" class="nav-group" :class="{ 'open': posVendaOpen }">
+                    <div v-if="hasAnyPermission(['pos_venda.boas_vindas.acessar', 'pos_venda.gestao_contratos.acessar', 'pos_venda.protocolos.acessar', 'pos_venda.reservas.acessar', 'pos_venda.onboarding.acessar', 'pos_venda.pendencias.acessar', 'pos_venda.treinamentos.acessar', 'pos_venda.acompanhamentos.acessar', 'pos_venda.campanhas.acessar', 'pos_venda.aniversariantes.acessar'])" class="nav-group" :class="{ 'open': posVendaOpen }">
                         <div class="nav-item nav-item-toggle" @click="togglePosVenda">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,6 +187,10 @@ const toggleSidebar = () => {
                             <Link v-if="can('pos_venda.protocolos.acessar')" :href="route('after-sales.protocols.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.protocols.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.protocols.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Protocolos
+                            </Link>
+                            <Link v-if="can('pos_venda.reservas.acessar')" :href="route('after-sales.reservations.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.reservations.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.reservations.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Reservas
                             </Link>
                             <Link v-if="can('pos_venda.onboarding.acessar')" href="#" class="nav-sub-item">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current opacity-30"></div>
@@ -256,7 +260,7 @@ const toggleSidebar = () => {
                         <span>Cargos</span>
                     </Link>
 
-                    <div v-if="hasAnyPermission(['configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
+                    <div v-if="hasAnyPermission(['configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleConfig">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,6 +322,10 @@ const toggleSidebar = () => {
                             <Link v-if="can('configuracoes.metas.acessar')" :href="route('admin.platform_goals.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.platform_goals.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.platform_goals.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Metas da Plataforma
+                            </Link>
+                            <Link v-if="can('configuracoes.assuntos_protocolo.acessar')" :href="route('admin.protocol_subjects.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.protocol_subjects.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.protocol_subjects.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Assuntos de Protocolo
                             </Link>
                         </div>
                     </div>

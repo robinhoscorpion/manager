@@ -43,7 +43,9 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Gerenciar Gestão de Contratos', 'slug' => 'pos_venda.gestao_contratos.gerenciar', 'group' => 'Pós-venda'],
             
             ['name' => 'Acessar Protocolos', 'slug' => 'pos_venda.protocolos.acessar', 'group' => 'Pós-venda'],
+            ['name' => 'Criar Protocolos', 'slug' => 'pos_venda.protocolos.criar', 'group' => 'Pós-venda'],
             ['name' => 'Gerenciar Protocolos', 'slug' => 'pos_venda.protocolos.gerenciar', 'group' => 'Pós-venda'],
+            ['name' => 'Excluir Protocolos', 'slug' => 'pos_venda.protocolos.excluir', 'group' => 'Pós-venda'],
             
             ['name' => 'Acessar Onboarding', 'slug' => 'pos_venda.onboarding.acessar', 'group' => 'Pós-venda'],
             ['name' => 'Gerenciar Onboarding', 'slug' => 'pos_venda.onboarding.gerenciar', 'group' => 'Pós-venda'],
@@ -62,6 +64,9 @@ class RoleAndPermissionSeeder extends Seeder
             
             ['name' => 'Acessar Aniversariantes', 'slug' => 'pos_venda.aniversariantes.acessar', 'group' => 'Pós-venda'],
             ['name' => 'Gerenciar Aniversariantes', 'slug' => 'pos_venda.aniversariantes.gerenciar', 'group' => 'Pós-venda'],
+            
+            ['name' => 'Acessar Reservas', 'slug' => 'pos_venda.reservas.acessar', 'group' => 'Pós-venda'],
+            ['name' => 'Gerenciar Reservas', 'slug' => 'pos_venda.reservas.gerenciar', 'group' => 'Pós-venda'],
 
             // ================= Funcionários =================
             ['name' => 'Acessar Funcionários', 'slug' => 'funcionarios.acessar', 'group' => 'Funcionários'],
@@ -104,6 +109,9 @@ class RoleAndPermissionSeeder extends Seeder
             
             ['name' => 'Acessar Metas da Plataforma', 'slug' => 'configuracoes.metas.acessar', 'group' => 'Configurações'],
             ['name' => 'Gerenciar Metas da Plataforma', 'slug' => 'configuracoes.metas.gerenciar', 'group' => 'Configurações'],
+            
+            ['name' => 'Acessar Assuntos de Protocolo', 'slug' => 'configuracoes.assuntos_protocolo.acessar', 'group' => 'Configurações'],
+            ['name' => 'Gerenciar Assuntos de Protocolo', 'slug' => 'configuracoes.assuntos_protocolo.gerenciar', 'group' => 'Configurações'],
             
             ['name' => 'Acessar Logs do Sistema', 'slug' => 'configuracoes.logs.acessar', 'group' => 'Configurações'],
         ];
