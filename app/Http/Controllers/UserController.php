@@ -138,4 +138,36 @@ class UserController extends Controller
         $user->delete();
         return redirect()->back()->with('message', 'Usuário removido com sucesso!');
     }
+
+    /**
+     * Impersonate a user safely.
+     */
+    public function impersonate(User $user)
+    {
+        if (auth()->id() === $user->id) {
+            return redirect()->back()->with('error', 'Você já está acessando esta conta.');
+        }
+
+        // Only allow admins or those with 'usuarios.gerenciar' to impersonate.
+        // Handled by middleware 'permission:usuarios.gerenciar' in routes.
+
+        session()->put('impersonated_by', auth()->id());
+        auth()->login($user);
+
+        return redirect()->route('dashboard')->with('message', 'Você acessou a conta de ' . $user->name);
+    }
+
+    /**
+     * Leave impersonation and return to original account.
+     */
+    public function leaveImpersonation()
+    {
+        if (session()->has('impersonated_by')) {
+            $adminId = session()->pull('impersonated_by');
+            auth()->loginUsingId($adminId);
+            return redirect()->route('users.index')->with('message', 'Você retornou para a sua conta principal.');
+        }
+
+        return redirect()->route('dashboard');
+    }
 }

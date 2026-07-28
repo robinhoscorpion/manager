@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'roles' => $request->user() ? $request->user()->roles->pluck('slug') : [],
                 'permissions' => $request->user() ? $request->user()->roles()->with('permissions')->get()->pluck('permissions')->flatten()->pluck('slug')->unique()->values()->all() : [],
+                'is_impersonating' => $request->session()->has('impersonated_by'),
             ],
             'flash' => [
                 'message' => $request->session()->get('message') ?? $request->session()->get('success'),

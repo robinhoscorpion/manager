@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->only(['index', 'show'])->middleware('permission:usuarios.acessar');
     Route::resource('users', UserController::class)->only(['destroy'])->middleware('permission:usuarios.deletar');
     Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:usuarios.gerenciar');
+    Route::post('/users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate')->middleware('permission:usuarios.gerenciar');
+    Route::post('/impersonate/leave', [UserController::class, 'leaveImpersonation'])->name('users.leave-impersonation');
 
     // Logs do Sistema
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index')->middleware('permission:configuracoes.logs.acessar');

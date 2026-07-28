@@ -340,6 +340,12 @@ const toggleSidebar = () => {
                     </div>
                     
                     <div class="mt-4 flex flex-col gap-1">
+                        <Link v-if="$page.props.auth.is_impersonating" :href="route('users.leave-impersonation')" method="post" as="button" class="nav-item py-2 w-full text-left bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                            </svg>
+                            <span>Voltar ao Principal</span>
+                        </Link>
                         <Link :href="route('profile.edit')" class="nav-item py-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
