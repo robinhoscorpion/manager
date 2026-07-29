@@ -16,7 +16,7 @@ class ScheduleController extends Controller
         // Controle de Acesso Restrito (RBAC)
         $user = auth()->user();
         // Se o usuário não for admin e não tiver a permissão "agendamentos.ver_todos"
-        if ($user && !$user->roles->contains('slug', 'admin') && !$user->roles->flatMap->permissions->pluck('slug')->contains('agendamentos.ver_todos')) {
+        if ($user && !$user->hasRole('admin') && !$user->hasPermission('agendamentos.ver_todos')) {
             $query->where('user_id', $user->id);
         }
 

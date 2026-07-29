@@ -312,7 +312,7 @@ class SalesServiceController extends Controller
 
     public function quickUpdate(Request $request, SalesService $service)
     {
-        if ($request->has('qualification') && !auth()->user()->can('atendimentos.alterar_qualificacao')) {
+        if ($request->has('qualification') && !auth()->user()->hasPermission('atendimentos.alterar_qualificacao')) {
             abort(403, 'Você não tem permissão para alterar a qualificação.');
         }
 
