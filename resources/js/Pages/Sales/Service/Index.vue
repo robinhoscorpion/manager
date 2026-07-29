@@ -625,7 +625,8 @@ const hasCortesia = (cortesia) => {
 
                                  <!-- Qualification -->
                                  <div v-if="columnSettings.qualification" class="w-24 flex justify-center relative">
-                                     <div 
+                                     <button 
+                                         type="button"
                                          @mouseenter="(e) => getQualificationMetadata(item.qualification) && onTooltipEnter(e, 'Qualificação', getQualificationMetadata(item.qualification).name, getQualificationMetadata(item.qualification).color)"
                                          @mouseleave="onTooltipLeave"
                                          @mousemove="onTooltipMove"
@@ -639,8 +640,9 @@ const hasCortesia = (cortesia) => {
                                          ]"
                                      >
                                          {{ item.qualification }}
-                                     </div>
+                                     </button>
                                  </div>
+
 
 
                                  <!-- Status -->
