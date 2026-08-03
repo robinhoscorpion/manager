@@ -15,5 +15,11 @@ class PaymentMethod extends Model
         'type',
         'description',
         'is_active',
+        'auto_baixa',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'auto_baixa' => 'boolean',
     ];
 }

@@ -181,6 +181,16 @@ Route::middleware('auth')->group(function () {
     Route::put('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'update'])->name('admin.protocol_subjects.update')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
     Route::delete('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'destroy'])->name('admin.protocol_subjects.destroy')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
 
+    // Tabela de Pontos, Temporadas e Feriados
+    Route::get('admin/tabela-pontos', [\App\Http\Controllers\Admin\PointTableController::class, 'index'])->name('admin.tabela_pontos.index')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::post('admin/tabela-pontos/score', [\App\Http\Controllers\Admin\PointTableController::class, 'updateScore'])->name('admin.tabela_pontos.score')->middleware('permission:configuracoes.tabela_pontos.acessar');
+
+    Route::resource('admin/seasons', \App\Http\Controllers\Admin\SeasonController::class, ['as' => 'admin'])->except(['show'])->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::get('admin/seasons/mapping/edit', [\App\Http\Controllers\Admin\SeasonController::class, 'mapping'])->name('admin.seasons.mapping')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::post('admin/seasons/mapping', [\App\Http\Controllers\Admin\SeasonController::class, 'storeMapping'])->name('admin.seasons.mapping.store')->middleware('permission:configuracoes.tabela_pontos.acessar');
+
+    Route::resource('admin/holidays', \App\Http\Controllers\Admin\HolidayController::class, ['as' => 'admin'])->only(['index', 'store', 'update', 'destroy'])->middleware('permission:configuracoes.tabela_pontos.acessar');
+
     // Módulo Financeiro
     Route::prefix('financeiro')->name('finance.')->group(function () {
         Route::get('/recebiveis', [\App\Http\Controllers\Finance\ReceivableController::class, 'index'])->name('receivables.index')->middleware('permission:recebiveis.acessar');
@@ -211,6 +221,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/reservas', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'store'])->name('reservations.store')->middleware('permission:pos_venda.reservas.gerenciar');
         Route::put('/reservas/{reservation}', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'update'])->name('reservations.update')->middleware('permission:pos_venda.reservas.gerenciar');
         Route::delete('/reservas/{reservation}', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'destroy'])->name('reservations.destroy')->middleware('permission:pos_venda.reservas.gerenciar');
+        
+        Route::get('/distratos', [\App\Http\Controllers\CancellationController::class, 'index'])->name('cancellations.index')->middleware('permission:pos_venda.distratos.gerenciar');
+        Route::get('/distratos/novo', [\App\Http\Controllers\CancellationController::class, 'create'])->name('cancellations.create')->middleware('permission:pos_venda.distratos.gerenciar');
+        Route::post('/distratos', [\App\Http\Controllers\CancellationController::class, 'store'])->name('cancellations.store')->middleware('permission:pos_venda.distratos.gerenciar');
+        Route::get('/distratos/buscar', [\App\Http\Controllers\CancellationController::class, 'apiSearch'])->name('cancellations.search')->middleware('permission:pos_venda.distratos.gerenciar');
+        Route::get('/distratos/{cancellation}/pdf', [\App\Http\Controllers\CancellationController::class, 'pdf'])->name('cancellations.pdf')->middleware('permission:pos_venda.distratos.gerenciar');
     });
 
     // Busca Global

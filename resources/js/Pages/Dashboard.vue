@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
+    current_month: Number,
+    current_year: Number,
     current_goal: Object,
     total_sales_revenue: {
         type: Number,
@@ -42,10 +44,55 @@ const can = (permission) => {
     return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
 };
 
-const currentMonthName = new Date().toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
-const currentYear = new Date().getFullYear();
-const currentDay = new Date().getDate();
-const daysInMonth = new Date(currentYear, new Date().getMonth() + 1, 0).getDate();
+const currentMonthName = computed(() => {
+    const d = new Date(props.current_year || new Date().getFullYear(), (props.current_month || (new Date().getMonth() + 1)) - 1, 1);
+    return d.toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase());
+});
+const currentYear = computed(() => props.current_year || new Date().getFullYear());
+const currentMonthNumeric = computed(() => props.current_month || (new Date().getMonth() + 1));
+const currentDay = computed(() => {
+    const today = new Date();
+    if (today.getMonth() + 1 === currentMonthNumeric.value && today.getFullYear() === currentYear.value) {
+        return today.getDate();
+    }
+    return daysInMonth.value;
+});
+const daysInMonth = computed(() => new Date(currentYear.value, currentMonthNumeric.value, 0).getDate());
+
+import Dropdown from '@/Components/Dropdown.vue';
+
+const selectedMonth = ref(props.current_month || (new Date().getMonth() + 1));
+const selectedYear = ref(props.current_year || new Date().getFullYear());
+
+watch(() => props.current_month, (val) => {
+    if (val) selectedMonth.value = val;
+});
+watch(() => props.current_year, (val) => {
+    if (val) selectedYear.value = val;
+});
+
+const availableMonths = [
+    { value: 1, label: 'Janeiro', short: 'Jan' },
+    { value: 2, label: 'Fevereiro', short: 'Fev' },
+    { value: 3, label: 'Março', short: 'Mar' },
+    { value: 4, label: 'Abril', short: 'Abr' },
+    { value: 5, label: 'Maio', short: 'Mai' },
+    { value: 6, label: 'Junho', short: 'Jun' },
+    { value: 7, label: 'Julho', short: 'Jul' },
+    { value: 8, label: 'Agosto', short: 'Ago' },
+    { value: 9, label: 'Setembro', short: 'Set' },
+    { value: 10, label: 'Outubro', short: 'Out' },
+    { value: 11, label: 'Novembro', short: 'Nov' },
+    { value: 12, label: 'Dezembro', short: 'Dez' },
+];
+
+const selectPeriod = (monthValue) => {
+    selectedMonth.value = monthValue;
+    router.visit(route('dashboard', { month: selectedMonth.value, year: selectedYear.value }), {
+        preserveState: true,
+        preserveScroll: true
+    });
+};
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -60,8 +107,8 @@ const goalPercentage = computed(() => {
     return Math.min(100, Math.round((props.total_sales_revenue / revenueTarget.value) * 100));
 });
 
-const dailyGoal = computed(() => daysInMonth > 0 ? (revenueTarget.value / daysInMonth) : 0);
-const dailyAverage = computed(() => currentDay > 0 ? (props.total_sales_revenue / currentDay) : 0);
+const dailyGoal = computed(() => daysInMonth.value > 0 ? (revenueTarget.value / daysInMonth.value) : 0);
+const dailyAverage = computed(() => currentDay.value > 0 ? (props.total_sales_revenue / currentDay.value) : 0);
 const isDailyGoalExceeded = computed(() => dailyAverage.value >= dailyGoal.value);
 
 const conversionRate = computed(() => {
@@ -126,13 +173,13 @@ const sourcesLeadsData = {
 
 const chartData = computed(() => {
     return {
-        labels: Array.from({ length: daysInMonth }, (_, i) => {
+        labels: Array.from({ length: daysInMonth.value }, (_, i) => {
             return (i + 1).toString().padStart(2, '0');
         }),
         datasets: [
             {
                 label: 'Vendas',
-                data: props.chart_sales_data.length ? props.chart_sales_data : Array(daysInMonth).fill(0),
+                data: props.chart_sales_data.length ? props.chart_sales_data : Array(daysInMonth.value).fill(0),
                 borderColor: '#6366f1',
                 backgroundColor: 'rgba(99, 102, 241, 0.08)',
                 fill: true,
@@ -145,7 +192,7 @@ const chartData = computed(() => {
             },
             {
                 label: 'Atendimentos',
-                data: props.chart_services_data.length ? props.chart_services_data : Array(daysInMonth).fill(0),
+                data: props.chart_services_data.length ? props.chart_services_data : Array(daysInMonth.value).fill(0),
                 borderColor: '#a78bfa',
                 backgroundColor: 'transparent',
                 tension: 0.4,
@@ -172,12 +219,49 @@ const chartData = computed(() => {
 
                 <!-- ── Left block: title + subtitle ── -->
                 <div class="dash-header-left">
-                    <div class="dash-period-badge">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {{ currentMonthName }} {{ currentYear }}
-                    </div>
+                    <Dropdown align="left" width="64">
+                        <template #trigger>
+                            <div class="dash-period-badge cursor-pointer group hover:bg-indigo-100 transition-colors">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{{ currentMonthName }} {{ currentYear }}</span>
+                                <svg class="w-3 h-3 opacity-50 group-hover:opacity-100 ml-1 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </template>
+
+                        <template #content>
+                            <div class="p-4 w-64" @click.stop>
+                                <!-- Seletor de Ano -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <button @click="selectedYear--" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                                    </button>
+                                    <span class="font-bold text-gray-900 dark:text-white text-[15px]">{{ selectedYear }}</span>
+                                    <button @click="selectedYear++" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                    </button>
+                                </div>
+                                
+                                <!-- Grade de Meses -->
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button 
+                                        v-for="m in availableMonths" 
+                                        :key="m.value" 
+                                        @click="selectPeriod(m.value)"
+                                        class="py-2 text-center rounded-lg text-sm font-medium transition-all"
+                                        :class="selectedMonth === m.value && props.current_year === selectedYear 
+                                            ? 'bg-indigo-600 text-white shadow-md' 
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'"
+                                    >
+                                        {{ m.short }}
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </Dropdown>
                     <h1 class="dash-title">Dashboard</h1>
                     <p class="dash-subtitle">Visão geral de performance da Sala de Vendas</p>
                 </div>

@@ -34,6 +34,7 @@ class PaymentMethodController extends Controller
             'type' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'auto_baixa' => 'boolean',
         ]);
 
         PaymentMethod::create($validated);
@@ -51,6 +52,7 @@ class PaymentMethodController extends Controller
             'type' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'auto_baixa' => 'boolean',
         ]);
 
         $paymentMethod->update($validated);
@@ -86,7 +88,8 @@ class PaymentMethodController extends Controller
                 ->map(fn($m) => [
                     'label' => $m->name,
                     'value' => $m->name, // Mantemos o nome como valor para compatibilidade com o que é salvo hoje, ou podemos mudar para ID se preferir
-                    'type' => $m->type
+                    'type' => $m->type,
+                    'auto_baixa' => $m->auto_baixa
                 ])
         );
     }

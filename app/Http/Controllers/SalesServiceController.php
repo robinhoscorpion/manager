@@ -659,7 +659,21 @@ class SalesServiceController extends Controller
             }
         };
 
-        $buildPaymentSummary = function ($category) use ($proposal) {
+        $paymentMethodsMap = \App\Models\PaymentMethod::pluck('type', 'name')->toArray();
+
+        $formatPaymentType = function ($type) {
+            $map = [
+                'credit_card' => 'Cartão de Crédito',
+                'debit_card' => 'Cartão de Débito',
+                'pix' => 'PIX',
+                'boleto' => 'Boleto Bancário',
+                'cash' => 'Dinheiro',
+                'bank_transfer' => 'Transferência Bancária'
+            ];
+            return $map[$type] ?? ucfirst(str_replace('_', ' ', $type));
+        };
+
+        $buildPaymentSummary = function ($category) use ($proposal, $paymentMethodsMap, $formatPaymentType) {
             if (!$proposal || !$proposal->payments)
                 return '';
             $payments = $proposal->payments->where('category', $category);
@@ -669,9 +683,12 @@ class SalesServiceController extends Controller
             foreach ($payments as $payment) {
                 $start = $payment->start_date ? \Carbon\Carbon::parse($payment->start_date)->format('d/m/Y') : 'A combinar';
                 $val = number_format($payment->installment_value, 2, ',', '.');
-                $lines[] = "{$payment->installments}x de R$ {$val} no {$payment->payment_method} (Início: {$start})";
+                $methodName = $payment->payment_method;
+                $methodType = $paymentMethodsMap[$methodName] ?? $methodName;
+                $formattedType = $formatPaymentType($methodType);
+                $lines[] = "{$payment->installments}x de R$ {$val} no {$formattedType} (Início: {$start})";
             }
-            return implode("\n + ", $lines);
+            return implode('</w:t><w:br/><w:t>+ ', $lines);
         };
 
         $mockData = [
@@ -728,11 +745,11 @@ class SalesServiceController extends Controller
             '${PROPOSTA_RESUMO_MANUTENCAO}' => $buildPaymentSummary('taxa_manutencao'),
             '${CONTRATO_RESUMO_MANUTENCAO}' => $buildPaymentSummary('taxa_manutencao'),
             '${CONTRATO_TAXA_MANUTENCAO}' => 'R$ ' . number_format($proposal->payments->where('category', 'taxa_manutencao')->sum('total_value'), 2, ',', '.'),
-            '${CONTRATO_FORMA_PAGAMENTO_ENTRADA}' => $proposal->payments->where('category', 'entrada')->first()?->payment_method ?? '',
-            '${CONTRATO_FORMA_PAGAMENTO_SALDO}' => $proposal->payments->where('category', 'saldo')->first()?->payment_method ?? '',
+            '${CONTRATO_FORMA_PAGAMENTO_ENTRADA}' => $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'entrada')->first()?->payment_method] ?? ($proposal->payments->where('category', 'entrada')->first()?->payment_method ?? '')),
+            '${CONTRATO_FORMA_PAGAMENTO_SALDO}' => $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'saldo')->first()?->payment_method] ?? ($proposal->payments->where('category', 'saldo')->first()?->payment_method ?? '')),
             '${CONTRATO_FORMA_PAGAMENTO}' => implode(' e ', array_filter(array_unique([
-                $proposal->payments->where('category', 'entrada')->first()?->payment_method,
-                $proposal->payments->where('category', 'saldo')->first()?->payment_method
+                $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'entrada')->first()?->payment_method] ?? $proposal->payments->where('category', 'entrada')->first()?->payment_method),
+                $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'saldo')->first()?->payment_method] ?? $proposal->payments->where('category', 'saldo')->first()?->payment_method)
             ]))),
             '${CONTRATO_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${CONTRATO_DATA_EXTENSO}' => ($service->date && ($d = $parseDate($service->date)))
@@ -837,7 +854,21 @@ class SalesServiceController extends Controller
             }
         };
 
-        $buildPaymentSummary = function ($category) use ($proposal) {
+        $paymentMethodsMap = \App\Models\PaymentMethod::pluck('type', 'name')->toArray();
+
+        $formatPaymentType = function ($type) {
+            $map = [
+                'credit_card' => 'Cartão de Crédito',
+                'debit_card' => 'Cartão de Débito',
+                'pix' => 'PIX',
+                'boleto' => 'Boleto Bancário',
+                'cash' => 'Dinheiro',
+                'bank_transfer' => 'Transferência Bancária'
+            ];
+            return $map[$type] ?? ucfirst(str_replace('_', ' ', $type));
+        };
+
+        $buildPaymentSummary = function ($category) use ($proposal, $paymentMethodsMap, $formatPaymentType) {
             if (!$proposal || !$proposal->payments)
                 return '';
             $payments = $proposal->payments->where('category', $category);
@@ -847,9 +878,12 @@ class SalesServiceController extends Controller
             foreach ($payments as $payment) {
                 $start = $payment->start_date ? \Carbon\Carbon::parse($payment->start_date)->format('d/m/Y') : 'A combinar';
                 $val = number_format($payment->installment_value, 2, ',', '.');
-                $lines[] = "{$payment->installments}x de R$ {$val} no {$payment->payment_method} (Início: {$start})";
+                $methodName = $payment->payment_method;
+                $methodType = $paymentMethodsMap[$methodName] ?? $methodName;
+                $formattedType = $formatPaymentType($methodType);
+                $lines[] = "{$payment->installments}x de R$ {$val} no {$formattedType} (Início: {$start})";
             }
-            return implode("\n + ", $lines);
+            return implode('</w:t><w:br/><w:t>+ ', $lines);
         };
 
         $mockData = [
@@ -906,11 +940,11 @@ class SalesServiceController extends Controller
             '${PROPOSTA_RESUMO_MANUTENCAO}' => $buildPaymentSummary('taxa_manutencao'),
             '${CONTRATO_RESUMO_MANUTENCAO}' => $buildPaymentSummary('taxa_manutencao'),
             '${CONTRATO_TAXA_MANUTENCAO}' => 'R$ ' . number_format($proposal->payments->where('category', 'taxa_manutencao')->sum('total_value'), 2, ',', '.'),
-            '${CONTRATO_FORMA_PAGAMENTO_ENTRADA}' => $proposal->payments->where('category', 'entrada')->first()?->payment_method ?? '',
-            '${CONTRATO_FORMA_PAGAMENTO_SALDO}' => $proposal->payments->where('category', 'saldo')->first()?->payment_method ?? '',
+            '${CONTRATO_FORMA_PAGAMENTO_ENTRADA}' => $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'entrada')->first()?->payment_method] ?? ($proposal->payments->where('category', 'entrada')->first()?->payment_method ?? '')),
+            '${CONTRATO_FORMA_PAGAMENTO_SALDO}' => $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'saldo')->first()?->payment_method] ?? ($proposal->payments->where('category', 'saldo')->first()?->payment_method ?? '')),
             '${CONTRATO_FORMA_PAGAMENTO}' => implode(' e ', array_filter(array_unique([
-                $proposal->payments->where('category', 'entrada')->first()?->payment_method,
-                $proposal->payments->where('category', 'saldo')->first()?->payment_method
+                $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'entrada')->first()?->payment_method] ?? $proposal->payments->where('category', 'entrada')->first()?->payment_method),
+                $formatPaymentType($paymentMethodsMap[$proposal->payments->where('category', 'saldo')->first()?->payment_method] ?? $proposal->payments->where('category', 'saldo')->first()?->payment_method)
             ]))),
             '${CONTRATO_DATA}' => ($service->date && ($d = $parseDate($service->date))) ? $d->format('d/m/Y') : date('d/m/Y'),
             '${CONTRATO_DATA_EXTENSO}' => ($service->date && ($d = $parseDate($service->date)))

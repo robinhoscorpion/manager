@@ -21,6 +21,7 @@ const form = useForm({
     type: 'boleto',
     description: '',
     is_active: true,
+    auto_baixa: false,
 });
 
 const types = [
@@ -46,6 +47,7 @@ const openEditModal = (method) => {
     form.type = method.type;
     form.description = method.description;
     form.is_active = !!method.is_active;
+    form.auto_baixa = !!method.auto_baixa;
     showEditModal.value = true;
 };
 
@@ -169,9 +171,10 @@ const closeModal = () => {
                     </div>
 
                     <div>
-                        <div class="flex items-center gap-2 mb-1.5">
+                        <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                             <h3 class="font-bold text-slate-900 dark:text-white uppercase tracking-tight text-sm">{{ method.name }}</h3>
                             <span v-if="!method.is_active" class="px-2 py-0.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 text-[9px] font-bold uppercase tracking-widest rounded-md">Inativo</span>
+                            <span v-if="method.auto_baixa" class="px-2 py-0.5 bg-brand-green/10 border border-brand-green/20 text-brand-green text-[9px] font-bold uppercase tracking-widest rounded-md">Auto Baixa</span>
                         </div>
                         <p class="text-[10px] font-bold text-brand-green/80 uppercase tracking-widest mb-3">
                             Tipo: {{ types.find(t => t.value === method.type)?.label || method.type }}
@@ -246,6 +249,18 @@ const closeModal = () => {
                                 </label>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Auto Baixar Parcelas?</label>
+                        <div class="flex items-center h-[46px] px-4 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm">
+                            <label class="relative inline-flex items-center cursor-pointer w-full">
+                                <input type="checkbox" v-model="form.auto_baixa" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-green"></div>
+                                <span class="ml-3 text-xs font-medium text-slate-600 dark:text-slate-300">Sim, criar parcelas já como baixadas</span>
+                            </label>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 px-1">Se marcado, o financeiro será gerado com o status "Pago" usando o valor e data de vencimento.</p>
                     </div>
 
                     <div class="space-y-1.5">

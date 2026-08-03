@@ -54,4 +54,9 @@ class Proposal extends Model
     {
         return $this->hasMany(Bill::class);
     }
+
+    public function cancellation()
+    {
+        return $this->hasOne(Cancellation::class);
+    }
 }

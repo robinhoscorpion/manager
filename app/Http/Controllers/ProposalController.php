@@ -208,6 +208,7 @@ class ProposalController extends Controller
     private function generateBills(Proposal $proposal)
     {
         $product = $proposal->product;
+        $paymentMethodsMap = \App\Models\PaymentMethod::pluck('auto_baixa', 'name')->toArray();
 
         foreach ($proposal->payments as $payment) {
             // Se for taxa de manutenção e o produto for isento, pula
@@ -262,6 +263,8 @@ class ProposalController extends Controller
                 $categoryLabel = $this->getCategoryLabel($payment->category);
                 $installmentStr = ($i + 1) . '/' . $payment->installments;
 
+                $isAutoBaixa = !empty($paymentMethodsMap[$payment->payment_method]);
+
                 \App\Models\Bill::create([
                     'client_id' => $proposal->client_id,
                     'proposal_id' => $proposal->id,
@@ -273,7 +276,9 @@ class ProposalController extends Controller
                     'payment_method' => $payment->payment_method,
                     'installment_number' => $i + 1,
                     'total_installments' => $payment->installments,
-                    'status' => 'pending'
+                    'status' => $isAutoBaixa ? 'paid' : 'pending',
+                    'paid_amount' => $isAutoBaixa ? $payment->installment_value : null,
+                    'paid_at' => $isAutoBaixa ? $dueDate : null,
                 ]);
             }
         }

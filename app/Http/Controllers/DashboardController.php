@@ -11,17 +11,21 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $now = Carbon::now();
         
-        $currentGoal = PlatformGoal::where('month', $now->month)
-                                   ->where('year', $now->year)
+        $month = $request->input('month', $now->month);
+        $year = $request->input('year', $now->year);
+        $date = Carbon::createFromDate($year, $month, 1);
+        
+        $currentGoal = PlatformGoal::where('month', $month)
+                                   ->where('year', $year)
                                    ->first();
 
         // Buscar total de vendas e quantidade de contratos no mês vigente
-        $monthlyProposals = Proposal::whereMonth('created_at', $now->month)
-                                    ->whereYear('created_at', $now->year)
+        $monthlyProposals = Proposal::whereMonth('created_at', $month)
+                                    ->whereYear('created_at', $year)
                                     ->where('status', 'approved')
                                     ->get();
 
@@ -29,7 +33,7 @@ class DashboardController extends Controller
         $totalContracts = $monthlyProposals->count();
 
         // Dados para o gráfico de Vendas por Dia
-        $daysInMonth = $now->daysInMonth;
+        $daysInMonth = $date->daysInMonth;
         $salesPerDay = array_fill(1, $daysInMonth, 0);
         $servicesPerDay = array_fill(1, $daysInMonth, 0);
 
@@ -38,8 +42,8 @@ class DashboardController extends Controller
             $salesPerDay[$day]++;
         }
 
-        $monthlyServices = SalesService::whereMonth('created_at', $now->month)
-                                       ->whereYear('created_at', $now->year)
+        $monthlyServices = SalesService::whereMonth('created_at', $month)
+                                       ->whereYear('created_at', $year)
                                        ->get();
 
         foreach ($monthlyServices as $service) {
@@ -112,6 +116,8 @@ class DashboardController extends Controller
         };
 
         return Inertia::render('Dashboard', [
+            'current_month' => $month,
+            'current_year' => $year,
             'current_goal' => $currentGoal,
             'total_sales_revenue' => $totalSalesRevenue,
             'total_contracts' => $totalContracts,
