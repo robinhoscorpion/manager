@@ -222,11 +222,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/reservas/{reservation}', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'update'])->name('reservations.update')->middleware('permission:pos_venda.reservas.gerenciar');
         Route::delete('/reservas/{reservation}', [\App\Http\Controllers\AfterSales\ReservationRequestController::class, 'destroy'])->name('reservations.destroy')->middleware('permission:pos_venda.reservas.gerenciar');
         
-        Route::get('/distratos', [\App\Http\Controllers\CancellationController::class, 'index'])->name('cancellations.index')->middleware('permission:pos_venda.distratos.gerenciar');
-        Route::get('/distratos/novo', [\App\Http\Controllers\CancellationController::class, 'create'])->name('cancellations.create')->middleware('permission:pos_venda.distratos.gerenciar');
-        Route::post('/distratos', [\App\Http\Controllers\CancellationController::class, 'store'])->name('cancellations.store')->middleware('permission:pos_venda.distratos.gerenciar');
-        Route::get('/distratos/buscar', [\App\Http\Controllers\CancellationController::class, 'apiSearch'])->name('cancellations.search')->middleware('permission:pos_venda.distratos.gerenciar');
-        Route::get('/distratos/{cancellation}/pdf', [\App\Http\Controllers\CancellationController::class, 'pdf'])->name('cancellations.pdf')->middleware('permission:pos_venda.distratos.gerenciar');
+        Route::get('/distratos', [\App\Http\Controllers\CancellationController::class, 'index'])->name('cancellations.index')->middleware('permission:pos_venda.cancelamentos.acessar');
+        Route::get('/distratos/novo', [\App\Http\Controllers\CancellationController::class, 'create'])->name('cancellations.create')->middleware('permission:pos_venda.cancelamentos.gerenciar');
+        Route::post('/distratos', [\App\Http\Controllers\CancellationController::class, 'store'])->name('cancellations.store')->middleware('permission:pos_venda.cancelamentos.gerenciar');
+        Route::get('/distratos/buscar', [\App\Http\Controllers\CancellationController::class, 'apiSearch'])->name('cancellations.search')->middleware('permission:pos_venda.cancelamentos.gerenciar');
+        Route::get('/distratos/{cancellation}/pdf', [\App\Http\Controllers\CancellationController::class, 'pdf'])->name('cancellations.pdf')->middleware('permission:pos_venda.cancelamentos.acessar');
     });
 
     // Busca Global

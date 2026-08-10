@@ -64,7 +64,7 @@ const formatDate = (dateString) => {
 
                         <div class="flex items-center gap-3">
                             <Link 
-                                v-if="can('pos_venda.distratos.gerenciar')"
+                                v-if="can('pos_venda.cancelamentos.gerenciar')"
                                 :href="route('after-sales.cancellations.create')"
                                 class="group relative px-6 py-3 bg-red-600 hover:bg-red-500 dark:bg-red-500 dark:hover:bg-red-400 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_25px_rgba(239,68,68,0.4)] flex items-center gap-2 overflow-hidden"
                             >
