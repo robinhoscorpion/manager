@@ -132,6 +132,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.atendimentos') ? 'opacity-100' : 'opacity-30'"></div>
                                 Atendimentos
                             </Link>
+                            <Link v-if="can('atendimentos.acessar')" :href="route('sales.linha')" class="nav-sub-item" :class="{ 'active': route().current('sales.linha') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('sales.linha') ? 'opacity-100' : 'opacity-30'"></div>
+                                Linha de Atendimento
+                            </Link>
                         </div>
                     </div>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 
 const can = (permission) => {
     return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
@@ -8,6 +8,7 @@ const can = (permission) => {
 import { useForm, Head, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     products: Array,
@@ -34,7 +35,7 @@ const form = useForm({
     description: '',
     contract_prefix: '',
     contract_format: 'seq_only',
-    current_sequence: 1,
+    current_sequence: '1',
     is_active: true,
     min_down_payment_percentage: 0,
     contract_fee: 0,
@@ -70,14 +71,31 @@ const openEditModal = (product) => {
     showEditModal.value = true;
 };
 
+const scrollToError = (errors) => {
+    const firstErrorKey = Object.keys(errors)[0];
+    if (firstErrorKey) {
+        nextTick(() => {
+            const el = document.getElementById(firstErrorKey);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.focus({ preventScroll: true });
+            }
+        });
+    }
+};
+
 const submit = () => {
     if (editingProduct.value) {
         form.put(route('admin.products.update', editingProduct.value.id), {
+            preserveScroll: true,
             onSuccess: () => closeModal(),
+            onError: (errors) => scrollToError(errors),
         });
     } else {
         form.post(route('admin.products.store'), {
+            preserveScroll: true,
             onSuccess: () => closeModal(),
+            onError: (errors) => scrollToError(errors),
         });
     }
 };
@@ -311,47 +329,55 @@ const contractNumberPreview = computed(() => {
                     <!-- Basic Info -->
                     <div class="space-y-4">
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Categoria de Produto</label>
-                            <select v-model="form.product_type_id" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                            <label for="product_type_id" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Categoria de Produto</label>
+                            <select id="product_type_id" v-model="form.product_type_id" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
                                 <option v-for="type in productTypes" :key="type.id" :value="type.id" class="bg-white dark:bg-slate-800">{{ type.name }}</option>
                             </select>
+                            <InputError :message="form.errors.product_type_id" />
                         </div>
 
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Nome Comercial</label>
-                            <input v-model="form.name" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: Produto VIP">
+                            <label for="name" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Nome Comercial</label>
+                            <input id="name" v-model="form.name" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: Produto VIP">
+                            <InputError :message="form.errors.name" />
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Valor Venda (Base)</label>
-                                <input :value="maskCurrency(form.price)" @input="onPriceInput($event, 'price')" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <label for="price" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Valor Venda (Base)</label>
+                                <input id="price" :value="maskCurrency(form.price)" @input="onPriceInput($event, 'price')" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <InputError :message="form.errors.price" />
                             </div>
                             <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Valor Teto (Máx)</label>
-                                <input :value="maskCurrency(form.min_price)" @input="onPriceInput($event, 'min_price')" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Duração</label>
-                                <input v-model="form.duration" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: 10 Anos">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">{{ quantityLabel }}</label>
-                                <input v-model="form.quantity" type="number" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <label for="min_price" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Valor Teto (Máx)</label>
+                                <input id="min_price" :value="maskCurrency(form.min_price)" @input="onPriceInput($event, 'min_price')" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <InputError :message="form.errors.min_price" />
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Taxa Contrato (R$)</label>
-                                <input :value="maskCurrency(form.contract_fee)" @input="onPriceInput($event, 'contract_fee')" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <label for="duration" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Duração</label>
+                                <input id="duration" v-model="form.duration" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Ex: 10 Anos">
+                                <InputError :message="form.errors.duration" />
                             </div>
                             <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Entrada Mín. (%)</label>
-                                <input v-model="form.min_down_payment_percentage" type="number" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <label for="quantity" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">{{ quantityLabel }}</label>
+                                <input id="quantity" v-model="form.quantity" type="number" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <InputError :message="form.errors.quantity" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label for="contract_fee" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Taxa Contrato (R$)</label>
+                                <input id="contract_fee" :value="maskCurrency(form.contract_fee)" @input="onPriceInput($event, 'contract_fee')" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <InputError :message="form.errors.contract_fee" />
+                            </div>
+                            <div class="space-y-1.5">
+                                <label for="min_down_payment_percentage" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Entrada Mín. (%)</label>
+                                <input id="min_down_payment_percentage" v-model="form.min_down_payment_percentage" type="number" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <InputError :message="form.errors.min_down_payment_percentage" />
                             </div>
                         </div>
 
@@ -372,18 +398,20 @@ const contractNumberPreview = computed(() => {
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="col-span-1 sm:col-span-2 space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Layout da Proposta (HTML)</label>
-                                <select v-model="form.proposal_template_id" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <label for="proposal_template_id" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Layout da Proposta (HTML)</label>
+                                <select id="proposal_template_id" v-model="form.proposal_template_id" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
                                     <option value="" class="bg-white dark:bg-slate-800">Nenhum (Usar Padrão do Sistema)</option>
                                     <option v-for="temp in proposalTemplates" :key="temp.id" :value="temp.id" class="bg-white dark:bg-slate-800">{{ temp.name }}</option>
                                 </select>
+                                <InputError :message="form.errors.proposal_template_id" />
                             </div>
                             <div class="col-span-1 sm:col-span-2 space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Modelo de Contrato (Individual)</label>
-                                <select v-model="form.contract_template_id" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                <label for="contract_template_id" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Modelo de Contrato (Individual)</label>
+                                <select id="contract_template_id" v-model="form.contract_template_id" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
                                     <option value="" class="bg-white dark:bg-slate-800">Nenhum (Usar Padrão Global)</option>
                                     <option v-for="temp in contractTemplates" :key="temp.id" :value="temp.id" class="bg-white dark:bg-slate-800">{{ temp.name }}</option>
                                 </select>
+                                <InputError :message="form.errors.contract_template_id" />
                                 <p class="text-[10px] text-slate-500 mt-1 px-1">* Se não informado, o sistema utilizará o contrato marcado como "Global Padrão".</p>
                             </div>
                             <div class="col-span-1 sm:col-span-2 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-4">
@@ -394,20 +422,23 @@ const contractNumberPreview = computed(() => {
                                 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div class="space-y-1.5 sm:col-span-2">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Formato do Número</label>
-                                        <select v-model="form.contract_format" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                        <label for="contract_format" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Formato do Número</label>
+                                        <select id="contract_format" v-model="form.contract_format" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
                                             <option value="prefix_sep_seq">Prefixo e Hífen (Ex: VIP-100)</option>
                                             <option value="prefix_seq">Prefixo Junto (Ex: VIP100)</option>
                                             <option value="seq_only">Apenas Sequencial (Ex: 100)</option>
                                         </select>
+                                        <InputError :message="form.errors.contract_format" />
                                     </div>
                                     <div class="space-y-1.5" :class="{'opacity-50 pointer-events-none': form.contract_format === 'seq_only'}">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Prefixo (Ex: VIP, P01)</label>
-                                        <input v-model="form.contract_prefix" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Opcional">
+                                        <label for="contract_prefix" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Prefixo (Ex: VIP, P01)</label>
+                                        <input id="contract_prefix" v-model="form.contract_prefix" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm" placeholder="Opcional">
+                                        <InputError :message="form.errors.contract_prefix" />
                                     </div>
                                     <div class="space-y-1.5">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Seq. Inicial (Ex: 1)</label>
-                                        <input v-model="form.current_sequence" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                        <label for="current_sequence" class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">Seq. Inicial (Ex: 1)</label>
+                                        <input id="current_sequence" v-model="form.current_sequence" type="text" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 transition-all shadow-sm">
+                                        <InputError :message="form.errors.current_sequence" />
                                     </div>
                                 </div>
 
@@ -422,8 +453,12 @@ const contractNumberPreview = computed(() => {
                     <!-- Actions -->
                     <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                         <button type="button" @click="closeModal" class="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-[12px] font-semibold text-sm transition-all shadow-sm">Cancelar</button>
-                        <button type="submit" :disabled="form.processing" class="flex-[2] py-3 bg-brand-green hover:bg-[#485638] text-white rounded-[12px] font-semibold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-2">
-                            <svg v-if="!form.processing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <button type="submit" :disabled="form.processing" class="flex-[2] py-3 bg-brand-green hover:bg-[#485638] text-white rounded-[12px] font-semibold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2">
+                            <svg v-if="form.processing" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
                         </button>
                     </div>

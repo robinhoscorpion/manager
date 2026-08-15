@@ -70,6 +70,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/protocols/bulk-update', [\App\Http\Controllers\ProtocolController::class, 'bulkUpdate'])->name('sales.protocols.bulk-update')->middleware('permission:atendimentos.editar');
     Route::post('/protocols/{protocol}/replies', [\App\Http\Controllers\ProtocolReplyController::class, 'store'])->name('sales.protocols.replies.store')->middleware('permission:atendimentos.editar');
     Route::get('/linha-atendimento', [ServiceLineController::class, 'index'])->name('sales.linha')->middleware('permission:atendimentos.acessar');
+    Route::patch('/linha-atendimento/order', [ServiceLineController::class, 'updateOrder'])->name('sales.linha.order')->middleware('permission:atendimentos.acessar');
+    Route::patch('/linha-atendimento/{position}/status', [ServiceLineController::class, 'updateStatus'])->name('sales.linha.status')->middleware('permission:atendimentos.acessar');
+    Route::post('/linha-atendimento/{group}/call-next', [ServiceLineController::class, 'callNext'])->name('sales.linha.call-next')->middleware('permission:atendimentos.acessar');
+    Route::post('/linha-atendimento/{group}/reset', [ServiceLineController::class, 'reset'])->name('sales.linha.reset')->middleware('permission:atendimentos.acessar');
 
     // Configurações de Dashboard
     Route::get('/configuracoes/colunas', [\App\Http\Controllers\Admin\ServiceSettingsController::class, 'index'])->name('admin.settings.columns.index')->middleware('permission:configuracoes.colunas.acessar');
