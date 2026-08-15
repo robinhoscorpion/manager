@@ -661,7 +661,13 @@ class SalesServiceController extends Controller
 
         $paymentMethodsMap = \App\Models\PaymentMethod::pluck('type', 'name')->toArray();
 
-        $formatPaymentType = function ($type) {
+        $formatPaymentType = function ($type, $name = null) {
+            if ($name) {
+                $lowerName = mb_strtolower($name, 'UTF-8');
+                if (str_contains($lowerName, 'cartão de credito') || str_contains($lowerName, 'cartão de crédito')) return 'Cartão de Crédito';
+                if (str_contains($lowerName, 'boleto')) return 'Boleto Bancário';
+                if (str_contains($lowerName, 'pix')) return 'PIX';
+            }
             $map = [
                 'credit_card' => 'Cartão de Crédito',
                 'debit_card' => 'Cartão de Débito',
@@ -685,7 +691,7 @@ class SalesServiceController extends Controller
                 $val = number_format($payment->installment_value, 2, ',', '.');
                 $methodName = $payment->payment_method;
                 $methodType = $paymentMethodsMap[$methodName] ?? $methodName;
-                $formattedType = $formatPaymentType($methodType);
+                $formattedType = $formatPaymentType($methodType, $methodName);
                 $lines[] = "{$payment->installments}x de R$ {$val} no {$formattedType} (Início: {$start})";
             }
             return implode('</w:t><w:br/><w:t>+ ', $lines);
@@ -856,7 +862,13 @@ class SalesServiceController extends Controller
 
         $paymentMethodsMap = \App\Models\PaymentMethod::pluck('type', 'name')->toArray();
 
-        $formatPaymentType = function ($type) {
+        $formatPaymentType = function ($type, $name = null) {
+            if ($name) {
+                $lowerName = mb_strtolower($name, 'UTF-8');
+                if (str_contains($lowerName, 'cartão de credito') || str_contains($lowerName, 'cartão de crédito')) return 'Cartão de Crédito';
+                if (str_contains($lowerName, 'boleto')) return 'Boleto Bancário';
+                if (str_contains($lowerName, 'pix')) return 'PIX';
+            }
             $map = [
                 'credit_card' => 'Cartão de Crédito',
                 'debit_card' => 'Cartão de Débito',
@@ -880,7 +892,7 @@ class SalesServiceController extends Controller
                 $val = number_format($payment->installment_value, 2, ',', '.');
                 $methodName = $payment->payment_method;
                 $methodType = $paymentMethodsMap[$methodName] ?? $methodName;
-                $formattedType = $formatPaymentType($methodType);
+                $formattedType = $formatPaymentType($methodType, $methodName);
                 $lines[] = "{$payment->installments}x de R$ {$val} no {$formattedType} (Início: {$start})";
             }
             return implode('</w:t><w:br/><w:t>+ ', $lines);
