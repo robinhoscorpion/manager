@@ -411,6 +411,8 @@ watch(() => form.product_id, (newProductId) => {
     }
 });
 
+const TOLERANCE = 5.00;
+
 const currentDownPaymentTotal = computed(() => {
     return form.payments
         .filter(p => p.category === 'entrada')
@@ -424,12 +426,12 @@ const minRequiredDownPayment = computed(() => {
 
 const isDownPaymentValid = computed(() => {
     if (isViewMode.value) return true;
-    return currentDownPaymentTotal.value >= minRequiredDownPayment.value;
+    return currentDownPaymentTotal.value >= (minRequiredDownPayment.value - TOLERANCE);
 });
 
 const isBalanceMatch = computed(() => {
     if (isViewMode.value) return true;
-    return Math.abs(remainingBalance.value) < 0.01;
+    return Math.abs(remainingBalance.value) <= TOLERANCE;
 });
 
 const entryPercentage = computed(() => {
@@ -440,7 +442,24 @@ const entryPercentage = computed(() => {
 const isDownPaymentOverLimit = computed(() => {
     if (!selectedProduct.value || isViewMode.value) return false;
     const percentLimit = parseFloat(selectedProduct.value.min_down_payment_percentage) || 100;
-    return entryPercentage.value > (percentLimit + 0.1);
+    const valueLimit = (parseFloat(selectedProduct.value.price) * percentLimit) / 100;
+    return currentDownPaymentTotal.value > (valueLimit + TOLERANCE);
+});
+
+const isTaxaContratoValid = computed(() => {
+    if (isViewMode.value || !selectedProduct.value) return true;
+    const expected = parseFloat(selectedProduct.value.contract_fee) || 0;
+    if (expected === 0) return true;
+    const actual = getCategoryTotal('taxa_contrato');
+    return Math.abs(expected - actual) <= TOLERANCE;
+});
+
+const isManutencaoValid = computed(() => {
+    if (isViewMode.value || !selectedProduct.value || selectedProduct.value.is_maintenance_exempt) return true;
+    const expected = (parseInt(selectedProduct.value.maintenance_fee_installments) || 12) * (parseFloat(selectedProduct.value.maintenance_fee_value) || 0);
+    if (expected === 0) return true;
+    const actual = getCategoryTotal('taxa_manutencao');
+    return Math.abs(expected - actual) <= TOLERANCE;
 });
 
 const isConfirmingApproval = ref(false);
@@ -481,7 +500,7 @@ const confirmApprove = () => {
 };
 
 const submit = () => {
-    if (!isDownPaymentValid.value || isDownPaymentOverLimit.value) return;
+    if (!isDownPaymentValid.value || isDownPaymentOverLimit.value || !isTaxaContratoValid.value || !isManutencaoValid.value) return;
     
     if (isEditMode.value && props.service.proposal) {
         form.put(route('sales.propostas.update', props.service.proposal.id), {
@@ -846,7 +865,7 @@ const close = () => {
                     <div class="flex flex-col">
                         <span class="text-[8px] font-black uppercase tracking-widest" :class="isBalanceMatch ? 'text-emerald-500' : 'text-amber-500'">Saldo</span>
                         <span class="font-black leading-none" :class="[isBalanceMatch ? 'text-emerald-500/50' : 'text-amber-500', isViewMode ? 'text-lg' : 'text-xl']">
-                            {{ Math.abs(remainingBalance) < 0.01 ? 'QUITADO' : maskCurrency(remainingBalance) }}
+                            {{ Math.abs(remainingBalance) <= TOLERANCE ? 'QUITADO' : maskCurrency(remainingBalance) }}
                         </span>
                     </div>
                 </div>
@@ -887,7 +906,7 @@ const close = () => {
                     <button 
                         v-if="!isViewMode"
                         @click="submit"
-                        :disabled="form.processing || !isDownPaymentValid || !isBalanceMatch || !hasCpf"
+                        :disabled="form.processing || !isDownPaymentValid || !isBalanceMatch || !hasCpf || !isTaxaContratoValid || !isManutencaoValid"
                         class="px-12 py-3 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.3em] shadow-xl active:scale-95 transition-all disabled:opacity-20 flex items-center gap-3"
                         :class="isEditMode ? 'bg-indigo-600 dark:bg-cyan-600 hover:bg-indigo-500 dark:hover:bg-cyan-500 shadow-indigo-500/20 dark:shadow-cyan-500/20' : 'bg-indigo-600 dark:bg-emerald-600 hover:bg-indigo-500 dark:hover:bg-emerald-500 shadow-indigo-500/20 dark:shadow-emerald-500/20'"
                     >

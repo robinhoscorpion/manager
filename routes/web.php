@@ -242,6 +242,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/propostas/{proposal}/bulk-pay-bills', [\App\Http\Controllers\BillController::class, 'bulkPay'])->name('bills.bulk-pay')->middleware('permission:recebiveis.gerenciar');
     Route::put('/bills/{bill}', [\App\Http\Controllers\BillController::class, 'update'])->name('bills.update')->middleware('permission:recebiveis.gerenciar');
     Route::delete('/bills/{bill}', [\App\Http\Controllers\BillController::class, 'destroy'])->name('bills.destroy')->middleware('permission:recebiveis.gerenciar');
+    
+    // Módulo de Comissões
+    Route::prefix('comissoes')->name('commissions.')->middleware('permission:comissoes.regras.acessar')->group(function () {
+        Route::get('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'index'])->name('rules.index');
+        Route::post('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'store'])->name('rules.store');
+        Route::put('/regras/{rule}', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'update'])->name('rules.update');
+        Route::delete('/regras/{rule}', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'destroy'])->name('rules.destroy');
+    });
 });
 
 require __DIR__ . '/auth.php';
