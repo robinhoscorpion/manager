@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AdminMaintenanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -245,10 +246,17 @@ Route::middleware('auth')->group(function () {
     
     // Módulo de Comissões
     Route::prefix('comissoes')->name('commissions.')->middleware('permission:comissoes.regras.acessar')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Commissions\CommissionController::class, 'index'])->name('index');
         Route::get('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'index'])->name('rules.index');
         Route::post('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'store'])->name('rules.store');
         Route::put('/regras/{rule}', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'update'])->name('rules.update');
         Route::delete('/regras/{rule}', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'destroy'])->name('rules.destroy');
+    });
+
+    // Módulo de Relatórios
+    Route::prefix('relatorios')->name('reports.')->group(function () {
+        Route::get('/ranking-de-vendas', [ReportController::class, 'salesRanking'])->name('sales-ranking');
+        Route::get('/ranking-de-vendas/pdf', [ReportController::class, 'exportPdf'])->name('sales-ranking.pdf');
     });
 });
 

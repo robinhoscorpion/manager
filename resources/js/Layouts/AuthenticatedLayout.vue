@@ -37,6 +37,7 @@ const salesRoomOpen = ref(false);
 const financeiroOpen = ref(false);
 const comissoesOpen = ref(false);
 const posVendaOpen = ref(false);
+const relatoriosOpen = ref(false);
 const _configOpen = ref(false);
 
 // Watch for route changes to auto-expand menus
@@ -45,6 +46,7 @@ watch(() => usePage().url, () => {
     if (route().current('finance.*')) financeiroOpen.value = true;
     if (route().current('commissions.*')) comissoesOpen.value = true;
     if (route().current('after-sales.*')) posVendaOpen.value = true;
+    if (route().current('reports.*')) relatoriosOpen.value = true;
     if (route().current('admin.*')) _configOpen.value = true;
 }, { immediate: true });
 
@@ -62,6 +64,10 @@ const toggleComissoes = () => {
 
 const togglePosVenda = () => {
     posVendaOpen.value = !posVendaOpen.value;
+};
+
+const toggleRelatorios = () => {
+    relatoriosOpen.value = !relatoriosOpen.value;
 };
 
 const configOpen = computed(() => _configOpen.value);
@@ -186,6 +192,10 @@ const toggleSidebar = () => {
                         </div>
                         
                         <div class="nav-sub-menu">
+                            <Link v-if="can('comissoes.regras.acessar')" :href="route('commissions.index')" class="nav-sub-item" :class="{ 'active': route().current('commissions.index') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('commissions.index') ? 'opacity-100' : 'opacity-30'"></div>
+                                Comissões
+                            </Link>
                             <Link v-if="can('comissoes.regras.acessar')" :href="route('commissions.rules.index')" class="nav-sub-item" :class="{ 'active': route().current('commissions.rules.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('commissions.rules.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Regras de Comissão
@@ -235,6 +245,27 @@ const toggleSidebar = () => {
                         </div>
                     </div>
 
+                    <!-- Relatórios Group -->
+                    <div class="nav-group" :class="{ 'open': relatoriosOpen }">
+                        <div class="nav-item nav-item-toggle" @click="toggleRelatorios">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span>Relatórios</span>
+                            </div>
+                            <svg class="nav-item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                        
+                        <div class="nav-sub-menu">
+                            <Link :href="route('reports.sales-ranking')" class="nav-sub-item" :class="{ 'active': route().current('reports.sales-ranking') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('reports.sales-ranking') ? 'opacity-100' : 'opacity-30'"></div>
+                                Ranking de Vendas
+                            </Link>
+                        </div>
+                    </div>
 
                     <Link 
                         v-if="can('funcionarios.acessar')"

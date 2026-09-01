@@ -45,18 +45,22 @@ class SalesControlController extends Controller
             ');
         }
 
+        $baseQuery = clone $query;
         $proposals = $query->orderBy('created_at', 'desc')->paginate(15);
 
         // Aggregating metrics
-        // Here we consider "approved" or "active" statuses as valid for the Net Total, adjust as needed.
-        $totalLiquido = Proposal::whereNotIn('status', ['Cancelado', 'cancelado'])->sum('total_value');
-        $totalBase = Proposal::whereNotIn('status', ['Cancelado', 'cancelado'])->sum('base_value');
-        $taxas = Proposal::whereNotIn('status', ['Cancelado', 'cancelado'])->sum('taxes');
+        $totalLiquido = (clone $baseQuery)->whereNotIn('status', ['cancelled'])->sum('total_value');
+        $totalBase = (clone $baseQuery)->whereNotIn('status', ['cancelled'])->sum('base_value');
+        $taxas = (clone $baseQuery)->whereNotIn('status', ['cancelled'])->sum('taxes');
         
-        $totalPendente = Proposal::whereIn('status', ['Pendente', 'pendente', 'Aguardando Pagamento'])->sum('total_value');
-        $totalCancelado = Proposal::whereIn('status', ['Cancelado', 'cancelado'])->sum('total_value');
+        $totalPendente = (clone $baseQuery)->whereIn('status', ['pending'])->sum('total_value');
+        $totalCancelado = (clone $baseQuery)->whereIn('status', ['cancelled'])->sum('total_value');
         
-        $entradas = ProposalPayment::where('category', 'entrada')->sum('total_value');
+        $entradas = ProposalPayment::where('category', 'entrada')
+            ->joinSub($baseQuery->select('proposals.id'), 'filtered', function ($join) {
+                $join->on('proposal_payments.proposal_id', '=', 'filtered.id');
+            })
+            ->sum('proposal_payments.total_value');
 
         return Inertia::render('Finance/SalesControl/Index', [
             'proposals' => $proposals,

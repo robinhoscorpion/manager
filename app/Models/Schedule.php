@@ -13,6 +13,10 @@ class Schedule extends Model
         'date',
         'time',
         'status',
+        'has_spouse',
+        'spouse_name',
+        'spouse_phone',
+        'spouse_email',
         'observations',
         'user_id'
     ];

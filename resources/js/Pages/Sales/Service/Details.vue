@@ -586,10 +586,12 @@ const updateProtocolStatus = (protocolId, status) => {
                             <div class="space-y-4">
                                 <div class="flex flex-wrap items-center gap-3">
                                     <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
-                                        :class="proposal?.contract_number
-                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
-                                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'">
-                                        {{ proposal?.contract_number ? '● Contrato Ativo' : '○ Sem Contrato' }}
+                                        :class="proposal?.status === 'cancelled'
+                                            ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30'
+                                            : (proposal?.contract_number
+                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
+                                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30')">
+                                        {{ proposal?.status === 'cancelled' ? '● Contrato Cancelado' : (proposal?.contract_number ? '● Contrato Ativo' : '○ Sem Contrato') }}
                                     </span>
                                     <span class="text-white/30 text-xs">|</span>
                                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{{ formatDate(service.date) }} às {{ service.time }}</span>

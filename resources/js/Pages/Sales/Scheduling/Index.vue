@@ -92,6 +92,26 @@ const applyPhoneMask = (event) => {
     form.value.phone = value;
 };
 
+const applySpousePhoneMask = (event) => {
+    let value = event.target.value.replace(/\D/g, ''); // Remove all non-digits
+    
+    if (value.length > 11) {
+        value = value.slice(0, 11);
+    }
+    
+    if (value.length > 10) {
+        value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 6) {
+        value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+        value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+    } else if (value.length > 0) {
+        value = value.replace(/^(\d{0,2})/, '($1');
+    }
+    
+    form.value.spouse_phone = value;
+};
+
 // Modal State
 const showNewModal = ref(false);
 const form = ref({
@@ -100,12 +120,16 @@ const form = ref({
     email: '',
     date: today,
     time: '',
+    has_spouse: false,
+    spouse_name: '',
+    spouse_phone: '',
+    spouse_email: '',
     observations: ''
 });
 const isSubmitting = ref(false);
 
 const openNewModal = () => {
-    form.value = { name: '', phone: '', email: '', date: today, time: '', observations: '' };
+    form.value = { name: '', phone: '', email: '', date: today, time: '', has_spouse: false, spouse_name: '', spouse_phone: '', spouse_email: '', observations: '' };
     showNewModal.value = true;
 };
 
@@ -346,6 +370,32 @@ const updateStatus = (schedule, newStatus) => {
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Horário</label>
                             <input v-model="form.time" type="time" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20">
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800/50 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Com 2º Titular / Acompanhante?</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="form.has_spouse" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-green"></div>
+                            </label>
+                        </div>
+                        
+                        <div v-if="form.has_spouse" class="animate-in fade-in slide-in-from-top-2">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nome do 2º Titular *</label>
+                            <input v-model="form.spouse_name" type="text" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="Ex: Maria da Silva" :required="form.has_spouse">
+                        </div>
+                        
+                        <div v-if="form.has_spouse" class="animate-in fade-in slide-in-from-top-2 grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Telefone (Opcional)</label>
+                                <input v-model="form.spouse_phone" @input="applySpousePhoneMask" type="text" maxlength="15" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="(00) 00000-0000">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">E-mail (Opcional)</label>
+                                <input v-model="form.spouse_email" type="email" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="exemplo@email.com">
+                            </div>
                         </div>
                     </div>
                     <div>

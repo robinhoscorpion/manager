@@ -59,4 +59,9 @@ class Proposal extends Model
     {
         return $this->hasOne(Cancellation::class);
     }
+
+    public function commissions()
+    {
+        return $this->hasMany(Commission::class);
+    }
 }

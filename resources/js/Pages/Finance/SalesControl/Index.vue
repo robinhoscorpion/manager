@@ -320,7 +320,11 @@ const hasDiscrepancy = (proposal) => {
                                     </td>
                                     
                                     <td class="px-4 py-3 text-center">
-                                        <div v-if="proposal.audit_status === 'approved'" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                        <div v-if="proposal.status === 'cancelled'" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                            CANCELADO
+                                        </div>
+                                        <div v-else-if="proposal.audit_status === 'approved'" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                             APROVADO
                                         </div>
@@ -336,12 +340,14 @@ const hasDiscrepancy = (proposal) => {
 
                                     <td class="px-4 py-3 text-right">
                                         <div class="flex items-center justify-end gap-1">
-                                            <button @click="approveAudit(proposal)" title="Aprovar Auditoria" class="p-1.5 rounded-md text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                            </button>
-                                            <button @click="openRejectModal(proposal)" title="Reprovar Auditoria" class="p-1.5 rounded-md text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </button>
+                                            <template v-if="proposal.status !== 'cancelled'">
+                                                <button @click="approveAudit(proposal)" title="Aprovar Auditoria" class="p-1.5 rounded-md text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                </button>
+                                                <button @click="openRejectModal(proposal)" title="Reprovar Auditoria" class="p-1.5 rounded-md text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </template>
                                             <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                                             <!-- Botão PDF -->
                                             <a v-if="proposal.sales_service_id" :href="route('sales.atendimentos.contrato.pdf', proposal.sales_service_id)" target="_blank" title="Ver Contrato PDF" class="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-300 dark:hover:bg-slate-800 transition-colors">

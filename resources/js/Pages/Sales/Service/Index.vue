@@ -337,6 +337,10 @@ const getAllowedStatuses = (currentStatus) => {
     else if (val === 'table' || val === 'mesa') {
         allowed.push(SERVICE_STATUS.FINALIZADO);
     }
+    // FINALIZADO -> MESA
+    else if (val === 'completed' || val === 'finalizado') {
+        allowed.push(SERVICE_STATUS.MESA);
+    }
     
     // Qualquer outro status não permite alteração manual pelo modal de status.
     // (Serão alterados via ações do sistema, como aprovar proposta, etc).

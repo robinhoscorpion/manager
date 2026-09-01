@@ -207,11 +207,11 @@ const deleteRule = (id) => {
                                 </button>
                             </div>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-6">
                                 <!-- Dados Básicos -->
-                                <div class="space-y-4 col-span-1 md:col-span-2">
+                                <div class="space-y-4">
                                     <h4 class="font-bold text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800 pb-2">Informações Básicas</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="flex flex-col gap-4">
                                         <div>
                                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Nome (Ex: Liner)</label>
                                             <input type="text" v-model="form.name" class="mt-1 block w-full rounded-xl border-slate-300 dark:border-slate-700 dark:bg-slate-800 shadow-sm focus:border-brand-green focus:ring-brand-green sm:text-sm transition-colors" required>
@@ -231,10 +231,10 @@ const deleteRule = (id) => {
                                 </div>
 
                                 <!-- Matemática de Pagamento -->
-                                <div class="space-y-4 col-span-1 md:col-span-2 mt-2">
+                                <div class="space-y-4 mt-2">
                                     <h4 class="font-bold text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800 pb-2">Matemática de Pagamento</h4>
                                     
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div class="flex flex-col gap-4 mb-4">
                                         <div>
                                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Base da Venda para Entrada (%)</label>
                                             <div class="text-xs text-slate-500 mb-1">Qual proporção da venda as parcelas acompanham? (Padrão: 15%)</div>
@@ -252,7 +252,7 @@ const deleteRule = (id) => {
                                         </div>
                                     </div>
                                     
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <div class="flex flex-col gap-4 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-100 dark:border-slate-700">
                                         <div>
                                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Parcelamento: Boleto</label>
                                             <select v-model="form.boleto_installments_type" class="mt-1 block w-full rounded-xl border-slate-300 dark:border-slate-600 dark:bg-slate-800 shadow-sm focus:border-brand-green focus:ring-brand-green sm:text-sm transition-colors" required>

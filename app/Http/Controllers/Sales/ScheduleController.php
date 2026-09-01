@@ -74,6 +74,10 @@ class ScheduleController extends Controller
             'email' => 'nullable|email|max:255',
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
+            'has_spouse' => 'nullable|boolean',
+            'spouse_name' => 'nullable|string|max:255',
+            'spouse_phone' => 'nullable|string|max:20',
+            'spouse_email' => 'nullable|email|max:255',
             'observations' => 'nullable|string',
         ]);
 
@@ -111,13 +115,23 @@ class ScheduleController extends Controller
                     'estado' => '',
                 ]);
 
+                $clientsName = $schedule->name;
+                if ($schedule->has_spouse && $schedule->spouse_name) {
+                    $clientsName .= ' & ' . $schedule->spouse_name;
+                }
+
                 $client->services()->create([
                     'date' => $schedule->date,
                     'time' => $schedule->time ?? '00:00',
-                    'clients' => $schedule->name,
+                    'clients' => $clientsName,
                     'local' => 'SALA',
                     'status' => 'table', // Using 'table' as 'fila' was removed
                     'qualification' => 'Q',
+                    'tem_conjuge' => $schedule->has_spouse ?? false,
+                    'nome_conjuge' => $schedule->spouse_name,
+                    'celular_conjuge' => $schedule->spouse_phone,
+                    'email_conjuge' => $schedule->spouse_email,
+                    'tipo_relacionamento' => 'Casal/Namorados', // default
                     'observacoes' => $schedule->observations,
                 ]);
             });
