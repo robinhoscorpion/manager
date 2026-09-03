@@ -13,6 +13,7 @@ class PaymentMethod extends Model
     protected $fillable = [
         'name',
         'type',
+        'recipient',
         'description',
         'is_active',
         'auto_baixa',

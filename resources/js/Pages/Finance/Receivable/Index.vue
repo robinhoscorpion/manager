@@ -218,28 +218,32 @@ const props = defineProps({
 });
 
 const search = ref(props.filters.search || '');
-const statusFilter = ref(props.filters.status || '');
 
 import { useForm } from '@inertiajs/vue3';
 
 const showFilters = ref(false);
-const today = new Date().toISOString().split('T')[0];
+const today = new Date();
+const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+
 const advancedFilters = useForm({
-    due_date_start: props.filters.due_date_start !== undefined ? props.filters.due_date_start : today,
-    due_date_end: props.filters.due_date_end !== undefined ? props.filters.due_date_end : today,
+    due_date_start: props.filters.due_date_start || '',
+    due_date_end: props.filters.due_date_end || '',
     paid_at_start: props.filters.paid_at_start || '',
     paid_at_end: props.filters.paid_at_end || '',
     payment_method: props.filters.payment_method || '',
+    recipient: props.filters.recipient || '',
     min_amount: props.filters.min_amount || '',
     max_amount: props.filters.max_amount || '',
-    sales_service_id: props.filters.sales_service_id || ''
+    sales_service_id: props.filters.sales_service_id || '',
+    status: props.filters.status || ''
 });
 
 const applyFilters = () => {
     advancedFilters.get(route('finance.receivables.index'), {
         preserveState: true,
         replace: true,
-        data: { search: search.value, status: statusFilter.value }
+        data: { search: search.value }
     });
     showFilters.value = false;
 };
@@ -284,11 +288,20 @@ const formatDate = (dateString) => {
 };
 
 watch(search, debounce(function (value) {
-    router.get(route('finance.receivables.index'), { search: value, status: statusFilter.value }, { preserveState: true, replace: true });
+    advancedFilters.get(route('finance.receivables.index'), { data: { search: value }, preserveState: true, replace: true });
 }, 300));
 
-watch(statusFilter, (value) => {
-    router.get(route('finance.receivables.index'), { search: search.value, status: value }, { preserveState: true, replace: true });
+const statusFilter = computed({
+    get: () => advancedFilters.status,
+    set: (value) => {
+        advancedFilters.status = value;
+        // Se clicar em Atrasados, limpa o filtro de data para mostrar todos os atrasados
+        if (value === 'overdue') {
+            advancedFilters.due_date_start = '';
+            advancedFilters.due_date_end = '';
+        }
+        applyFilters();
+    }
 });
 
 const getStatusBadge = (status) => {
@@ -363,6 +376,45 @@ const getStatusBadge = (status) => {
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-white dark:bg-[#0f1219] p-6 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Recebido (Hoje)</p>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ formatCurrency(kpis.received_today) }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-[#0f1219] p-6 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-amber-500/30 transition-colors">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="p-3 bg-amber-500/10 text-amber-500 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">A Vencer (Hoje)</p>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ formatCurrency(kpis.due_today) }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-[#0f1219] p-6 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-purple-500/30 transition-colors">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="p-3 bg-purple-500/10 text-purple-500 rounded-xl">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Juros (Geral)</p>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ formatCurrency(kpis.total_interest) }}</h3>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tabela e Filtros -->
@@ -398,6 +450,9 @@ const getStatusBadge = (status) => {
                         </button>
                         <button @click="statusFilter = 'overdue'" :class="statusFilter === 'overdue' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                             Atrasados
+                        </button>
+                        <button @click="statusFilter = 'cancelled'" :class="statusFilter === 'cancelled' ? 'bg-slate-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'" class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                            Canceladas
                         </button>
                     </div>
                 </div>
@@ -454,6 +509,17 @@ const getStatusBadge = (status) => {
                                 </div>
 
                                 <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status da Parcela</label>
+                                    <select v-model="advancedFilters.status" class="w-full bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-brand-green/20">
+                                        <option value="">Qualquer Status</option>
+                                        <option value="pending">A Pagar / A Vencer</option>
+                                        <option value="paid">Pago</option>
+                                        <option value="overdue">Atrasado</option>
+                                        <option value="cancelled">Cancelada</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1">
                                     <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pagamento</label>
                                     <select v-model="advancedFilters.payment_method" class="w-full bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-brand-green/20">
                                         <option value="">Qualquer Forma</option>
@@ -463,6 +529,15 @@ const getStatusBadge = (status) => {
                                         <option value="Cartão de Débito">Cartão de Débito</option>
                                         <option value="Dinheiro">Dinheiro</option>
                                         <option value="Transferência">Transferência</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recebedor</label>
+                                    <select v-model="advancedFilters.recipient" class="w-full bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-brand-green/20">
+                                        <option value="">Qualquer Recebedor</option>
+                                        <option value="proprietario">Proprietário do Hotel</option>
+                                        <option value="comercializadora">Comercializadora</option>
                                     </select>
                                 </div>
 
@@ -548,7 +623,11 @@ const getStatusBadge = (status) => {
                                     </div>
                                 </td>
                                 <td class="px-2 py-2">
-                                    <span class="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
+                                        <span v-if="bill.recipient === 'proprietario'" class="text-[8px] font-black text-amber-500 uppercase tracking-widest">Proprietário</span>
+                                        <span v-else-if="bill.recipient === 'comercializadora'" class="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Comercializadora</span>
+                                    </div>
                                 </td>
                                 <td class="px-2 py-2">
                                     <span class="text-xs text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
@@ -658,7 +737,11 @@ const getStatusBadge = (status) => {
                                     </div>
                                 </td>
                                 <td class="px-2 py-2">
-                                    <span class="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg whitespace-nowrap">{{ bill.payment_method || '-' }}</span>
+                                        <span v-if="bill.recipient === 'proprietario'" class="text-[8px] font-black text-amber-500 uppercase tracking-widest">Proprietário</span>
+                                        <span v-else-if="bill.recipient === 'comercializadora'" class="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Comercializadora</span>
+                                    </div>
                                 </td>
                                 <td class="px-2 py-2">
                                     <span class="text-xs text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>

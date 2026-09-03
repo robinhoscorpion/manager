@@ -32,6 +32,7 @@ class PaymentMethodController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:50',
+            'recipient' => 'nullable|string|in:proprietario,comercializadora',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'auto_baixa' => 'boolean',
@@ -50,6 +51,7 @@ class PaymentMethodController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:50',
+            'recipient' => 'nullable|string|in:proprietario,comercializadora',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'auto_baixa' => 'boolean',

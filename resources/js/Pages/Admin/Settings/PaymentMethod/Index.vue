@@ -20,6 +20,7 @@ const form = useForm({
     name: '',
     type: 'boleto',
     description: '',
+    recipient: '',
     is_active: true,
     auto_baixa: false,
 });
@@ -45,6 +46,7 @@ const openEditModal = (method) => {
     editingMethod.value = method;
     form.name = method.name;
     form.type = method.type;
+    form.recipient = method.recipient || '';
     form.description = method.description;
     form.is_active = !!method.is_active;
     form.auto_baixa = !!method.auto_baixa;
@@ -176,8 +178,11 @@ const closeModal = () => {
                             <span v-if="!method.is_active" class="px-2 py-0.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-500 text-[9px] font-bold uppercase tracking-widest rounded-md">Inativo</span>
                             <span v-if="method.auto_baixa" class="px-2 py-0.5 bg-brand-green/10 border border-brand-green/20 text-brand-green text-[9px] font-bold uppercase tracking-widest rounded-md">Auto Baixa</span>
                         </div>
-                        <p class="text-[10px] font-bold text-brand-green/80 uppercase tracking-widest mb-3">
+                        <p class="text-[10px] font-bold text-brand-green/80 uppercase tracking-widest mb-1">
                             Tipo: {{ types.find(t => t.value === method.type)?.label || method.type }}
+                        </p>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                            Recebedor: {{ method.recipient === 'proprietario' ? 'Proprietário do Hotel' : (method.recipient === 'comercializadora' ? 'Comercializadora' : 'Não Definido') }}
                         </p>
                         <p v-if="method.description" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ method.description }}</p>
                     </div>
@@ -249,6 +254,18 @@ const closeModal = () => {
                                 </label>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Recebedor Padrão</label>
+                        <select 
+                            v-model="form.recipient" 
+                            class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all"
+                        >
+                            <option value="" class="bg-white dark:bg-slate-800">Não Definido (Livre)</option>
+                            <option value="proprietario" class="bg-white dark:bg-slate-800">Proprietário do Hotel</option>
+                            <option value="comercializadora" class="bg-white dark:bg-slate-800">Comercializadora</option>
+                        </select>
                     </div>
 
                     <div class="space-y-1.5">

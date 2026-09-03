@@ -31,11 +31,21 @@ class ReceivableController extends Controller
         }
 
         // Filtros Avançados
-        if ($request->filled('due_date_start')) {
-            $query->whereDate('due_date', '>=', $request->due_date_start);
+        
+        // Se NÃO houver nenhum filtro explícito de data e NEM filtro de status, assumimos o mês atual
+        if (!$request->has('due_date_start') && !$request->has('due_date_end') && !$request->has('status') && !$request->has('search')) {
+            $dueDateStart = date('Y-m-01');
+            $dueDateEnd = date('Y-m-t');
+        } else {
+            $dueDateStart = $request->input('due_date_start');
+            $dueDateEnd = $request->input('due_date_end');
         }
-        if ($request->filled('due_date_end')) {
-            $query->whereDate('due_date', '<=', $request->due_date_end);
+
+        if ($dueDateStart) {
+            $query->whereDate('due_date', '>=', $dueDateStart);
+        }
+        if ($dueDateEnd) {
+            $query->whereDate('due_date', '<=', $dueDateEnd);
         }
 
         if ($request->filled('paid_at_start')) {
@@ -47,6 +57,10 @@ class ReceivableController extends Controller
 
         if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('recipient')) {
+            $query->where('recipient', $request->recipient);
         }
 
         if ($request->filled('min_amount')) {
@@ -61,25 +75,63 @@ class ReceivableController extends Controller
         }
 
         // Ordenar por data de vencimento
-        $query->orderBy('due_date', 'asc');
+        $receivables = (clone $query)->orderBy('due_date', 'asc')->paginate(20)->withQueryString();
 
-        $receivables = $query->paginate(20)->withQueryString();
+        // Base query para os KPIs (sem o filtro de data padrão e sem o status padrão, que podem estar em $query)
+        $baseKpiQuery = Bill::query();
+        
+        // Reaplica os mesmos filtros de texto, recebedor e método para os KPIs
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $baseKpiQuery->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhereHas('client', function ($qClient) use ($search) {
+                      $qClient->where('nome', 'like', "%{$search}%")->orWhere('cpf', 'like', "%{$search}%");
+                  });
+            });
+        }
+        if ($request->filled('payment_method')) $baseKpiQuery->where('payment_method', $request->payment_method);
+        if ($request->filled('recipient')) $baseKpiQuery->where('recipient', $request->recipient);
+        if ($request->filled('sales_service_id')) $baseKpiQuery->where('sales_service_id', $request->sales_service_id);
 
-        // Calcular KPIs (Total a receber e Recebido no mês atual)
         $currentMonth = date('m');
         $currentYear = date('Y');
 
         $kpis = [
-            'total_pending' => Bill::where('status', 'pending')->whereMonth('due_date', $currentMonth)->whereYear('due_date', $currentYear)->sum('amount'),
-            'total_paid' => Bill::where('status', 'paid')->whereMonth('paid_at', $currentMonth)->whereYear('paid_at', $currentYear)->sum('amount'),
-            'total_overdue' => Bill::where('status', 'overdue')->sum('amount'),
+            'total_pending' => (clone $baseKpiQuery)->where('status', 'pending')
+                ->whereMonth('due_date', $currentMonth)
+                ->whereYear('due_date', $currentYear)
+                ->sum('amount'),
+                
+            'total_paid' => (clone $baseKpiQuery)->where('status', 'paid')
+                ->whereMonth('paid_at', $currentMonth)
+                ->whereYear('paid_at', $currentYear)
+                ->sum('amount'),
+                
+            'total_overdue' => (clone $baseKpiQuery)->where('status', 'overdue')
+                ->sum('amount'),
+                
+            'received_today' => (clone $baseKpiQuery)->where('status', 'paid')
+                ->whereDate('paid_at', date('Y-m-d'))
+                ->get()
+                ->sum(function($bill) { return $bill->amount + ($bill->interest_amount ?? 0); }),
+                
+            'due_today' => (clone $baseKpiQuery)->where('status', 'pending')
+                ->whereDate('due_date', date('Y-m-d'))
+                ->sum('amount'),
+                
+            'total_interest' => (clone $baseKpiQuery)->where('status', 'paid')
+                ->sum('interest_amount'),
         ];
 
         return Inertia::render('Finance/Receivable/Index', [
-            'filters' => $request->only([
-                'search', 'status', 'due_date_start', 'due_date_end', 
+            'filters' => array_merge($request->only([
+                'search', 'status', 
                 'paid_at_start', 'paid_at_end', 'payment_method', 
-                'min_amount', 'max_amount', 'sales_service_id'
+                'min_amount', 'max_amount', 'sales_service_id', 'recipient'
+            ]), [
+                'due_date_start' => $dueDateStart,
+                'due_date_end' => $dueDateEnd,
             ]),
             'receivables' => $receivables,
             'kpis' => $kpis,

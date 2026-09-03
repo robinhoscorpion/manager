@@ -209,6 +209,7 @@ class ProposalController extends Controller
     {
         $product = $proposal->product;
         $paymentMethodsMap = \App\Models\PaymentMethod::pluck('auto_baixa', 'name')->toArray();
+        $recipientMap = \App\Models\PaymentMethod::pluck('recipient', 'name')->toArray();
 
         foreach ($proposal->payments as $payment) {
             // Se for taxa de manutenção e o produto for isento, pula
@@ -274,6 +275,7 @@ class ProposalController extends Controller
                     'amount' => $payment->installment_value,
                     'due_date' => $dueDate,
                     'payment_method' => $payment->payment_method,
+                    'recipient' => $recipientMap[$payment->payment_method] ?? null,
                     'installment_number' => $i + 1,
                     'total_installments' => $payment->installments,
                     'status' => $isAutoBaixa ? 'paid' : 'pending',

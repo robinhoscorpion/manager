@@ -18,6 +18,7 @@ class Bill extends Model
         'due_date',
         'paid_at',
         'status',
+        'recipient',
         'payment_method',
         'installment_number',
         'total_installments',
