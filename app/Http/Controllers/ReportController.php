@@ -128,7 +128,6 @@ class ReportController extends Controller
 
         $vendidos = 0;
         $total = 0;
-        $q_count_for_aproveitamento = 0;
 
         foreach ($services as $service) {
             $qual = strtoupper(trim($service->qualification ?? ''));
@@ -137,13 +136,8 @@ class ReportController extends Controller
                 $qualCounts[$qual]++;
             }
 
-            // Para manter o cálculo de aproveitamento usando o "Q" exato (se existir)
-            if ($qual === 'Q') {
-                $q_count_for_aproveitamento++;
-            }
-
-            // Consider sold if there is a proposal that is not cancelled
-            if ($service->proposal && strtolower($service->proposal->status ?? '') !== 'cancelled') {
+            // Considera vendido APENAS se a proposta está aprovada (contrato ativo)
+            if ($service->proposal && strtolower($service->proposal->status ?? '') === 'approved') {
                 $vendidos++;
                 $total += (float) ($service->proposal->total_value ?? 0);
             }
@@ -152,10 +146,8 @@ class ReportController extends Controller
         $show = $services->count();
         $qualCounts['show'] = $show;
         
-        $aproveitamento = 0;
-        if ($q_count_for_aproveitamento > 0) {
-            $aproveitamento = ($vendidos / $q_count_for_aproveitamento) * 100;
-        }
+        // Aproveitamento = Vendidos ÷ Total de Shows (total de atendimentos)
+        $aproveitamento = $show > 0 ? ($vendidos / $show) * 100 : 0;
 
         return [
             'name' => $user->name,

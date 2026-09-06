@@ -361,6 +361,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.payment_methods.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Formas de Pagamento
                             </Link>
+                            <Link v-if="can('configuracoes.formas_pagamento.acessar')" :href="route('admin.bank-accounts.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.bank-accounts.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.bank-accounts.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Contas Bancárias
+                            </Link>
                             <Link v-if="can('configuracoes.qualificacao.acessar')" :href="route('admin.qualifications.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.qualifications.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.qualifications.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Tipos de Qualificação

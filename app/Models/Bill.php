@@ -19,6 +19,7 @@ class Bill extends Model
         'paid_at',
         'status',
         'recipient',
+        'bank_account_id',
         'payment_method',
         'installment_number',
         'total_installments',
@@ -40,5 +41,10 @@ class Bill extends Model
     public function salesService()
     {
         return $this->belongsTo(SalesService::class);
+    }
+
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 }

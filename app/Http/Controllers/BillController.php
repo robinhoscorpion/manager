@@ -41,6 +41,8 @@ class BillController extends Controller
             'due_date' => $validated['due_date'],
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
+            'bank_account_id' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('bank_account_id'),
+            'recipient' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('recipient'),
             'status' => $validated['status'],
             'paid_at' => $validated['paid_at'] ?? null,
             'paid_amount' => $validated['paid_amount'] ?? null,
@@ -72,6 +74,12 @@ class BillController extends Controller
 
         if (isset($validated['paid_amount']) && $validated['paid_amount'] > $validated['amount']) {
             $validated['interest_amount'] = $validated['paid_amount'] - $validated['amount'];
+        }
+
+        if (isset($validated['payment_method'])) {
+            $pm = \App\Models\PaymentMethod::where('name', $validated['payment_method'])->first();
+            $validated['bank_account_id'] = $pm?->bank_account_id;
+            $validated['recipient'] = $pm?->recipient;
         }
 
         $bill->update($validated);
@@ -144,6 +152,8 @@ class BillController extends Controller
                 'due_date' => $validated['due_date'],
                 'amount' => $totalAmount,
                 'payment_method' => $validated['payment_method'],
+                'bank_account_id' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('bank_account_id'),
+                'recipient' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('recipient'),
                 'status' => 'pending',
                 'observations' => '[SISTEMA]: Parcela criada a partir da renegociação e agrupamento das parcelas nº ' . implode(', ', $oldNumbers) . '.',
             ]);
@@ -188,6 +198,8 @@ class BillController extends Controller
                     'status' => 'paid',
                     'paid_at' => $paidAt,
                     'payment_method' => $validated['payment_method'],
+                    'bank_account_id' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('bank_account_id'),
+                    'recipient' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('recipient'),
                     'paid_amount' => $bill->amount + ($bill->interest_amount ?? 0),
                     'observations' => trim($bill->observations . "\n[LOTE]: " . ($validated['observations'] ?? 'Baixa em lote realizada.'))
                 ]);

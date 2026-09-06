@@ -11,6 +11,7 @@ import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
     paymentMethods: Array,
+    bankAccounts: Array,
 });
 
 const showEditModal = ref(false);
@@ -21,6 +22,7 @@ const form = useForm({
     type: 'boleto',
     description: '',
     recipient: '',
+    bank_account_id: '',
     is_active: true,
     auto_baixa: false,
 });
@@ -47,6 +49,7 @@ const openEditModal = (method) => {
     form.name = method.name;
     form.type = method.type;
     form.recipient = method.recipient || '';
+    form.bank_account_id = method.bank_account_id || '';
     form.description = method.description;
     form.is_active = !!method.is_active;
     form.auto_baixa = !!method.auto_baixa;
@@ -256,16 +259,28 @@ const closeModal = () => {
                         </div>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Recebedor Padrão</label>
-                        <select 
-                            v-model="form.recipient" 
-                            class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all"
-                        >
-                            <option value="" class="bg-white dark:bg-slate-800">Não Definido (Livre)</option>
-                            <option value="proprietario" class="bg-white dark:bg-slate-800">Proprietário do Hotel</option>
-                            <option value="comercializadora" class="bg-white dark:bg-slate-800">Comercializadora</option>
-                        </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Recebedor Padrão</label>
+                            <select 
+                                v-model="form.recipient" 
+                                class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all"
+                            >
+                                <option value="" class="bg-white dark:bg-slate-800">Não Definido (Livre)</option>
+                                <option value="proprietario" class="bg-white dark:bg-slate-800">Proprietário do Hotel</option>
+                                <option value="comercializadora" class="bg-white dark:bg-slate-800">Comercializadora</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest px-1">Conta Bancária (Padrão)</label>
+                            <select 
+                                v-model="form.bank_account_id" 
+                                class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm outline-none focus:border-brand-green/50 focus:ring-1 focus:ring-brand-green/50 shadow-sm transition-all"
+                            >
+                                <option value="" class="bg-white dark:bg-slate-800">Sem Conta Padrão</option>
+                                <option v-for="account in bankAccounts" :key="account.id" :value="account.id" class="bg-white dark:bg-slate-800">{{ account.name }}</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="space-y-1.5">

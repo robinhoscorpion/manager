@@ -17,7 +17,13 @@ class PaymentMethod extends Model
         'description',
         'is_active',
         'auto_baixa',
+        'bank_account_id',
     ];
+
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
+    }
 
     protected $casts = [
         'is_active' => 'boolean',

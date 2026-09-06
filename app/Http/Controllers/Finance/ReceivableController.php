@@ -135,6 +135,7 @@ class ReceivableController extends Controller
             ]),
             'receivables' => $receivables,
             'kpis' => $kpis,
+            'bankAccounts' => \App\Models\BankAccount::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -147,7 +148,8 @@ class ReceivableController extends Controller
             'payment_method' => 'required|string',
             'mode' => 'required|string|in:single,individual',
             'bill_dates' => 'required_if:mode,individual|array',
-            'global_paid_amount' => 'nullable|numeric'
+            'global_paid_amount' => 'nullable|numeric',
+            'bank_account_id' => 'nullable|exists:bank_accounts,id',
         ]);
 
         $bills = Bill::whereIn('id', $validated['bill_ids'])->get();
@@ -186,6 +188,7 @@ class ReceivableController extends Controller
                     'paid_amount' => $finalPaidAmount,
                     'interest_amount' => $interestAmount,
                     'payment_method' => $validated['payment_method'],
+                    'bank_account_id' => $validated['bank_account_id'] ?? null,
                 ]);
             }
         });

@@ -154,6 +154,17 @@ Route::middleware('auth')->group(function () {
         'edit' => 'admin.payment_methods.edit'
     ])->middleware('permission:configuracoes.formas_pagamento.gerenciar');
 
+    // Bank Accounts
+    Route::resource('admin/bank-accounts', \App\Http\Controllers\BankAccountController::class)->names([
+        'index' => 'admin.bank-accounts.index',
+        'create' => 'admin.bank-accounts.create',
+        'store' => 'admin.bank-accounts.store',
+        'show' => 'admin.bank-accounts.show',
+        'edit' => 'admin.bank-accounts.edit',
+        'update' => 'admin.bank-accounts.update',
+        'destroy' => 'admin.bank-accounts.destroy',
+    ])->middleware('permission:configuracoes.formas_pagamento.gerenciar');
+
     // Gestão de Qualificações
     Route::resource('admin/qualifications', \App\Http\Controllers\QualificationController::class)->only(['index', 'show'])->names('admin.qualifications')->middleware('permission:configuracoes.qualificacao.acessar');
     Route::resource('admin/qualifications', \App\Http\Controllers\QualificationController::class)->except(['index', 'show'])->names('admin.qualifications')->middleware('permission:configuracoes.qualificacao.gerenciar');

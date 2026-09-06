@@ -19,8 +19,11 @@ class PaymentMethodController extends Controller
             return $pm;
         });
 
+        $bankAccounts = \App\Models\BankAccount::where('is_active', true)->orderBy('name')->get();
+
         return Inertia::render('Admin/Settings/PaymentMethod/Index', [
-            'paymentMethods' => $paymentMethods
+            'paymentMethods' => $paymentMethods,
+            'bankAccounts' => $bankAccounts
         ]);
     }
 

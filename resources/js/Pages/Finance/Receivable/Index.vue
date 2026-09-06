@@ -108,7 +108,8 @@ const bulkPayForm = useForm({
     paid_at: new Date().toISOString().split('T')[0],
     payment_method: 'PIX',
     bill_dates: {},
-    global_paid_amount: 0
+    global_paid_amount: 0,
+    bank_account_id: ''
 });
 const openBulkPay = () => {
     bulkPayForm.bill_ids = selectedBills.value;
@@ -136,7 +137,8 @@ const payForm = useForm({
     paid_amount: '',
     payment_method: 'PIX',
     status: 'paid',
-    observations: ''
+    observations: '',
+    bank_account_id: ''
 });
 
 const openPayModal = (bill) => {
@@ -214,7 +216,8 @@ const submitCancel = () => {
 const props = defineProps({
     receivables: Object,
     filters: Object,
-    kpis: Object
+    kpis: Object,
+    bankAccounts: Array
 });
 
 const search = ref(props.filters.search || '');
@@ -839,16 +842,25 @@ const getStatusBadge = (status) => {
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data do Pagamento Global</label>
                         <input v-model="bulkPayForm.paid_at" type="date" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl focus:ring-brand-green/20">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Forma de Pagamento</label>
-                        <select v-model="bulkPayForm.payment_method" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl focus:ring-brand-green/20">
-                            <option value="PIX">PIX</option>
-                            <option value="Boleto">Boleto</option>
-                            <option value="Cartão de Crédito">Cartão de Crédito</option>
-                            <option value="Cartão de Débito">Cartão de Débito</option>
-                            <option value="Dinheiro">Dinheiro</option>
-                            <option value="Transferência">Transferência</option>
-                        </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Forma de Pagamento</label>
+                            <select v-model="bulkPayForm.payment_method" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl focus:ring-brand-green/20">
+                                <option value="PIX">PIX</option>
+                                <option value="Boleto">Boleto</option>
+                                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                <option value="Cartão de Débito">Cartão de Débito</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Transferência">Transferência</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Conta de Destino</label>
+                            <select v-model="bulkPayForm.bank_account_id" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl focus:ring-brand-green/20">
+                                <option value="">Não Especificada</option>
+                                <option v-for="account in bankAccounts" :key="account.id" :value="account.id">{{ account.name }}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
@@ -881,11 +893,24 @@ const getStatusBadge = (status) => {
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Recebido</label>
                         <input v-model="payForm.paid_amount" type="number" step="0.01" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl text-emerald-500 font-bold">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Forma de Pagamento</label>
-                        <select v-model="payForm.payment_method" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl">
-                            <option value="PIX">PIX</option><option value="Boleto">Boleto</option>
-                        </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Forma de Pagamento</label>
+                            <select v-model="payForm.payment_method" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl">
+                                <option value="PIX">PIX</option><option value="Boleto">Boleto</option>
+                                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                <option value="Cartão de Débito">Cartão de Débito</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Transferência">Transferência</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Conta de Destino</label>
+                            <select v-model="payForm.bank_account_id" class="w-full bg-white dark:bg-[#0f1219] border-slate-200 dark:border-slate-800 rounded-xl">
+                                <option value="">Não Especificada</option>
+                                <option v-for="account in bankAccounts" :key="account.id" :value="account.id">{{ account.name }}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
