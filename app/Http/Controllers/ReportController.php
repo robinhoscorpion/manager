@@ -136,8 +136,8 @@ class ReportController extends Controller
                 $qualCounts[$qual]++;
             }
 
-            // Considera vendido APENAS se a proposta está aprovada (contrato ativo)
-            if ($service->proposal && strtolower($service->proposal->status ?? '') === 'approved') {
+            // Considera vendido se proposta está aprovada ou concluída (contrato ativo/finalizado)
+            if ($service->proposal && in_array(strtolower($service->proposal->status ?? ''), ['approved', 'completed'])) {
                 $vendidos++;
                 $total += (float) ($service->proposal->total_value ?? 0);
             }
