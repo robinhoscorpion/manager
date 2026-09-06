@@ -268,6 +268,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('relatorios')->name('reports.')->group(function () {
         Route::get('/ranking-de-vendas', [ReportController::class, 'salesRanking'])->name('sales-ranking');
         Route::get('/ranking-de-vendas/pdf', [ReportController::class, 'exportPdf'])->name('sales-ranking.pdf');
+        // [DEBUG TEMPORÁRIO] Remover após diagnóstico
+        Route::get('/debug-shows', [ReportController::class, 'debugShows'])->name('debug-shows');
     });
 });
 
