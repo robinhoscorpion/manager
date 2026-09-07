@@ -18,7 +18,7 @@ class ReportController extends Controller
     public function debugShows(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate   = $request->input('end_date',   Carbon::now()->endOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
 
         $users = User::with('roles')->where('status', true)->whereHas('roles', function ($q) {
             $q->whereIn('slug', ['promotor', 'consultor', 'supervisor']);
@@ -28,24 +28,25 @@ class ReportController extends Controller
         foreach ($users as $user) {
             $roles = $user->roles->pluck('slug')->toArray();
             foreach (['opc_id' => 'promotor', 'liner_id' => 'consultor', 'closer_id' => 'supervisor'] as $col => $role) {
-                if (!in_array($role, $roles)) continue;
+                if (!in_array($role, $roles))
+                    continue;
                 $services = SalesService::with('proposal')
                     ->where($col, $user->id)
-                    ->whereBetween('date', [$startDate, $endDate])
-                    ->get(['id', 'date', 'qualification', $col]);
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->get(['id', 'created_at', 'date', 'qualification', $col]);
                 $result[] = [
-                    'user_id'    => $user->id,
-                    'user_name'  => $user->name,
-                    'role'       => $role,
-                    'column'     => $col,
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'role' => $role,
+                    'column' => $col,
                     'show_count' => $services->count(),
-                    'services'   => $services->map(fn($s) => [
-                        'id'              => $s->id,
-                        'date'            => $s->date,
-                        'qualification'   => $s->qualification,
-                        'has_proposal'    => $s->proposal !== null,
+                    'services' => $services->map(fn($s) => [
+                        'id' => $s->id,
+                        'date' => $s->date,
+                        'qualification' => $s->qualification,
+                        'has_proposal' => $s->proposal !== null,
                         'proposal_status' => $s->proposal?->status,
-                        'proposal_value'  => $s->proposal?->total_value,
+                        'proposal_value' => $s->proposal?->total_value,
                     ])->values(),
                 ];
             }
@@ -53,7 +54,7 @@ class ReportController extends Controller
 
         return response()->json([
             'period' => "$startDate → $endDate",
-            'users'  => $result,
+            'users' => $result,
         ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
@@ -164,8 +165,9 @@ class ReportController extends Controller
         // Query Sales Services associated with the user as this specific role in the date range
         $services = SalesService::with('proposal')
             ->where($roleColumn, $user->id)
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
+
 
         $qualCounts = [];
         // Initialize dynamic qualifications count
@@ -178,7 +180,7 @@ class ReportController extends Controller
 
         foreach ($services as $service) {
             $qual = strtoupper(trim($service->qualification ?? ''));
-            
+
             if (array_key_exists($qual, $qualCounts)) {
                 $qualCounts[$qual]++;
             }
@@ -192,7 +194,7 @@ class ReportController extends Controller
 
         $show = $services->count();
         $qualCounts['show'] = $show;
-        
+
         // Aproveitamento = Vendidos ÷ Total de Shows (total de atendimentos)
         $aproveitamento = $show > 0 ? ($vendidos / $show) * 100 : 0;
 
