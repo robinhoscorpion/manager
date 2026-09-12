@@ -246,7 +246,7 @@ const toggleSidebar = () => {
                     </div>
 
                     <!-- Relatórios Group -->
-                    <div class="nav-group" :class="{ 'open': relatoriosOpen }">
+                    <div v-if="can('relatorios.acessar')" class="nav-group" :class="{ 'open': relatoriosOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleRelatorios">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

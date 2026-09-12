@@ -24,6 +24,10 @@ const props = defineProps({
     required: {
         type: Boolean,
         default: false
+    },
+    placement: {
+        type: String,
+        default: 'bottom'
     }
 });
 
@@ -123,7 +127,8 @@ onUnmounted(() => {
 
         <div 
             v-if="isOpen"
-            class="absolute z-[100] mt-2 w-full bg-white dark:bg-[#1a1f2e] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            class="absolute z-[100] w-full bg-white dark:bg-[#1a1f2e] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            :class="placement === 'top' ? 'bottom-full mb-2 origin-bottom' : 'mt-2 top-full origin-top'"
         >
             <div class="p-2 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02]">
                 <input 

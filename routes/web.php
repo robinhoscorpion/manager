@@ -258,6 +258,9 @@ Route::middleware('auth')->group(function () {
     // Módulo de Comissões
     Route::prefix('comissoes')->name('commissions.')->middleware('permission:comissoes.regras.acessar')->group(function () {
         Route::get('/', [\App\Http\Controllers\Commissions\CommissionController::class, 'index'])->name('index');
+        Route::post('/gerar', [\App\Http\Controllers\Commissions\CommissionController::class, 'generate'])->name('generate');
+        Route::get('/geradas-status', [\App\Http\Controllers\Commissions\CommissionController::class, 'generatedStatus'])->name('generated-status');
+        Route::delete('/deletar-periodo', [\App\Http\Controllers\Commissions\CommissionController::class, 'destroyPeriod'])->name('destroy-period');
         Route::get('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'index'])->name('rules.index');
         Route::post('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'store'])->name('rules.store');
         Route::put('/regras/{rule}', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'update'])->name('rules.update');
@@ -265,7 +268,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Módulo de Relatórios
-    Route::prefix('relatorios')->name('reports.')->group(function () {
+    Route::prefix('relatorios')->name('reports.')->middleware('permission:relatorios.acessar')->group(function () {
         Route::get('/ranking-de-vendas', [ReportController::class, 'salesRanking'])->name('sales-ranking');
         Route::get('/ranking-de-vendas/pdf', [ReportController::class, 'exportPdf'])->name('sales-ranking.pdf');
         // [DEBUG TEMPORÁRIO] Remover após diagnóstico

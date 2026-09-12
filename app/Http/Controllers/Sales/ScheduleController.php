@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Schedule;
+use App\Models\ComplimentaryItem;
+use App\Models\User;
 
 class ScheduleController extends Controller
 {
@@ -57,6 +59,10 @@ class ScheduleController extends Controller
         return Inertia::render('Sales/Scheduling/Index', [
             'schedules' => $schedules,
             'metrics' => $metrics,
+            'complimentaryItems' => ComplimentaryItem::where('is_active', true)->where('type', 'atendimento')->orderBy('name')->get(),
+            'users' => User::select('id', 'name')->with('roles:name,slug')->get()->map(function($u) {
+                return [ 'id' => $u->id, 'name' => $u->name, 'roles' => $u->roles->pluck('slug') ];
+            }),
             'filters' => [
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
@@ -72,16 +78,26 @@ class ScheduleController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
+            'nacionalidade' => 'nullable|string|max:255',
+            'data_nascimento' => 'nullable|date',
+            'profissao' => 'nullable|string|max:255',
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
             'has_spouse' => 'nullable|boolean',
             'spouse_name' => 'nullable|string|max:255',
             'spouse_phone' => 'nullable|string|max:20',
             'spouse_email' => 'nullable|email|max:255',
+            'spouse_nacionalidade' => 'nullable|string|max:255',
+            'spouse_data_nascimento' => 'nullable|date',
+            'spouse_profissao' => 'nullable|string|max:255',
             'observations' => 'nullable|string',
+            'renda_familiar' => 'nullable|string|max:50',
+            'cortesia' => 'nullable|array',
+            'cortesia.*' => 'nullable|string',
+            'user_id' => 'nullable|exists:users,id',
         ]);
 
-        $validated['user_id'] = auth()->id();
+        $validated['user_id'] = $request->input('user_id') ?? auth()->id();
         $validated['status'] = 'scheduled';
 
         Schedule::create($validated);
@@ -103,6 +119,9 @@ class ScheduleController extends Controller
                     'nome' => $schedule->name,
                     'celular1' => $schedule->phone ?: '00000000000',
                     'email' => $schedule->email,
+                    'nacionalidade' => $schedule->nacionalidade,
+                    'data_nascimento' => $schedule->data_nascimento,
+                    'profissao' => $schedule->profissao,
                 ]);
 
                 // Create associated address to prevent errors in Atendimentos queries
@@ -131,8 +150,14 @@ class ScheduleController extends Controller
                     'nome_conjuge' => $schedule->spouse_name,
                     'celular_conjuge' => $schedule->spouse_phone,
                     'email_conjuge' => $schedule->spouse_email,
+                    'nacionalidade_conjuge' => $schedule->spouse_nacionalidade,
+                    'data_nascimento_conjuge' => $schedule->spouse_data_nascimento,
+                    'profissao_conjuge' => $schedule->spouse_profissao,
                     'tipo_relacionamento' => 'Casal/Namorados', // default
                     'observacoes' => $schedule->observations,
+                    'renda_familiar' => $schedule->renda_familiar,
+                    'cortesia' => $schedule->cortesia,
+                    'opc_id' => $schedule->user_id,
                 ]);
             });
 

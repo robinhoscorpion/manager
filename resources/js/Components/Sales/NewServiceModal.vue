@@ -340,12 +340,11 @@ const maritals = [
 ];
 
 const incomes = [
-    { label: 'ATÉ R$ 3.000', value: '3k' },
-    { label: 'R$ 3.001 - R$ 5.000', value: '3-5k' },
-    { label: 'R$ 5.001 - R$ 8.000', value: '5-8k' },
-    { label: 'R$ 8.001 - R$ 12.000', value: '8-12k' },
-    { label: 'R$ 12.001 - R$ 20.000', value: '12-20k' },
-    { label: 'ACIMA DE R$ 20.000', value: '20k+' },
+    { label: 'Acima de R$20.000', value: '20k+' },
+    { label: 'R$15.000 a R$19.999', value: '15-20k' },
+    { label: 'R$10.000 a R$14.999', value: '10-15k' },
+    { label: 'R$5.000 a R$9.999', value: '5-10k' },
+    { label: 'Abaixo de R$4.999', value: '-5k' },
 ];
 
 const togetherOptions = [

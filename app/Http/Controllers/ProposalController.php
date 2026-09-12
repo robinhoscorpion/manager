@@ -121,16 +121,8 @@ class ProposalController extends Controller
             return redirect()->back()->withErrors(['product_id' => 'O cliente deve ter um CPF ou Documento cadastrado para salvar a proposta.']);
         }
 
-        // Se a proposta já estiver aprovada, verifica se existem parcelas pagas
-        if ($proposal->status === 'approved') {
-            $hasPaidBills = \App\Models\Bill::where('proposal_id', $proposal->id)
-                ->whereIn('status', ['paid', 'partially_paid'])
-                ->exists();
-            
-            if ($hasPaidBills) {
-                return redirect()->back()->withErrors(['product_id' => 'Não é possível editar este contrato pois já existem parcelas pagas no financeiro.']);
-            }
-        }
+        // O bloqueio de edição quando existem parcelas pagas foi removido a pedido.
+        // As parcelas serão deletadas e recriadas abaixo.
 
         DB::transaction(function () use ($validated, $proposal) {
             // Calcular Valores da Proposta (Ignorando Taxa de Manutenção para o Valor Bruto)

@@ -156,17 +156,21 @@ const handleAction = (type) => {
 // Helper to parse date string to Date object
 const parseDate = (dateStr) => {
     if (!dateStr) return null;
+    
+    // Extrai apenas a parte da data (remove hora se houver)
+    const cleanDateStr = typeof dateStr === 'string' ? dateStr.split(' ')[0] : dateStr;
+
     // Handle YYYY-MM-DD (Database default)
-    if (dateStr.includes('-')) {
-        const [year, month, day] = dateStr.split('-').map(Number);
+    if (cleanDateStr.includes('-')) {
+        const [year, month, day] = cleanDateStr.split('-').map(Number);
         return new Date(year, month - 1, day);
     }
     // Handle DD/MM/YYYY
-    if (dateStr.includes('/')) {
-        const [day, month, year] = dateStr.split('/').map(Number);
+    if (cleanDateStr.includes('/')) {
+        const [day, month, year] = cleanDateStr.split('/').map(Number);
         return new Date(year, month - 1, day);
     }
-    return new Date(dateStr);
+    return new Date(cleanDateStr);
 };
 
 const filteredServiceData = computed(() => {

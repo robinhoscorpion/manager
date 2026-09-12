@@ -118,6 +118,9 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Gerenciar Assuntos de Protocolo', 'slug' => 'configuracoes.assuntos_protocolo.gerenciar', 'group' => 'Configurações'],
 
             ['name' => 'Acessar Logs do Sistema', 'slug' => 'configuracoes.logs.acessar', 'group' => 'Configurações'],
+
+            // Relatórios
+            ['name' => 'Acessar Relatórios', 'slug' => 'relatorios.acessar', 'group' => 'Relatórios'],
         ];
 
         // Delete old permissions that are no longer in this list

@@ -244,6 +244,16 @@ class SalesServiceController extends Controller
             'time' => 'required|string',
             'local' => 'required|string',
             'cortesia' => 'required|array',
+            'nacionalidade' => 'nullable|string|max:100',
+            'dataNascimento' => 'nullable|date',
+            'profissao' => 'nullable|string',
+            'estadoCivil' => 'nullable|string',
+            'rendaFamiliar' => 'nullable|string',
+            'nomeConjuge' => 'nullable|string|max:255',
+            'dataNascimentoConjuge' => 'nullable|date',
+            'profissaoConjuge' => 'nullable|string',
+            'tipoRelacionamento' => 'nullable|string',
+            'tempoJuntos' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request, $service) {

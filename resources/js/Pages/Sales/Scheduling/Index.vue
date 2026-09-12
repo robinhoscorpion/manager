@@ -8,11 +8,32 @@ const can = (permission) => {
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { professions } from '@/Constants/Professions';
 
 const props = defineProps({
     schedules: Array,
     metrics: Object,
+    complimentaryItems: Array,
+    users: Array,
     filters: Object,
+});
+
+const isPromoter = computed(() => {
+    const roles = usePage().props.auth.roles || [];
+    return roles.some(r => ['promotor', 'opc'].includes(r.toLowerCase()));
+});
+
+const promoters = computed(() => {
+    return props.users?.filter(u => u.roles.some(r => ['promotor', 'opc'].includes(r.toLowerCase())))
+        .map(u => ({ label: u.name, value: u.id })) || [];
+});
+
+const giftOptions = computed(() => {
+    return props.complimentaryItems?.map(item => ({
+        label: item.name,
+        value: item.name
+    })) || [];
 });
 
 const schedules = computed(() => props.schedules || []);
@@ -45,7 +66,8 @@ const clearDates = () => {
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     try {
-        const [year, month, day] = dateStr.split('-');
+        const dateOnly = dateStr.split('T')[0];
+        const [year, month, day] = dateOnly.split('-');
         return `${day}/${month}/${year}`;
     } catch (e) {
         return dateStr;
@@ -118,18 +140,27 @@ const form = ref({
     name: '',
     phone: '',
     email: '',
+    nacionalidade: 'Brasileira',
+    data_nascimento: '',
+    profissao: '',
     date: today,
     time: '',
     has_spouse: false,
     spouse_name: '',
     spouse_phone: '',
     spouse_email: '',
-    observations: ''
+    spouse_nacionalidade: 'Brasileira',
+    spouse_data_nascimento: '',
+    spouse_profissao: '',
+    observations: '',
+    renda_familiar: '',
+    cortesia: [],
+    user_id: null
 });
 const isSubmitting = ref(false);
 
 const openNewModal = () => {
-    form.value = { name: '', phone: '', email: '', date: today, time: '', has_spouse: false, spouse_name: '', spouse_phone: '', spouse_email: '', observations: '' };
+    form.value = { name: '', phone: '', email: '', nacionalidade: 'Brasileira', data_nascimento: '', profissao: '', date: today, time: '', has_spouse: false, spouse_name: '', spouse_phone: '', spouse_email: '', spouse_nacionalidade: 'Brasileira', spouse_data_nascimento: '', spouse_profissao: '', observations: '', renda_familiar: '', cortesia: [], user_id: isPromoter.value ? usePage().props.auth.user.id : null };
     showNewModal.value = true;
 };
 
@@ -337,7 +368,7 @@ const updateStatus = (schedule, newStatus) => {
         </div>
 
         <!-- Modal Novo Agendamento -->
-        <Modal :show="showNewModal" @close="showNewModal = false" maxWidth="md">
+        <Modal :show="showNewModal" @close="showNewModal = false" maxWidth="2xl" :closeable="false">
             <div class="p-6">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-10 h-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 text-brand-green flex items-center justify-center">
@@ -358,19 +389,34 @@ const updateStatus = (schedule, newStatus) => {
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Telefone (WhatsApp)</label>
                         <input v-model="form.phone" @input="applyPhoneMask" type="text" maxlength="15" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="(00) 00000-0000">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">E-mail (Opcional)</label>
-                        <input v-model="form.email" type="email" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="exemplo@email.com">
-                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data *</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">E-mail (Opcional)</label>
+                            <input v-model="form.email" type="email" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="exemplo@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nacionalidade</label>
+                            <input v-model="form.nacionalidade" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="Ex: Brasileira">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data Nascimento</label>
+                            <input v-model="form.data_nascimento" type="date" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data Agendamento *</label>
                             <input v-model="form.date" type="date" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" required>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Horário</label>
                             <input v-model="form.time" type="time" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20">
                         </div>
+                    </div>
+
+                    <div class="z-[70] relative">
+                        <SearchableSelect v-model="form.profissao" :options="professions" label="Profissão" placeholder="SELECIONE A PROFISSÃO" />
                     </div>
 
                     <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800/50 space-y-4">
@@ -397,10 +443,49 @@ const updateStatus = (schedule, newStatus) => {
                                 <input v-model="form.spouse_email" type="email" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="exemplo@email.com">
                             </div>
                         </div>
+
+                        <div v-if="form.has_spouse" class="animate-in fade-in slide-in-from-top-2 grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nacionalidade</label>
+                                <input v-model="form.spouse_nacionalidade" type="text" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20" placeholder="Ex: Brasileira">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data Nascimento</label>
+                                <input v-model="form.spouse_data_nascimento" type="date" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20">
+                            </div>
+                        </div>
+
+                        <div v-if="form.has_spouse" class="animate-in fade-in slide-in-from-top-2 z-[60] relative mt-4">
+                            <SearchableSelect v-model="form.spouse_profissao" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE A PROFISSÃO" />
+                        </div>
                     </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Renda Mensal (Opcional)</label>
+                        <select v-model="form.renda_familiar" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20">
+                            <option value="">Selecione a faixa de renda</option>
+                            <option value="20k+">Acima de R$20.000</option>
+                            <option value="15-20k">R$15.000 a R$19.999</option>
+                            <option value="10-15k">R$10.000 a R$14.999</option>
+                            <option value="5-10k">R$5.000 a R$9.999</option>
+                            <option value="-5k">Abaixo de R$4.999</option>
+                        </select>
+                    </div>
+
+                    <div class="z-[50] relative">
+                        <SearchableSelect v-model="form.cortesia" :options="giftOptions" label="Cortesias Ofertadas (Opcional)" placeholder="SELECIONE AS CORTESIAS" multiple />
+                    </div>
+
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Observações (Opcional)</label>
                         <textarea v-model="form.observations" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm p-3 focus:ring-brand-green/20" placeholder="Ex: Casal com 2 filhos..."></textarea>
+                    </div>
+
+                    <div v-if="!isPromoter" class="p-4 bg-brand-green/5 dark:bg-brand-green/10 border border-brand-green/20 dark:border-brand-green/30 rounded-xl space-y-2 mt-4 z-[40] relative">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <span class="text-[11px] font-bold text-brand-green uppercase tracking-widest">Atribuição de Responsável</span>
+                        </div>
+                        <SearchableSelect v-model="form.user_id" :options="promoters" label="OPC / Promotor Responsável *" placeholder="SELECIONE O PROMOTOR" required placement="top" />
                     </div>
                 </div>
 

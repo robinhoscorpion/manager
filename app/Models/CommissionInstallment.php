@@ -10,6 +10,7 @@ class CommissionInstallment extends Model
         'commission_id',
         'month_offset',
         'due_date',
+        'reference_month',
         'amount',
         'status',
         'origin_type'

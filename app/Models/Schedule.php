@@ -10,6 +10,9 @@ class Schedule extends Model
         'name',
         'phone',
         'email',
+        'nacionalidade',
+        'data_nascimento',
+        'profissao',
         'date',
         'time',
         'status',
@@ -17,8 +20,21 @@ class Schedule extends Model
         'spouse_name',
         'spouse_phone',
         'spouse_email',
+        'spouse_nacionalidade',
+        'spouse_data_nascimento',
+        'spouse_profissao',
         'observations',
+        'renda_familiar',
+        'cortesia',
         'user_id'
+    ];
+
+    protected $casts = [
+        'cortesia' => 'array',
+        'has_spouse' => 'boolean',
+        'date' => 'date',
+        'data_nascimento' => 'date',
+        'spouse_data_nascimento' => 'date',
     ];
 
     public function user()
