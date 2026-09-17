@@ -5,25 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PointTable\Holiday;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class HolidayController extends Controller
 {
-    public function index()
-    {
-        $holidays = Holiday::orderBy('holiday_date', 'asc')->get();
-        return Inertia::render('Admin/Holidays/Index', [
-            'holidays' => $holidays
-        ]);
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'holiday_date' => 'nullable|date',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'name'           => 'required|string|max:255',
+            'holiday_date'   => 'nullable|date',
+            'start_date'     => 'nullable|date',
+            'end_date'       => 'nullable|date',
+            'classification' => 'nullable|string|max:255',
         ]);
 
         Holiday::create($validated);
@@ -34,10 +26,11 @@ class HolidayController extends Controller
     public function update(Request $request, Holiday $holiday)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'holiday_date' => 'nullable|date',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'name'           => 'required|string|max:255',
+            'holiday_date'   => 'nullable|date',
+            'start_date'     => 'nullable|date',
+            'end_date'       => 'nullable|date',
+            'classification' => 'nullable|string|max:255',
         ]);
 
         $holiday->update($validated);

@@ -200,12 +200,26 @@ Route::middleware('auth')->group(function () {
     // Tabela de Pontos, Temporadas e Feriados
     Route::get('admin/tabela-pontos', [\App\Http\Controllers\Admin\PointTableController::class, 'index'])->name('admin.tabela_pontos.index')->middleware('permission:configuracoes.tabela_pontos.acessar');
     Route::post('admin/tabela-pontos/score', [\App\Http\Controllers\Admin\PointTableController::class, 'updateScore'])->name('admin.tabela_pontos.score')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    
+    // CRUD Manual para Tabela de Pontos
+    Route::post('admin/tabela-pontos/resort', [\App\Http\Controllers\Admin\PointTableController::class, 'storeResort'])->name('admin.tabela_pontos.resort.store')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::delete('admin/tabela-pontos/resort/{id}', [\App\Http\Controllers\Admin\PointTableController::class, 'destroyResort'])->name('admin.tabela_pontos.resort.destroy')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::post('admin/tabela-pontos/resort/{id}/accommodation', [\App\Http\Controllers\Admin\PointTableController::class, 'storeAccommodation'])->name('admin.tabela_pontos.accommodation.store')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::delete('admin/tabela-pontos/accommodation/{id}', [\App\Http\Controllers\Admin\PointTableController::class, 'destroyAccommodation'])->name('admin.tabela_pontos.accommodation.destroy')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::post('admin/tabela-pontos/accommodation/{id}/pax', [\App\Http\Controllers\Admin\PointTableController::class, 'storePax'])->name('admin.tabela_pontos.pax.store')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::delete('admin/tabela-pontos/accommodation/{id}/pax/{pax}', [\App\Http\Controllers\Admin\PointTableController::class, 'destroyPax'])->name('admin.tabela_pontos.pax.destroy')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::post('admin/tabela-pontos/season', [\App\Http\Controllers\Admin\PointTableController::class, 'storeSeason'])->name('admin.tabela_pontos.season.store')->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::delete('admin/tabela-pontos/season/{id}', [\App\Http\Controllers\Admin\PointTableController::class, 'destroySeason'])->name('admin.tabela_pontos.season.destroy')->middleware('permission:configuracoes.tabela_pontos.acessar');
 
-    Route::resource('admin/seasons', \App\Http\Controllers\Admin\SeasonController::class, ['as' => 'admin'])->except(['show'])->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::get('admin/configuracoes-calendario', [\App\Http\Controllers\Admin\CalendarSettingsController::class, 'index'])->name('admin.calendar_settings.index')->middleware('permission:configuracoes.tabela_pontos.acessar');
+
+    // Mapeamento deve vir ANTES do resource para não conflitar com {season}
     Route::get('admin/seasons/mapping/edit', [\App\Http\Controllers\Admin\SeasonController::class, 'mapping'])->name('admin.seasons.mapping')->middleware('permission:configuracoes.tabela_pontos.acessar');
     Route::post('admin/seasons/mapping', [\App\Http\Controllers\Admin\SeasonController::class, 'storeMapping'])->name('admin.seasons.mapping.store')->middleware('permission:configuracoes.tabela_pontos.acessar');
 
-    Route::resource('admin/holidays', \App\Http\Controllers\Admin\HolidayController::class, ['as' => 'admin'])->only(['index', 'store', 'update', 'destroy'])->middleware('permission:configuracoes.tabela_pontos.acessar');
+    Route::resource('admin/seasons', \App\Http\Controllers\Admin\SeasonController::class, ['as' => 'admin'])->except(['index', 'show'])->middleware('permission:configuracoes.tabela_pontos.acessar');
+
+    Route::resource('admin/holidays', \App\Http\Controllers\Admin\HolidayController::class, ['as' => 'admin'])->only(['store', 'update', 'destroy'])->middleware('permission:configuracoes.tabela_pontos.acessar');
 
     // Módulo Financeiro
     Route::prefix('financeiro')->name('finance.')->group(function () {

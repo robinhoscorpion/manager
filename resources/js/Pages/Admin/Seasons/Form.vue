@@ -41,7 +41,7 @@ const submit = () => {
                 <div class="bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] mb-6 shadow-sm dark:shadow-none flex flex-col relative z-20">
                     <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
-                            <Link :href="route('admin.seasons.index')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors">
+                            <Link :href="route('admin.calendar_settings.index')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                             </Link>
                             <div class="w-12 h-12 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center">
@@ -113,7 +113,7 @@ const submit = () => {
                             </div>
 
                             <div class="flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 pt-6 mt-8">
-                                <Link :href="route('admin.seasons.index')" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-[12px] transition-all shadow-sm">
+                                <Link :href="route('admin.calendar_settings.index')" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-[12px] transition-all shadow-sm">
                                     Cancelar
                                 </Link>
                                 <button type="submit" :class="{ 'opacity-50': form.processing }" :disabled="form.processing" class="px-6 py-2.5 bg-brand-green hover:bg-[#485638] text-white text-xs font-bold uppercase tracking-wider rounded-[12px] transition-all shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2">

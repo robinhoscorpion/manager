@@ -8,7 +8,7 @@ const props = defineProps({
     seasons: Array
 });
 
-// All possible months and standard special dates
+// All possible months
 const allItems = [
     { id: 'm-1', type: 'month', name: 'Janeiro', color: 'bg-blue-500' },
     { id: 'm-2', type: 'month', name: 'Fevereiro', color: 'bg-blue-500' },
@@ -22,17 +22,6 @@ const allItems = [
     { id: 'm-10', type: 'month', name: 'Outubro', color: 'bg-blue-500' },
     { id: 'm-11', type: 'month', name: 'Novembro', color: 'bg-blue-500' },
     { id: 'm-12', type: 'month', name: 'Dezembro', color: 'bg-blue-500' },
-    { id: 'd-1', type: 'date', name: 'Carnaval', color: 'bg-orange-500' },
-    { id: 'd-2', type: 'date', name: 'Páscoa', color: 'bg-pink-500' },
-    { id: 'd-3', type: 'date', name: 'Tiradentes', color: 'bg-teal-500' },
-    { id: 'd-4', type: 'date', name: 'Dia do Trabalho', color: 'bg-green-500' },
-    { id: 'd-5', type: 'date', name: 'Corpus Christi', color: 'bg-amber-800' },
-    { id: 'd-6', type: 'date', name: 'Independência do Brasil', color: 'bg-cyan-500' },
-    { id: 'd-7', type: 'date', name: 'Dia das Crianças', color: 'bg-purple-500' },
-    { id: 'd-8', type: 'date', name: 'Finados', color: 'bg-lime-500' },
-    { id: 'd-9', type: 'date', name: 'Proclamação da República', color: 'bg-yellow-500' },
-    { id: 'd-10', type: 'date', name: 'Natal', color: 'bg-indigo-500' },
-    { id: 'd-11', type: 'date', name: 'Réveillon', color: 'bg-blue-400' },
 ];
 
 const unassignedItems = ref([]);
@@ -68,16 +57,6 @@ onMounted(() => {
             }
         });
         
-        dates.forEach(d => {
-            let found = allItems.find(i => i.type === 'date' && i.name === d);
-            if (!found) {
-                // Se for uma data especial que não está na nossa lista padrão
-                found = { id: `d-custom-${d}`, type: 'date', name: d, color: 'bg-gray-600' };
-            }
-            items.push(found);
-            assignedNames.add(found.name);
-        });
-        
         return {
             id: season.id,
             name: season.name,
@@ -102,24 +81,12 @@ const saveMapping = () => {
             }))
         }))
     }, {
+        onSuccess: () => router.visit(route('admin.calendar_settings.index')),
         onFinish: () => isSaving.value = false,
         preserveScroll: true
     });
 };
 
-const newDateName = ref('');
-const addNewDate = () => {
-    if (newDateName.value.trim() !== '') {
-        const name = newDateName.value.trim();
-        unassignedItems.value.push({
-            id: `d-custom-${Date.now()}`,
-            type: 'date',
-            name: name,
-            color: 'bg-gray-600'
-        });
-        newDateName.value = '';
-    }
-};
 
 const dragOptions = {
     animation: 200,
@@ -155,7 +122,7 @@ const saveEdit = (item) => {
                 <div class="bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] mb-6 shadow-sm dark:shadow-none flex flex-col relative z-20">
                     <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
-                            <Link :href="route('admin.seasons.index')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors">
+                            <Link :href="route('admin.calendar_settings.index')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                             </Link>
                             <div class="w-12 h-12 rounded-[14px] bg-brand-green/10 border border-brand-green/20 flex items-center justify-center">
@@ -196,13 +163,7 @@ const saveEdit = (item) => {
                             </div>
                             <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-tight">Disponíveis</h3>
                         </div>
-                        
-                        <div class="mb-5 flex gap-2">
-                            <input type="text" v-model="newDateName" @keyup.enter="addNewDate" placeholder="Adicionar data especial..." class="w-full text-sm rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:ring-brand-green/40 focus:border-brand-green/40 shadow-sm transition-all px-3 py-2 text-slate-700 dark:text-white">
-                            <button @click="addNewDate" class="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/30 text-indigo-600 dark:text-indigo-400 px-3 py-2 rounded-xl transition-colors font-bold flex items-center justify-center shadow-sm">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            </button>
-                        </div>
+                        <!-- No input for dates anymore -->
 
                         <draggable 
                             class="min-h-[250px] flex flex-wrap gap-2 content-start p-4 bg-slate-50/80 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 transition-colors" 

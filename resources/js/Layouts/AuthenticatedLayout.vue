@@ -325,13 +325,9 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.columns.index') ? 'opacity-100' : 'opacity-30'"></div>
                                 Colunas do Dashboard
                             </Link>
-                            <Link v-if="can('configuracoes.tabela_pontos.acessar')" :href="route('admin.seasons.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.seasons.*') }">
-                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.seasons.*') ? 'opacity-100' : 'opacity-30'"></div>
-                                Temporadas
-                            </Link>
-                            <Link v-if="can('configuracoes.tabela_pontos.acessar')" :href="route('admin.holidays.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.holidays.*') }">
-                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.holidays.*') ? 'opacity-100' : 'opacity-30'"></div>
-                                Feriados (Datas Especiais)
+                            <Link v-if="can('configuracoes.tabela_pontos.acessar')" :href="route('admin.calendar_settings.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.calendar_settings.*') || route().current('admin.seasons.*') || route().current('admin.holidays.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.calendar_settings.*') || route().current('admin.seasons.*') || route().current('admin.holidays.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Calendário e Feriados
                             </Link>
                             <Link v-if="can('configuracoes.modelos_contrato.acessar')" :href="route('admin.settings.ficha_templates.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.ficha_templates.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.ficha_templates.*') ? 'opacity-100' : 'opacity-30'"></div>

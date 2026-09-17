@@ -381,7 +381,14 @@ const releasedPoints = computed(() => {
     return Math.floor(totalPoints.value * ratio);
 });
 
-const utilizedPoints = computed(() => proposal.value?.used_points || 0);
+const utilizedPoints = computed(() => {
+    if (props.service?.reservation_requests && props.service.reservation_requests.length > 0) {
+        return props.service.reservation_requests
+            .filter(r => r.status !== 'canceled')
+            .reduce((acc, r) => acc + (parseInt(r.points_used) || 0), 0);
+    }
+    return proposal.value?.used_points || 0;
+});
 const availablePoints = computed(() => Math.max(0, releasedPoints.value - utilizedPoints.value));
 
 // --- Duration & Usage Metrics ---
@@ -446,6 +453,27 @@ const groupedBills = computed(() => {
             })
         }));
 });
+
+
+const getReservationStatusLabel = (status) => {
+    const labels = {
+        pending: 'Pendente',
+        analyzing: 'Em Análise',
+        confirmed: 'Confirmada',
+        canceled: 'Cancelada'
+    };
+    return labels[status] || status;
+};
+
+const getReservationStatusColor = (status) => {
+    switch (status) {
+        case 'confirmed': return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+        case 'pending': return 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+        case 'analyzing': return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+        case 'canceled': return 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800';
+        default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+    }
+};
 
 const getStatusColor = (status) => {
     switch (status) {
@@ -994,6 +1022,59 @@ const updateProtocolStatus = (protocolId, status) => {
                 </div>
 
                 <!-- =========================================================== -->
+                <!-- TABELA DE RESERVAS / USO DE PONTOS -->
+                <div v-if="props.service?.reservation_requests && props.service.reservation_requests.length > 0" class="mt-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-[20px] overflow-hidden shadow-sm">
+                    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">Solicitações de Reserva & Uso de Pontos</h3>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Histórico de pontos consumidos em reservas deste contrato</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-200/50 dark:border-amber-500/20">
+                                Total Utilizado: {{ utilizedPoints.toLocaleString('pt-BR') }} pts
+                            </span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/80">
+                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">ID</th>
+                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Destino & Acomodação</th>
+                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Pontos Consumidos</th>
+                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Período</th>
+                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr v-for="res in props.service.reservation_requests" :key="res.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                                    <td class="px-6 py-3.5 font-bold text-slate-800 dark:text-slate-200">#{{ res.id }}</td>
+                                    <td class="px-6 py-3.5">
+                                        <div class="font-bold text-slate-800 dark:text-slate-200">{{ res.destination }}</div>
+                                        <div v-if="res.accommodation" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ res.accommodation }}</div>
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center font-bold text-amber-600 dark:text-amber-400">
+                                        {{ (res.points_used || 0).toLocaleString('pt-BR') }} pts
+                                    </td>
+                                    <td class="px-6 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
+                                        {{ res.check_in }} → {{ res.check_out }}
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border shadow-xs" :class="getReservationStatusColor(res.status)">
+                                            {{ getReservationStatusLabel(res.status) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!--  EXTRATO FINANCEIRO — Tabela Principal                        -->
                 <!-- =========================================================== -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[20px] hover:shadow-lg transition-all duration-300">

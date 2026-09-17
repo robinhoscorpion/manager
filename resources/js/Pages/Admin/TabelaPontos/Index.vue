@@ -12,6 +12,45 @@ const getDataColumns = (resort) => resort.accommodationGroups.flatMap(g => g.col
 
 // Imprime apenas a tabela
 const printTable = () => window.print();
+
+const editingCell = ref(null);
+const editValue = ref(0);
+
+const startEdit = (row, colKey) => {
+    editingCell.value = row.season_id + '_' + colKey;
+    editValue.value = row[colKey + '_raw'];
+};
+
+const cancelEdit = () => {
+    editingCell.value = null;
+    editValue.value = 0;
+};
+
+const saveEdit = (row, colKey) => {
+    if (!editingCell.value) return;
+
+    const scoreId = row[colKey + '_score_id'];
+    const newVal = editValue.value;
+
+    if (!scoreId) {
+        alert("ID de pontuação não encontrado. Configure a acomodação corretamente.");
+        cancelEdit();
+        return;
+    }
+
+    router.post(route('admin.tabela_pontos.score'), {
+        score_id: scoreId,
+        points: newVal
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => cancelEdit(),
+        onError: () => {
+            alert('Erro ao salvar pontuação.');
+            cancelEdit();
+        }
+    });
+};
 </script>
 
 <template>

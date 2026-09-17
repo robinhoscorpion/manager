@@ -9,7 +9,7 @@ class ReservationRequestController extends Controller
 {
     public function index(Request $request)
     {
-        $query = \App\Models\ReservationRequest::with(['service.client', 'user'])->latest();
+        $query = \App\Models\ReservationRequest::with(['service.client', 'service.proposal', 'user'])->latest();
         
         if ($request->has('search')) {
             $search = $request->search;
@@ -20,10 +20,14 @@ class ReservationRequestController extends Controller
         }
 
         $reservations = $query->paginate(15)->withQueryString();
+        $destinations = \App\Models\PointTable\Resort::with(['accommodations' => function($q) { $q->with(['scores.season']); }])->orderBy('name')->get();
+        $holidays = \App\Models\PointTable\Holiday::orderBy('start_date')->get();
 
         return \Inertia\Inertia::render('AfterSales/ReservationRequest/Index', [
             'reservations' => $reservations,
             'filters' => $request->only('search'),
+            'destinations' => $destinations,
+            'holidays' => $holidays,
         ]);
     }
 
@@ -32,6 +36,7 @@ class ReservationRequestController extends Controller
         $validated = $request->validate([
             'sales_service_id' => 'required|exists:sales_services,id',
             'destination' => 'required|string|max:255',
+            'accommodation' => 'nullable|string|max:255',
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
             'adults' => 'required|integer|min:1',

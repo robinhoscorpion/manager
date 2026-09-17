@@ -380,7 +380,8 @@ class SalesServiceController extends Controller
             'proposal.product.proposalTemplate',
             'proposal.product.contractTemplate',
             'protocols.user',
-            'protocols.replies.user'
+            'protocols.replies.user',
+            'reservationRequests'
         ]);
 
         return Inertia::render('Sales/Service/Details', [
@@ -400,7 +401,7 @@ class SalesServiceController extends Controller
             return response()->json([]);
         }
 
-        $query = SalesService::with(['client', 'proposal'])
+        $query = SalesService::with(['client', 'proposal.bills'])
             ->where(function ($q) use ($search) {
                 $q->whereHas('client', function ($cq) use ($search) {
                     $cq->where('nome', 'like', "%{$search}%")
@@ -420,12 +421,44 @@ class SalesServiceController extends Controller
         $results = $query->limit(10)
             ->get()
             ->map(function ($service) {
+                $proposal = $service->proposal;
+                $totalPoints = $proposal?->quantity ? (int) $proposal->quantity : 0;
+                $totalValue = (float) ($proposal?->total_value ?? 0);
+
+                $totalPaid = 0;
+                if ($proposal && $proposal->bills) {
+                    $totalPaid = (float) $proposal->bills
+                        ->filter(function ($b) {
+                            return in_array($b->category, ['entrada', 'saldo']) && $b->status === 'paid';
+                        })
+                        ->sum(function ($b) {
+                            return (float) ($b->paid_amount ?: $b->amount);
+                        });
+                }
+
+                if ($proposal && $totalValue > 0) {
+                    $ratio = $totalPaid / $totalValue;
+                    $releasedPoints = (int) floor($totalPoints * $ratio);
+                } else {
+                    $releasedPoints = $totalPoints;
+                }
+
+                $usedPoints = (int) \App\Models\ReservationRequest::where('sales_service_id', $service->id)
+                    ->where('status', '!=', 'canceled')
+                    ->sum('points_used');
+
+                $availablePoints = max(0, $releasedPoints - $usedPoints);
+
                 return [
                     'id' => $service->id,
                     'title' => $service->client?->nome ?? 'Cliente não identificado',
-                    'subtitle' => "Contrato: " . ($service->proposal?->contract_number ?? 'S/N') . " | CPF: " . ($service->client?->cpf ?? '-'),
+                    'subtitle' => "Contrato: " . ($proposal?->contract_number ?? 'S/N') . " | CPF: " . ($service->client?->cpf ?? '-'),
                     'url' => route('sales.atendimentos.show', $service->id),
-                    'type' => 'Contrato'
+                    'type' => 'Contrato',
+                    'total_points' => $totalPoints,
+                    'released_points' => $releasedPoints,
+                    'used_points' => $usedPoints,
+                    'available_points' => $availablePoints,
                 ];
             });
 

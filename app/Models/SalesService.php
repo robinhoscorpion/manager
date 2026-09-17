@@ -62,6 +62,12 @@ class SalesService extends Model
         'contract_file_path',
     ];
 
+    
+    public function reservationRequests()
+    {
+        return $this->hasMany(\App\Models\ReservationRequest::class, 'sales_service_id');
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);

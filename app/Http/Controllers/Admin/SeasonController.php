@@ -9,14 +9,6 @@ use Inertia\Inertia;
 
 class SeasonController extends Controller
 {
-    public function index()
-    {
-        $seasons = Season::orderBy('advance_days', 'asc')->get();
-        return Inertia::render('Admin/Seasons/Index', [
-            'seasons' => $seasons
-        ]);
-    }
-
     public function create()
     {
         return Inertia::render('Admin/Seasons/Form');
@@ -34,7 +26,9 @@ class SeasonController extends Controller
 
         Season::create($validated);
 
-        return redirect()->route('admin.seasons.index')->with('success', 'Temporada cadastrada com sucesso!');
+        PointTableController::ensureMatrixIntegrity();
+
+        return redirect()->route('admin.calendar_settings.index')->with('success', 'Temporada cadastrada com sucesso!');
     }
 
     public function edit(Season $season)
@@ -56,13 +50,13 @@ class SeasonController extends Controller
 
         $season->update($validated);
 
-        return redirect()->route('admin.seasons.index')->with('success', 'Temporada atualizada com sucesso!');
+        return redirect()->route('admin.calendar_settings.index')->with('success', 'Temporada atualizada com sucesso!');
     }
 
     public function destroy(Season $season)
     {
         $season->delete();
-        return redirect()->route('admin.seasons.index')->with('success', 'Temporada excluída com sucesso!');
+        return redirect()->route('admin.calendar_settings.index')->with('success', 'Temporada excluída com sucesso!');
     }
 
     public function mapping()
@@ -90,8 +84,6 @@ class SeasonController extends Controller
             foreach ($mapping['items'] as $item) {
                 if ($item['type'] === 'month') {
                     $months[] = $item['name'];
-                } else {
-                    $specialDates[] = $item['name'];
                 }
             }
             
@@ -100,12 +92,9 @@ class SeasonController extends Controller
             if (!empty($months)) {
                 $descriptionParts[] = implode(', ', $months);
             }
-            if (!empty($specialDates)) {
-                $descriptionParts[] = implode(', ', $specialDates);
-            }
             
             $season->months_active = $months;
-            $season->special_dates = $specialDates;
+            $season->special_dates = [];
             $season->period_description = mb_strtoupper(implode("\n", $descriptionParts), 'UTF-8');
             $season->save();
         }

@@ -16,6 +16,7 @@ class Holiday extends Model
         'holiday_date',
         'start_date',
         'end_date',
+        'classification',
     ];
 
     protected $casts = [

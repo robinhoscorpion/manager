@@ -1,16 +1,221 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import Modal from '@/Components/Modal.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 import debounce from 'lodash/debounce';
 import axios from 'axios';
 
 const props = defineProps({
     reservations: Object,
     filters: Object,
+    destinations: {
+        type: Array,
+        default: () => []
+    },
+    holidays: {
+        type: Array,
+        default: () => []
+    },
 });
+
+const isCreateModalOpen = ref(false);
+const createForm = useForm({
+    sales_service_id: '',
+    destination: '',
+    accommodation: '',
+    points_used: 0,
+    check_in: '',
+    check_out: '',
+    adults: 1,
+    children: 0,
+    guests_list: [{ name: '', type: 'adult' }],
+    observations: '',
+});
+
+const destinationOptions = computed(() => {
+    return (props.destinations || []).map(d => ({
+        label: d.name,
+        value: d.name
+    }));
+});
+
+
+const stayBreakdown = computed(() => {
+    if (!createForm.destination || !createForm.accommodation || !createForm.check_in || !createForm.check_out) {
+        return null;
+    }
+
+    const start = new Date(createForm.check_in + 'T00:00:00');
+    const end = new Date(createForm.check_out + 'T00:00:00');
+    
+    const diffTime = end.getTime() - start.getTime();
+    if (diffTime <= 0) return null;
+    
+    const nights = Math.ceil(diffTime / (1000 * 3600 * 24));
+    if (nights <= 0) return null;
+
+    const resort = (props.destinations || []).find(d => d.name === createForm.destination);
+    if (!resort || !resort.accommodations) return null;
+
+    const acc = resort.accommodations.find(a => a.name === createForm.accommodation);
+    if (!acc || !acc.scores || acc.scores.length === 0) return null;
+
+    const currentPax = Math.max(1, (createForm.adults || 1) + (createForm.children || 0));
+
+    const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    let totalPoints = 0;
+    const dailyList = [];
+    let weeklyBasePoints = 0;
+    let mainSeasonName = '';
+    let hasHolidayInStay = false;
+
+    for (let i = 0; i < nights; i++) {
+        const currentDate = new Date(start);
+        currentDate.setDate(currentDate.getDate() + i);
+
+        // Date ISO YYYY-MM-DD
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const currentISO = `${year}-${month}-${day}`;
+        const monthName = monthNames[currentDate.getMonth()];
+        const dateStr = currentDate.toLocaleDateString('pt-BR');
+
+        // Check holiday match
+        const holidayMatch = (props.holidays || []).find(h => {
+            const hDate = h.holiday_date ? String(h.holiday_date).split('T')[0] : null;
+            const hStart = h.start_date ? String(h.start_date).split('T')[0] : hDate;
+            const hEnd = h.end_date ? String(h.end_date).split('T')[0] : hDate;
+
+            if (hStart && hEnd) {
+                return currentISO >= hStart && currentISO <= hEnd;
+            }
+            return hDate === currentISO;
+        });
+
+        let targetSeasonName = null;
+        let holidayName = null;
+
+        if (holidayMatch) {
+            hasHolidayInStay = true;
+            holidayName = holidayMatch.name;
+            targetSeasonName = holidayMatch.classification;
+        }
+
+        let matchedScore = null;
+
+        // Try holiday classification season
+        if (targetSeasonName) {
+            matchedScore = acc.scores.find(s => {
+                return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase() && s.pax === currentPax;
+            });
+            if (!matchedScore) {
+                matchedScore = acc.scores.find(s => {
+                    return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase();
+                });
+            }
+        }
+
+        // Regular month season match
+        if (!matchedScore) {
+            matchedScore = acc.scores.find(s => {
+                if (!s.season || !s.season.months_active) return false;
+                let months = s.season.months_active;
+                if (typeof months === 'string') {
+                    try { months = JSON.parse(months); } catch(e) { months = []; }
+                }
+                if (!Array.isArray(months)) months = [];
+                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase()) && s.pax === currentPax;
+            });
+        }
+
+        if (!matchedScore) {
+            matchedScore = acc.scores.find(s => {
+                if (!s.season || !s.season.months_active) return false;
+                let months = s.season.months_active;
+                if (typeof months === 'string') {
+                    try { months = JSON.parse(months); } catch(e) { months = []; }
+                }
+                if (!Array.isArray(months)) months = [];
+                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase());
+            });
+        }
+
+        if (!matchedScore) {
+            matchedScore = acc.scores.find(s => s.pax === currentPax) || acc.scores[0];
+        }
+
+        const baseWeekly = parseFloat(matchedScore.points || matchedScore.points_raw || 0);
+        const dailyPoints = Math.round(baseWeekly / 7);
+        totalPoints += dailyPoints;
+
+        const effectiveSeasonName = matchedScore.season ? matchedScore.season.name : (targetSeasonName || 'Padrão');
+
+        if (i === 0) {
+            weeklyBasePoints = baseWeekly;
+            mainSeasonName = holidayName ? `${holidayName} (${effectiveSeasonName})` : effectiveSeasonName;
+        }
+
+        dailyList.push({
+            date: dateStr,
+            seasonName: effectiveSeasonName,
+            holidayName: holidayName,
+            isHoliday: !!holidayMatch,
+            points: dailyPoints
+        });
+    }
+
+    return {
+        nights,
+        totalPoints,
+        weeklyBasePoints,
+        seasonName: mainSeasonName,
+        hasHolidayInStay,
+        dailyList
+    };
+});
+
+const accommodationOptions = computed(() => {
+    if (!createForm.destination) return [];
+    const selectedResort = (props.destinations || []).find(d => d.name === createForm.destination);
+    if (!selectedResort || !selectedResort.accommodations) return [];
+    return selectedResort.accommodations.map(a => ({
+        label: a.name,
+        value: a.name
+    }));
+});
+
+watch(() => createForm.destination, (newVal) => {
+    const valid = accommodationOptions.value.some(opt => opt.value === createForm.accommodation);
+    if (!valid) {
+        createForm.accommodation = '';
+    }
+});
+
+
+const getNightsCount = (checkIn, checkOut) => {
+    if (!checkIn || !checkOut) return 0;
+    const start = new Date(checkIn + 'T00:00:00');
+    const end = new Date(checkOut + 'T00:00:00');
+    const diff = end.getTime() - start.getTime();
+    return diff > 0 ? Math.ceil(diff / (1000 * 3600 * 24)) : 0;
+};
+
+const formatDatePt = (dateStr) => {
+    if (!dateStr) return '-';
+    const parts = String(dateStr).split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+};
 
 const can = (permission) => {
     return usePage().props.auth.permissions.includes(permission) || usePage().props.auth.roles.includes('admin');
@@ -35,17 +240,7 @@ const clearFilters = () => {
     applyFilters();
 };
 
-const isCreateModalOpen = ref(false);
-const createForm = useForm({
-    sales_service_id: '',
-    destination: '',
-    check_in: '',
-    check_out: '',
-    adults: 1,
-    children: 0,
-    guests_list: [{ name: '', type: 'adult' }],
-    observations: '',
-});
+
 
 // Autocomplete Logic
 const searchServiceQuery = ref('');
@@ -114,6 +309,9 @@ const closeCreateModal = () => {
 };
 
 const submitCreate = () => {
+    if (stayBreakdown.value) {
+        createForm.points_used = stayBreakdown.value.totalPoints;
+    }
     createForm.post(route('after-sales.reservations.store'), {
         preserveScroll: true,
         onSuccess: () => {
@@ -247,8 +445,9 @@ const getStatusColor = (status) => {
                         <thead>
                             <tr class="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/80 backdrop-blur-md">
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">ID</th>
-                                <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cliente</th>
-                                <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Destino</th>
+                                <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cliente / Contrato</th>
+                                <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Destino & Acomodação</th>
+                                <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Pontos Utilizados</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Período</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Hóspedes</th>
                                 <th class="py-4 px-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Status</th>
@@ -262,27 +461,50 @@ const getStatusColor = (status) => {
                                 </td>
                                 <td class="py-4 px-6 align-middle">
                                     <div class="flex flex-col">
-                                        <div class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ item.service?.client?.name }}</div>
-                                        <span class="text-xs text-slate-500">Contrato: {{ item.sales_service_id }}</span>
+                                        <div class="text-sm font-bold text-slate-800 dark:text-slate-100">
+                                            {{ item.service?.client?.name || item.service?.client?.nome || 'Cliente não informado' }}
+                                        </div>
+                                        <div class="text-xs font-semibold text-brand-green mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            Contrato: {{ item.service?.proposal?.contract_number || ('IVC-' + String(item.sales_service_id).padStart(4, '0')) }}
+                                        </div>
+                                        <span v-if="item.service?.client?.cpf" class="text-[11px] text-slate-400 font-medium">CPF: {{ item.service.client.cpf }}</span>
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 align-middle">
-                                    <div class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    <div class="text-sm font-bold text-slate-800 dark:text-slate-100">
                                         {{ item.destination }}
+                                    </div>
+                                    <div v-if="item.accommodation" class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                        {{ item.accommodation }}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-center align-middle">
+                                    <div class="inline-flex flex-col items-center">
+                                        <span class="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 font-black text-xs border border-amber-200/60 dark:border-amber-500/20">
+                                            {{ (item.points_used || 0).toLocaleString('pt-BR') }} pts
+                                        </span>
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 align-middle">
                                     <div class="flex flex-col text-xs text-slate-600 dark:text-slate-400">
-                                        <span><strong class="font-semibold text-slate-800 dark:text-slate-300">In:</strong> {{ item.check_in }}</span>
-                                        <span><strong class="font-semibold text-slate-800 dark:text-slate-300">Out:</strong> {{ item.check_out }}</span>
+                                        <div class="flex items-center gap-1">
+                                            <span class="font-bold text-slate-800 dark:text-slate-200">{{ formatDatePt(item.check_in) }}</span>
+                                            <span class="text-slate-400">→</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200">{{ formatDatePt(item.check_out) }}</span>
+                                        </div>
+                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                            {{ getNightsCount(item.check_in, item.check_out) }} {{ getNightsCount(item.check_in, item.check_out) === 1 ? 'Diária' : 'Diárias' }}
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 text-center align-middle">
-                                    <div class="text-xs text-slate-600 dark:text-slate-400">
+                                    <div class="text-xs text-slate-600 dark:text-slate-400 font-semibold">
                                         {{ item.adults }} ADT <span v-if="item.children > 0">, {{ item.children }} CHD</span>
-                                        <div v-if="item.guests_list && item.guests_list.length > 0" class="mt-1 flex -space-x-1 justify-center" title="Nomes informados">
-                                            <div class="w-5 h-5 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center text-[10px] font-bold border border-white dark:border-slate-800">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                        <div v-if="item.guests_list && item.guests_list.length > 0" class="mt-1 flex -space-x-1 justify-center" title="Hóspedes informados">
+                                            <div class="w-5 h-5 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center text-[10px] font-bold border border-white dark:border-slate-800" :title="item.guests_list.map(g => g.name).join(', ')">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             </div>
                                         </div>
                                     </div>
@@ -308,7 +530,7 @@ const getStatusColor = (status) => {
                                 </td>
                             </tr>
                             <tr v-if="reservations.data.length === 0">
-                                <td colspan="7" class="py-16 px-6 text-center">
+                                <td colspan="8" class="py-16 px-6 text-center">
                                     <div class="text-slate-500">Nenhuma solicitação de reserva encontrada.</div>
                                 </td>
                             </tr>
@@ -363,8 +585,16 @@ const getStatusColor = (status) => {
                                             <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{{ result.subtitle }}</div>
                                         </div>
                                     </div>
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 group-hover:text-brand-green group-hover:bg-brand-green/10 transition-all opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-right shrink-0">
+                                            <div class="text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                {{ (result.available_points ?? (result.total_points ?? 0)).toLocaleString('pt-BR') }} pts
+                                            </div>
+                                            <div class="text-[10px] text-slate-400 font-medium">Pontos Disp.</div>
+                                        </div>
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 group-hover:text-brand-green group-hover:bg-brand-green/10 transition-all opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                        </div>
                                     </div>
                                 </button>
                             </div>
@@ -378,30 +608,77 @@ const getStatusColor = (status) => {
                             </div>
                         </div>
                         
-                        <div v-else class="flex items-center justify-between p-5 bg-gradient-to-r from-brand-green/5 to-transparent border border-brand-green/30 rounded-2xl shadow-sm">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-brand-green text-white flex items-center justify-center flex-shrink-0 shadow-inner">
-                                    <span class="font-bold text-lg">{{ selectedService.title.charAt(0).toUpperCase() }}</span>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ selectedService.title }}</div>
-                                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                        {{ selectedService.subtitle }}
+                        <div v-else class="p-5 bg-gradient-to-br from-emerald-50/80 via-white to-amber-50/50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-amber-950/10 border border-emerald-500/30 dark:border-emerald-500/20 rounded-2xl shadow-md">
+                            <div class="flex items-center justify-between gap-4 pb-3 border-b border-slate-200/60 dark:border-slate-800">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-green to-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-green/20">
+                                        {{ selectedService.title.charAt(0).toUpperCase() }}
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">{{ selectedService.title }}</div>
+                                        <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                            {{ selectedService.subtitle }}
+                                        </div>
                                     </div>
                                 </div>
+                                <button type="button" @click="removeSelectedService" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Trocar Cliente">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
                             </div>
-                            <button @click="removeSelectedService" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Trocar Cliente">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+
+                            <!-- Pontuação Disponível em Destaque -->
+                            <div class="mt-3 pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-950/30 dark:to-emerald-950/30 p-3.5 rounded-xl border border-amber-300/40 dark:border-amber-500/30 shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Pontuação Disponível</div>
+                                        <div class="text-xl font-black text-amber-600 dark:text-amber-400 tracking-tight leading-tight">
+                                            {{ (selectedService.available_points ?? 0).toLocaleString('pt-BR') }} <span class="text-xs font-bold text-slate-500 dark:text-slate-400">pts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50 self-start sm:self-auto">
+                                    <span>Liberados: <strong class="text-amber-600 dark:text-amber-400">{{ (selectedService.released_points ?? 0).toLocaleString('pt-BR') }}</strong></span>
+                                    <span class="text-slate-300 dark:text-slate-600">•</span>
+                                    <span>Total: <strong>{{ (selectedService.total_points ?? 0).toLocaleString('pt-BR') }}</strong></span>
+                                    <span class="text-slate-300 dark:text-slate-600">•</span>
+                                    <span>Utilizados: <strong>{{ (selectedService.used_points ?? 0).toLocaleString('pt-BR') }}</strong></span>
+                                </div>
+                            </div>
+                            <div v-if="selectedService.available_points === 0" class="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                Contrato sem pontuação liberada (pagamento de entrada/saldo pendente).
+                            </div>
                         </div>
                         <div v-if="createForm.errors.sales_service_id" class="text-sm text-red-600 mt-1">{{ createForm.errors.sales_service_id }}</div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Destino</label>
-                        <input type="text" v-model="createForm.destination" required class="mt-1 block w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-brand-green focus:ring-brand-green sm:text-sm">
-                        <div v-if="createForm.errors.destination" class="text-sm text-red-600 mt-1">{{ createForm.errors.destination }}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <SearchableSelect
+                                v-model="createForm.destination"
+                                :options="destinationOptions"
+                                label="Destino / Empreendimento"
+                                placeholder="Selecione o destino..."
+                                :error="createForm.errors.destination"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <SearchableSelect
+                                v-model="createForm.accommodation"
+                                :options="accommodationOptions"
+                                label="Tipo de Acomodação"
+                                :placeholder="createForm.destination ? 'Selecione a acomodação...' : 'Selecione o destino primeiro'"
+                                :disabled="!createForm.destination"
+                                :error="createForm.errors.accommodation"
+                            />
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -413,6 +690,56 @@ const getStatusColor = (status) => {
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Check-out</label>
                             <input type="date" v-model="createForm.check_out" required class="mt-1 block w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-brand-green focus:ring-brand-green sm:text-sm">
                             <div v-if="createForm.errors.check_out" class="text-sm text-red-600 mt-1">{{ createForm.errors.check_out }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Stay Breakdown Card -->
+                    <div v-if="stayBreakdown" class="p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 rounded-2xl animate-fade-in">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-sm shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Resumo das Diárias ({{ stayBreakdown.nights }} {{ stayBreakdown.nights === 1 ? 'Diária' : 'Diárias' }})</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ stayBreakdown.seasonName }} • Fracionado por diária (Base 7 dias)</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Total Necessário</span>
+                                <span class="text-base font-black text-brand-green dark:text-emerald-400">{{ stayBreakdown.totalPoints.toLocaleString('pt-BR') }} pts</span>
+                            </div>
+                        </div>
+
+                        <!-- Lista Detalhada das Diárias -->
+                        <div class="mt-3 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                            <div v-for="(day, idx) in stayBreakdown.dailyList" :key="idx" class="flex items-center justify-between py-1.5 px-3 bg-white dark:bg-slate-800/80 rounded-xl text-xs border border-slate-100 dark:border-slate-700/50 shadow-2xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-700 dark:text-slate-300">1x Diária - {{ day.date }}</span>
+                                    <span v-if="day.isHoliday" class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                                        🎉 {{ day.holidayName }} ({{ day.seasonName }})
+                                    </span>
+                                    <span v-else class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                        {{ day.seasonName }}
+                                    </span>
+                                </div>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">{{ day.points.toLocaleString('pt-BR') }} pts</span>
+                            </div>
+                        </div>
+
+                        <!-- Resumo e Validação do Saldo do Cliente -->
+                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">Base Semanal (7 dias): <strong>{{ stayBreakdown.weeklyBasePoints.toLocaleString('pt-BR') }} pts</strong></span>
+                            <div v-if="selectedService">
+                                <span v-if="selectedService.available_points >= stayBreakdown.totalPoints" class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Saldo Suficiente
+                                </span>
+                                <span v-else class="px-2.5 py-1 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 font-bold flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    Saldo Insuficiente (Falta {{ (stayBreakdown.totalPoints - selectedService.available_points).toLocaleString('pt-BR') }} pts)
+                                </span>
+                            </div>
                         </div>
                     </div>
                     

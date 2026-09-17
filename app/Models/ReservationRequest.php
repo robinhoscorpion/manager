@@ -10,6 +10,8 @@ class ReservationRequest extends Model
         'sales_service_id',
         'user_id',
         'destination',
+        'accommodation',
+        'points_used',
         'check_in',
         'check_out',
         'adults',
