@@ -14,7 +14,9 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 
 const props = defineProps({
-    service: Object
+    service: Object,
+    destinations: Array,
+    holidays: Array
 });
 
 const client = computed(() => props.service.client);
@@ -486,7 +488,163 @@ const getStatusColor = (status) => {
 
 // --- Protocol Accordion Logic ---
 const expandedProtocols = ref([]);
-const isTimelineExpanded = ref(false); // Controls the main Timeline visibility
+const isTimelineExpanded = ref(false);
+const isReservationsExpanded = ref(false);
+
+// --- Reservation View Modal Logic ---
+const selectedReservation = ref(null);
+const isReservationViewModalOpen = ref(false);
+
+const openReservationViewModal = (res) => {
+    selectedReservation.value = res;
+    isReservationViewModalOpen.value = true;
+};
+
+
+const calculateStayBreakdown = (res) => {
+    if (!res || !res.destination || !res.accommodation || !res.check_in || !res.check_out) {
+        return null;
+    }
+
+    const start = new Date(res.check_in + 'T00:00:00');
+    const end = new Date(res.check_out + 'T00:00:00');
+    
+    const diffTime = end.getTime() - start.getTime();
+    if (diffTime <= 0) return null;
+    
+    const nights = Math.ceil(diffTime / (1000 * 3600 * 24));
+    if (nights <= 0) return null;
+
+    const resort = (props.destinations || []).find(d => d.name === res.destination);
+    if (!resort || !resort.accommodations) return null;
+
+    const acc = resort.accommodations.find(a => a.name === res.accommodation);
+    if (!acc || !acc.scores || acc.scores.length === 0) return null;
+
+    const currentPax = Math.max(1, (res.adults || 1) + (res.children || 0));
+
+    const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    let totalPoints = 0;
+    const dailyList = [];
+    let weeklyBasePoints = 0;
+    let mainSeasonName = '';
+    let hasHolidayInStay = false;
+
+    for (let i = 0; i < nights; i++) {
+        const currentDate = new Date(start);
+        currentDate.setDate(currentDate.getDate() + i);
+
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const currentISO = `${year}-${month}-${day}`;
+        const monthName = monthNames[currentDate.getMonth()];
+        const dateStr = currentDate.toLocaleDateString('pt-BR');
+
+        const holidayMatch = (props.holidays || []).find(h => {
+            const hDate = h.holiday_date ? String(h.holiday_date).split('T')[0] : null;
+            const hStart = h.start_date ? String(h.start_date).split('T')[0] : hDate;
+            const hEnd = h.end_date ? String(h.end_date).split('T')[0] : hDate;
+
+            if (hStart && hEnd) {
+                return currentISO >= hStart && currentISO <= hEnd;
+            }
+            return hDate === currentISO;
+        });
+
+        let targetSeasonName = null;
+        let holidayName = null;
+
+        if (holidayMatch) {
+            hasHolidayInStay = true;
+            holidayName = holidayMatch.name;
+            targetSeasonName = holidayMatch.classification;
+        }
+
+        let matchedScore = null;
+
+        if (targetSeasonName) {
+            matchedScore = acc.scores.find(s => {
+                return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase() && s.pax === currentPax;
+            });
+            if (!matchedScore) {
+                matchedScore = acc.scores.find(s => {
+                    return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase();
+                });
+            }
+        }
+
+        if (!matchedScore) {
+            matchedScore = acc.scores.find(s => {
+                if (!s.season || !s.season.months_active) return false;
+                let months = s.season.months_active;
+                if (typeof months === 'string') {
+                    try { months = JSON.parse(months); } catch(e) { months = []; }
+                }
+                if (!Array.isArray(months)) months = [];
+                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase()) && s.pax === currentPax;
+            });
+        }
+
+        if (!matchedScore) {
+            matchedScore = acc.scores.find(s => {
+                if (!s.season || !s.season.months_active) return false;
+                let months = s.season.months_active;
+                if (typeof months === 'string') {
+                    try { months = JSON.parse(months); } catch(e) { months = []; }
+                }
+                if (!Array.isArray(months)) months = [];
+                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase());
+            });
+        }
+
+        if (!matchedScore) {
+            matchedScore = acc.scores.find(s => s.pax === currentPax) || acc.scores[0];
+        }
+
+        const baseWeekly = parseFloat(matchedScore.points || matchedScore.points_raw || 0);
+        const dailyPoints = Math.round(baseWeekly / 7);
+        totalPoints += dailyPoints;
+
+        const effectiveSeasonName = matchedScore.season ? matchedScore.season.name : (targetSeasonName || 'Padrão');
+
+        if (i === 0) {
+            weeklyBasePoints = baseWeekly;
+            mainSeasonName = holidayName ? `${holidayName} (${effectiveSeasonName})` : effectiveSeasonName;
+        }
+
+        dailyList.push({
+            date: dateStr,
+            seasonName: effectiveSeasonName,
+            holidayName: holidayName,
+            isHoliday: !!holidayMatch,
+            points: dailyPoints
+        });
+    }
+
+    return {
+        nights,
+        totalPoints,
+        weeklyBasePoints,
+        seasonName: mainSeasonName,
+        hasHolidayInStay,
+        dailyList
+    };
+};
+
+const modalBreakdown = computed(() => {
+    return calculateStayBreakdown(selectedReservation.value);
+});
+
+const closeReservationViewModal = () => {
+    isReservationViewModalOpen.value = false;
+    selectedReservation.value = null;
+};
+ // Controls the main Timeline visibility
 
 // --- Protocol Replies Logic ---
 const activeReplyProtocolId = ref(null);
@@ -646,7 +804,148 @@ const updateProtocolStatus = (protocolId, status) => {
                                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                             </svg>
                                         </button>
-                                    </template>
+                                    
+        <!-- Modal de Detalhes da Reserva -->
+        <Modal :show="isReservationViewModalOpen" @close="closeReservationViewModal" maxWidth="2xl">
+            <div v-if="selectedReservation" class="p-6">
+                <!-- Header Modal -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                Detalhes da Reserva #{{ selectedReservation.id }}
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                {{ selectedReservation.destination }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border" :class="getReservationStatusColor(selectedReservation.status)">
+                            {{ getReservationStatusLabel(selectedReservation.status) }}
+                        </span>
+                        <button @click="closeReservationViewModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conteúdo dos Dados -->
+                <div class="mt-6 space-y-6">
+                    <!-- Grid Principal -->
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Destino</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ selectedReservation.destination || '—' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Acomodação</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ selectedReservation.accommodation || 'Não informada' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Período de Estada</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                {{ selectedReservation.check_in }} → {{ selectedReservation.check_out }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Pontos Consumidos</span>
+                            <span class="text-xs font-bold text-amber-600 dark:text-amber-400">
+                                {{ (selectedReservation.points_used || 0).toLocaleString('pt-BR') }} pts
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Detalhamento das Diárias (Breakdown & Pontuação) -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Resumo das Diárias ({{ modalBreakdown?.nights || 0 }} {{ modalBreakdown?.nights === 1 ? 'Diária' : 'Diárias' }})
+                            </h4>
+                            <span v-if="modalBreakdown?.seasonName" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                Temporada / Evento: <strong class="text-slate-800 dark:text-slate-200">{{ modalBreakdown.seasonName }}</strong>
+                            </span>
+                        </div>
+
+                        <!-- Lista diária com datas, tipo (Temporada/Feriado) e pontuação fracionada -->
+                        <div v-if="modalBreakdown && modalBreakdown.dailyList && modalBreakdown.dailyList.length > 0" class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 max-h-48 overflow-y-auto shadow-2xs">
+                            <div v-for="(day, idx) in modalBreakdown.dailyList" :key="idx" class="px-4 py-2.5 flex items-center justify-between text-xs bg-white dark:bg-slate-900">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ day.date }}</span>
+                                    <span v-if="day.isHoliday" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40">
+                                        Feriado: {{ day.holidayName }}
+                                    </span>
+                                    <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                                        Tipo: {{ day.seasonName }}
+                                    </span>
+                                </div>
+                                <div class="font-bold text-amber-600 dark:text-amber-400">
+                                    {{ day.points.toLocaleString('pt-BR') }} pts / dia
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-xs text-slate-400 italic p-3 bg-slate-50 dark:bg-slate-800/30 rounded-xl text-center border border-slate-200/50 dark:border-slate-800">
+                            Fracionamento diário de pontos calculado com base na tabela ativa.
+                        </div>
+                    </div>
+
+                    <!-- Ocupantes & Hóspedes -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Ocupantes ({{ (selectedReservation.adults || 0) + (selectedReservation.children || 0) }})
+                            </h4>
+                            <span class="text-[11px] font-semibold text-slate-500">
+                                {{ selectedReservation.adults || 0 }} Adulto(s), {{ selectedReservation.children || 0 }} Criança(s)
+                            </span>
+                        </div>
+
+                        <!-- Lista de Hóspedes -->
+                        <div v-if="selectedReservation.guests_list && selectedReservation.guests_list.length > 0" class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                            <div v-for="(guest, gIdx) in selectedReservation.guests_list" :key="gIdx" class="px-4 py-2.5 flex items-center justify-between text-xs bg-white dark:bg-slate-900">
+                                <span class="font-bold text-slate-800 dark:text-slate-200">
+                                    {{ guest.name || `Hóspede ${gIdx + 1}` }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                    {{ guest.type === 'child' ? 'Criança' : 'Adulto' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div v-else class="text-xs text-slate-400 italic p-3 bg-slate-50 dark:bg-slate-800/30 rounded-xl text-center">
+                            Nenhuma lista individualizada de hóspedes informada.
+                        </div>
+                    </div>
+
+                    <!-- Observações -->
+                    <div v-if="selectedReservation.observations" class="space-y-1">
+                        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Observações</h4>
+                        <div class="p-3 bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/60 dark:border-amber-500/20 rounded-xl text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                            {{ selectedReservation.observations }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                    <button @click="closeReservationViewModal" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </Modal>
+
+</template>
                                     <template #content>
                                         <button class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                                             Visualizar Dados
@@ -1023,24 +1322,33 @@ const updateProtocolStatus = (protocolId, status) => {
 
                 <!-- =========================================================== -->
                 <!-- TABELA DE RESERVAS / USO DE PONTOS -->
-                <div v-if="props.service?.reservation_requests && props.service.reservation_requests.length > 0" class="mt-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-[20px] overflow-hidden shadow-sm">
-                    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div v-if="props.service?.reservation_requests && props.service.reservation_requests.length > 0" class="mb-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-[20px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                    <!-- Header Collapsible Button -->
+                    <button @click="isReservationsExpanded = !isReservationsExpanded" class="w-full px-6 py-5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100/80 dark:hover:bg-white/[0.02] transition-colors focus:outline-none text-left">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </div>
                             <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">Solicitações de Reserva & Uso de Pontos</h3>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Histórico de pontos consumidos em reservas deste contrato</p>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">Solicitações de Reserva & Uso de Pontos</h3>
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-widest">
+                                        {{ props.service.reservation_requests.length }} {{ props.service.reservation_requests.length === 1 ? 'Reserva' : 'Reservas' }}
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Histórico de pontos consumidos em reservas deste contrato</p>
                             </div>
                         </div>
-                        <div class="text-right">
+                        <div class="flex items-center gap-4">
                             <span class="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-200/50 dark:border-amber-500/20">
                                 Total Utilizado: {{ utilizedPoints.toLocaleString('pt-BR') }} pts
                             </span>
+                            <svg :class="{ 'rotate-180': isReservationsExpanded }" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
-                    </div>
-                    <div class="overflow-x-auto">
+                    </button>
+                    <div v-show="isReservationsExpanded" class="overflow-x-auto border-t border-slate-100 dark:border-slate-800">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/80">
@@ -1049,6 +1357,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                     <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Pontos Consumidos</th>
                                     <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Período</th>
                                     <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1068,6 +1377,15 @@ const updateProtocolStatus = (protocolId, status) => {
                                         <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border shadow-xs" :class="getReservationStatusColor(res.status)">
                                             {{ getReservationStatusLabel(res.status) }}
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center">
+                                        <button @click="openReservationViewModal(res)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[11px] font-bold transition-all border border-amber-500/20 shadow-xs active:scale-95">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            Ver Dados
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>

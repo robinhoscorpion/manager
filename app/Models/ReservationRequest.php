@@ -18,6 +18,7 @@ class ReservationRequest extends Model
         'children',
         'guests_list',
         'status',
+        'reservation_code',
         'observations',
     ];
 

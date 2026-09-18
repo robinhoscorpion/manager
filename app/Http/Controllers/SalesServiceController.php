@@ -381,11 +381,16 @@ class SalesServiceController extends Controller
             'proposal.product.contractTemplate',
             'protocols.user',
             'protocols.replies.user',
-            'reservationRequests'
+            'reservationRequests.user'
         ]);
 
+        $destinations = \App\Models\PointTable\Resort::with(['accommodations' => function($q) { $q->with(['scores.season']); }])->orderBy('name')->get();
+        $holidays = \App\Models\PointTable\Holiday::orderBy('start_date')->get();
+
         return Inertia::render('Sales/Service/Details', [
-            'service' => $service
+            'service' => $service,
+            'destinations' => $destinations,
+            'holidays' => $holidays,
         ]);
     }
 
