@@ -314,6 +314,12 @@ class SalesServiceController extends Controller
             // Sincronizar Cancelamento com a Proposta
             if ($service->status === SalesService::STATUS_CANCELADO && $service->proposal) {
                 $service->proposal->update(['status' => 'cancelled']);
+                \App\Models\CommissionInstallment::whereHas('commission', function ($q) use ($service) {
+                    $q->where('proposal_id', $service->proposal->id);
+                })->whereIn('status', ['pending'])->update([
+                    'status' => 'cancelled',
+                    'notes' => 'Cancelado automaticamente devido ao cancelamento do atendimento/contrato'
+                ]);
             }
         });
 

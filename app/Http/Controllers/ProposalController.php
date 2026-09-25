@@ -178,6 +178,27 @@ class ProposalController extends Controller
 
             // 3. Gerar Parcelas Financeiras (Bills)
             $this->generateBills($proposal);
+
+            // 4. Automação de Envio de Boas-Vindas e Acesso
+            try {
+                $setting = \App\Models\Setting::where('key', 'welcome_access_settings')->first();
+                $settings = $setting && is_array($setting->value) ? $setting->value : [];
+                if (($settings['dispatch_mode'] ?? 'manual') === 'automatic') {
+                    $salesService = $proposal->salesService;
+                    $client = $salesService ? $salesService->client : null;
+                    if ($client && !empty($client->email) && ($settings['auto_send_email'] ?? true)) {
+                        \Illuminate\Support\Facades\Mail::to($client->email)->send(
+                            new \App\Mail\SocioWelcomeMail($client, config('app.url'), $settings['email_template'] ?? '')
+                        );
+                        $salesService->update([
+                            'welcome_status' => 'sent_email',
+                            'welcome_sent_at' => now(),
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Falha no e-mail não trava a aprovação da venda
+            }
         });
 
         return redirect()->back()->with('success', 'Proposta #' . $proposal->contract_number . ' aprovada e financeiro gerado!');

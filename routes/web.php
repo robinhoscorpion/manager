@@ -221,6 +221,11 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('admin/holidays', \App\Http\Controllers\Admin\HolidayController::class, ['as' => 'admin'])->only(['store', 'update', 'destroy'])->middleware('permission:configuracoes.tabela_pontos.acessar');
 
+    // Configurações de Boas-Vindas e Acessos do Sócio
+    Route::get('admin/configuracoes-boas-vindas', [\App\Http\Controllers\Admin\WelcomeSettingsController::class, 'index'])->name('admin.settings.welcome_access.index')->middleware('permission:configuracoes.colunas.acessar');
+    Route::post('admin/configuracoes-boas-vindas', [\App\Http\Controllers\Admin\WelcomeSettingsController::class, 'update'])->name('admin.settings.welcome_access.update')->middleware('permission:configuracoes.colunas.acessar');
+
+
     // Módulo Financeiro
     Route::prefix('financeiro')->name('finance.')->group(function () {
         Route::get('/recebiveis', [\App\Http\Controllers\Finance\ReceivableController::class, 'index'])->name('receivables.index')->middleware('permission:recebiveis.acessar');
@@ -236,6 +241,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('pos-venda')->name('after-sales.')->group(function () {
         Route::get('/boas-vindas', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'index'])->name('welcome.index')->middleware('permission:pos_venda.boas_vindas.acessar');
         Route::patch('/boas-vindas/{salesService}/status', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'updateStatus'])->name('welcome.status.update')->middleware('permission:pos_venda.boas_vindas.gerenciar');
+        Route::post('/boas-vindas/{salesService}/send-email', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'sendWelcomeEmail'])->name('welcome.send-email')->middleware('permission:pos_venda.boas_vindas.gerenciar');
+        Route::post('/boas-vindas/{salesService}/temp-password', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'generateTempPassword'])->name('welcome.temp-password')->middleware('permission:pos_venda.boas_vindas.gerenciar');
         
         Route::get('/entrega-contrato', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'index'])->name('contract-delivery.index')->middleware('permission:pos_venda.gestao_contratos.acessar');
         Route::patch('/entrega-contrato/{salesService}/status', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'updateStatus'])->name('contract-delivery.status.update')->middleware('permission:pos_venda.gestao_contratos.gerenciar');
@@ -275,6 +282,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/gerar', [\App\Http\Controllers\Commissions\CommissionController::class, 'generate'])->name('generate');
         Route::get('/geradas-status', [\App\Http\Controllers\Commissions\CommissionController::class, 'generatedStatus'])->name('generated-status');
         Route::delete('/deletar-periodo', [\App\Http\Controllers\Commissions\CommissionController::class, 'destroyPeriod'])->name('destroy-period');
+        Route::patch('/parcela/{installment}/status', [\App\Http\Controllers\Commissions\CommissionController::class, 'updateInstallmentStatus'])->name('installment.update-status');
         Route::get('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'index'])->name('rules.index');
         Route::post('/regras', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'store'])->name('rules.store');
         Route::put('/regras/{rule}', [\App\Http\Controllers\Commissions\CommissionRuleController::class, 'update'])->name('rules.update');

@@ -7,6 +7,7 @@ import Modal from '@/Components/Modal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import debounce from 'lodash/debounce';
 import axios from 'axios';
+import { calculateStayBreakdown, getReservationPoints } from '@/Utils/reservationPoints';
 
 const props = defineProps({
     reservations: Object,
@@ -381,138 +382,7 @@ const viewStayBreakdown = computed(() => {
 
 // --- Helper function for stay breakdown ---
 const calculateStayBreakdownFor = (resData) => {
-    if (!resData || !resData.destination || !resData.accommodation || !resData.check_in || !resData.check_out) {
-        return null;
-    }
-
-    const start = new Date(resData.check_in + 'T00:00:00');
-    const end = new Date(resData.check_out + 'T00:00:00');
-    
-    const diffTime = end.getTime() - start.getTime();
-    if (diffTime <= 0) return null;
-    
-    const nights = Math.ceil(diffTime / (1000 * 3600 * 24));
-    if (nights <= 0) return null;
-
-    const resort = (props.destinations || []).find(d => d.name === resData.destination);
-    if (!resort || !resort.accommodations) return null;
-
-    const acc = resort.accommodations.find(a => a.name === resData.accommodation);
-    if (!acc || !acc.scores || acc.scores.length === 0) return null;
-
-    const currentPax = Math.max(1, (resData.adults || 1) + (resData.children || 0));
-
-    const monthNames = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-
-    let totalPoints = 0;
-    const dailyList = [];
-    let weeklyBasePoints = 0;
-    let mainSeasonName = '';
-    let hasHolidayInStay = false;
-
-    for (let i = 0; i < nights; i++) {
-        const currentDate = new Date(start);
-        currentDate.setDate(currentDate.getDate() + i);
-
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(currentDate.getDate()).padStart(2, '0');
-        const currentISO = `${year}-${month}-${day}`;
-        const monthName = monthNames[currentDate.getMonth()];
-        const dateStr = currentDate.toLocaleDateString('pt-BR');
-
-        const holidayMatch = (props.holidays || []).find(h => {
-            const hDate = h.holiday_date ? String(h.holiday_date).split('T')[0] : null;
-            const hStart = h.start_date ? String(h.start_date).split('T')[0] : hDate;
-            const hEnd = h.end_date ? String(h.end_date).split('T')[0] : hDate;
-
-            if (hStart && hEnd) {
-                return currentISO >= hStart && currentISO <= hEnd;
-            }
-            return hDate === currentISO;
-        });
-
-        let targetSeasonName = null;
-        let holidayName = null;
-
-        if (holidayMatch) {
-            hasHolidayInStay = true;
-            holidayName = holidayMatch.name;
-            targetSeasonName = holidayMatch.classification;
-        }
-
-        let matchedScore = null;
-
-        if (targetSeasonName) {
-            matchedScore = acc.scores.find(s => {
-                return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase() && s.pax === currentPax;
-            });
-            if (!matchedScore) {
-                matchedScore = acc.scores.find(s => {
-                    return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase();
-                });
-            }
-        }
-
-        if (!matchedScore) {
-            matchedScore = acc.scores.find(s => {
-                if (!s.season || !s.season.months_active) return false;
-                let months = s.season.months_active;
-                if (typeof months === 'string') {
-                    try { months = JSON.parse(months); } catch(e) { months = []; }
-                }
-                if (!Array.isArray(months)) months = [];
-                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase()) && s.pax === currentPax;
-            });
-        }
-
-        if (!matchedScore) {
-            matchedScore = acc.scores.find(s => {
-                if (!s.season || !s.season.months_active) return false;
-                let months = s.season.months_active;
-                if (typeof months === 'string') {
-                    try { months = JSON.parse(months); } catch(e) { months = []; }
-                }
-                if (!Array.isArray(months)) months = [];
-                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase());
-            });
-        }
-
-        if (!matchedScore) {
-            matchedScore = acc.scores.find(s => s.pax === currentPax) || acc.scores[0];
-        }
-
-        const baseWeekly = parseFloat(matchedScore.points || matchedScore.points_raw || 0);
-        const dailyPoints = Math.round(baseWeekly / 7);
-        totalPoints += dailyPoints;
-
-        const effectiveSeasonName = matchedScore.season ? matchedScore.season.name : (targetSeasonName || 'Padrão');
-
-        if (i === 0) {
-            weeklyBasePoints = baseWeekly;
-            mainSeasonName = holidayName ? `${holidayName} (${effectiveSeasonName})` : effectiveSeasonName;
-        }
-
-        dailyList.push({
-            date: dateStr,
-            seasonName: effectiveSeasonName,
-            holidayName: holidayName,
-            isHoliday: !!holidayMatch,
-            points: dailyPoints
-        });
-    }
-
-    return {
-        nights,
-        totalPoints,
-        weeklyBasePoints,
-        seasonName: mainSeasonName,
-        hasHolidayInStay,
-        dailyList
-    };
+    return calculateStayBreakdown(resData, props.destinations, props.holidays);
 };
 
 // --- Edit Modal Logic ---
@@ -803,7 +673,7 @@ const getStatusColor = (status) => {
                                     </td>
                                     <td class="py-4 px-6 text-center align-middle">
                                         <span class="inline-flex items-center px-3 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 font-black text-xs border border-amber-200/60 dark:border-amber-500/20 shadow-2xs">
-                                            {{ (item.points_used || 0).toLocaleString('pt-BR') }} pts
+                                            {{ getReservationPoints(item, props.destinations, props.holidays).toLocaleString('pt-BR') }} pts
                                         </span>
                                     </td>
                                     <td class="py-4 px-6 align-middle">

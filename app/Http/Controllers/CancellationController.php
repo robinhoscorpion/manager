@@ -153,6 +153,14 @@ class CancellationController extends Controller
                 }
                 $bill->save();
             }
+
+            // 5. Inativa comissões pendentes do contrato
+            \App\Models\CommissionInstallment::whereHas('commission', function ($q) use ($proposal) {
+                $q->where('proposal_id', $proposal->id);
+            })->whereIn('status', ['pending'])->update([
+                'status' => 'cancelled',
+                'notes' => 'Cancelado automaticamente devido ao distrato do contrato'
+            ]);
         });
 
         return redirect()->route('after-sales.cancellations.index')->with('success', 'Distrato realizado com sucesso!');

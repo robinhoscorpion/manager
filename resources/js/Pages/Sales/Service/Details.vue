@@ -12,6 +12,7 @@ import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
+import { calculateStayBreakdown, getReservationPoints } from '@/Utils/reservationPoints';
 
 const props = defineProps({
     service: Object,
@@ -387,7 +388,7 @@ const utilizedPoints = computed(() => {
     if (props.service?.reservation_requests && props.service.reservation_requests.length > 0) {
         return props.service.reservation_requests
             .filter(r => r.status !== 'canceled')
-            .reduce((acc, r) => acc + (parseInt(r.points_used) || 0), 0);
+            .reduce((acc, r) => acc + getReservationPoints(r, props.destinations, props.holidays), 0);
     }
     return proposal.value?.used_points || 0;
 });
@@ -501,143 +502,8 @@ const openReservationViewModal = (res) => {
 };
 
 
-const calculateStayBreakdown = (res) => {
-    if (!res || !res.destination || !res.accommodation || !res.check_in || !res.check_out) {
-        return null;
-    }
-
-    const start = new Date(res.check_in + 'T00:00:00');
-    const end = new Date(res.check_out + 'T00:00:00');
-    
-    const diffTime = end.getTime() - start.getTime();
-    if (diffTime <= 0) return null;
-    
-    const nights = Math.ceil(diffTime / (1000 * 3600 * 24));
-    if (nights <= 0) return null;
-
-    const resort = (props.destinations || []).find(d => d.name === res.destination);
-    if (!resort || !resort.accommodations) return null;
-
-    const acc = resort.accommodations.find(a => a.name === res.accommodation);
-    if (!acc || !acc.scores || acc.scores.length === 0) return null;
-
-    const currentPax = Math.max(1, (res.adults || 1) + (res.children || 0));
-
-    const monthNames = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-
-    let totalPoints = 0;
-    const dailyList = [];
-    let weeklyBasePoints = 0;
-    let mainSeasonName = '';
-    let hasHolidayInStay = false;
-
-    for (let i = 0; i < nights; i++) {
-        const currentDate = new Date(start);
-        currentDate.setDate(currentDate.getDate() + i);
-
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(currentDate.getDate()).padStart(2, '0');
-        const currentISO = `${year}-${month}-${day}`;
-        const monthName = monthNames[currentDate.getMonth()];
-        const dateStr = currentDate.toLocaleDateString('pt-BR');
-
-        const holidayMatch = (props.holidays || []).find(h => {
-            const hDate = h.holiday_date ? String(h.holiday_date).split('T')[0] : null;
-            const hStart = h.start_date ? String(h.start_date).split('T')[0] : hDate;
-            const hEnd = h.end_date ? String(h.end_date).split('T')[0] : hDate;
-
-            if (hStart && hEnd) {
-                return currentISO >= hStart && currentISO <= hEnd;
-            }
-            return hDate === currentISO;
-        });
-
-        let targetSeasonName = null;
-        let holidayName = null;
-
-        if (holidayMatch) {
-            hasHolidayInStay = true;
-            holidayName = holidayMatch.name;
-            targetSeasonName = holidayMatch.classification;
-        }
-
-        let matchedScore = null;
-
-        if (targetSeasonName) {
-            matchedScore = acc.scores.find(s => {
-                return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase() && s.pax === currentPax;
-            });
-            if (!matchedScore) {
-                matchedScore = acc.scores.find(s => {
-                    return s.season && String(s.season.name).toLowerCase() === String(targetSeasonName).toLowerCase();
-                });
-            }
-        }
-
-        if (!matchedScore) {
-            matchedScore = acc.scores.find(s => {
-                if (!s.season || !s.season.months_active) return false;
-                let months = s.season.months_active;
-                if (typeof months === 'string') {
-                    try { months = JSON.parse(months); } catch(e) { months = []; }
-                }
-                if (!Array.isArray(months)) months = [];
-                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase()) && s.pax === currentPax;
-            });
-        }
-
-        if (!matchedScore) {
-            matchedScore = acc.scores.find(s => {
-                if (!s.season || !s.season.months_active) return false;
-                let months = s.season.months_active;
-                if (typeof months === 'string') {
-                    try { months = JSON.parse(months); } catch(e) { months = []; }
-                }
-                if (!Array.isArray(months)) months = [];
-                return months.some(m => String(m).toLowerCase() === monthName.toLowerCase());
-            });
-        }
-
-        if (!matchedScore) {
-            matchedScore = acc.scores.find(s => s.pax === currentPax) || acc.scores[0];
-        }
-
-        const baseWeekly = parseFloat(matchedScore.points || matchedScore.points_raw || 0);
-        const dailyPoints = Math.round(baseWeekly / 7);
-        totalPoints += dailyPoints;
-
-        const effectiveSeasonName = matchedScore.season ? matchedScore.season.name : (targetSeasonName || 'Padrão');
-
-        if (i === 0) {
-            weeklyBasePoints = baseWeekly;
-            mainSeasonName = holidayName ? `${holidayName} (${effectiveSeasonName})` : effectiveSeasonName;
-        }
-
-        dailyList.push({
-            date: dateStr,
-            seasonName: effectiveSeasonName,
-            holidayName: holidayName,
-            isHoliday: !!holidayMatch,
-            points: dailyPoints
-        });
-    }
-
-    return {
-        nights,
-        totalPoints,
-        weeklyBasePoints,
-        seasonName: mainSeasonName,
-        hasHolidayInStay,
-        dailyList
-    };
-};
-
 const modalBreakdown = computed(() => {
-    return calculateStayBreakdown(selectedReservation.value);
+    return calculateStayBreakdown(selectedReservation.value, props.destinations, props.holidays);
 });
 
 const closeReservationViewModal = () => {
@@ -1368,7 +1234,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                         <div v-if="res.accommodation" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ res.accommodation }}</div>
                                     </td>
                                     <td class="px-6 py-3.5 text-center font-bold text-amber-600 dark:text-amber-400">
-                                        {{ (res.points_used || 0).toLocaleString('pt-BR') }} pts
+                                        {{ getReservationPoints(res, props.destinations, props.holidays).toLocaleString('pt-BR') }} pts
                                     </td>
                                     <td class="px-6 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
                                         {{ res.check_in }} → {{ res.check_out }}

@@ -17,7 +17,8 @@ class CommissionController extends Controller
         $query = CommissionInstallment::with([
             'commission.proposal.client',
             'commission.proposal.product',
-            'commission.user'
+            'commission.user',
+            'auditedBy'
         ]);
 
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
@@ -140,5 +141,25 @@ class CommissionController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erro ao excluir comissões do período: ' . $e->getMessage());
         }
+    }
+
+    public function updateInstallmentStatus(Request $request, CommissionInstallment $installment)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,paid,approved,rejected,cancelled',
+            'paid_at' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $status = $validated['status'] === 'approved' ? 'paid' : $validated['status'];
+
+        $installment->update([
+            'status' => $status,
+            'paid_at' => $status === 'paid' ? ($validated['paid_at'] ?? now()) : null,
+            'audited_by' => auth()->id(),
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'Auditoria e status da comissão atualizados com sucesso!');
     }
 }

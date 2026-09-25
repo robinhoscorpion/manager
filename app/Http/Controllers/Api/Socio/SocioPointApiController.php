@@ -8,6 +8,8 @@ use App\Models\PointTable\Resort;
 use App\Models\PointTable\Score;
 use App\Models\PointTable\Season;
 use App\Models\SalesService;
+use App\Models\Proposal;
+use App\Models\ReservationRequest;
 use App\Models\Client;
 use Illuminate\Http\Request;
 
@@ -18,19 +20,41 @@ class SocioPointApiController extends Controller
         $user = $request->user();
         $client = $user instanceof Client ? $user : ($user ? $user->client : null);
 
-        $service = $client ? SalesService::where('client_id', $client->id)->with('proposal')->first() : null;
+        if (!$client) {
+            return response()->json([
+                'contract' => [
+                    'proposal_number'  => 'Sem Contrato',
+                    'total_points'     => 0,
+                    'used_points'      => 0,
+                    'available_points' => 0,
+                ],
+                'scores' => [],
+            ]);
+        }
 
-        $totalPoints = $service && $service->proposal ? ($service->proposal->pontos_total ?? 100000) : 100000;
-        $usedPoints = $service ? (int) \App\Models\ReservationRequest::where('sales_service_id', $service->id)->where('status', '!=', 'canceled')->sum('points_used') : 0;
+        $proposal = Proposal::where('client_id', $client->id)
+            ->with(['product.productType', 'salesService'])
+            ->orderByRaw("CASE WHEN status = 'approved' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END")
+            ->latest('id')
+            ->first();
+
+        $totalPoints = $proposal ? (int)($proposal->quantity ?? 0) : 0;
+        
+        $serviceIds = SalesService::where('client_id', $client->id)->pluck('id');
+        $usedPoints = (int) ReservationRequest::whereIn('sales_service_id', $serviceIds)
+            ->whereNotIn('status', ['canceled', 'cancelled', 'reproved', 'rejected'])
+            ->sum('points_used');
+
+        $availablePoints = max(0, $totalPoints - $usedPoints);
 
         return response()->json([
             'contract' => [
-                'proposal_number' => $service ? ($service->contrato_numero ?? 'CNT-' . $service->id) : 'CONTRATO-SOCIO-001',
-                'total_points' => $totalPoints,
-                'used_points' => $usedPoints,
-                'available_points' => max(0, $totalPoints - $usedPoints),
+                'proposal_number'  => $proposal ? $proposal->contract_number : 'Sem Contrato',
+                'total_points'     => $totalPoints,
+                'used_points'      => $usedPoints,
+                'available_points' => $availablePoints,
             ],
-            'scores' => Score::with(['resort', 'season', 'accommodation'])->limit(50)->get(),
+            'scores' => Score::with(['accommodation.resort', 'season'])->limit(50)->get(),
         ]);
     }
 

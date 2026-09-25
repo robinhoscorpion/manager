@@ -39,9 +39,13 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'message' => $request->session()->get('message') ?? $request->session()->get('success'),
+                'success' => $request->session()->get('success'),
+                'warning' => $request->session()->get('warning'),
                 'error' => $request->session()->get('error'),
                 'generated_protocol_number' => $request->session()->get('generated_protocol_number'),
+                'temp_password' => $request->session()->get('temp_password'),
             ],
+
         ];
     }
 }

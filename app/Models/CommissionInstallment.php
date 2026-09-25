@@ -13,11 +13,23 @@ class CommissionInstallment extends Model
         'reference_month',
         'amount',
         'status',
-        'origin_type'
+        'origin_type',
+        'paid_at',
+        'audited_by',
+        'notes',
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
     ];
 
     public function commission()
     {
         return $this->belongsTo(Commission::class);
+    }
+
+    public function auditedBy()
+    {
+        return $this->belongsTo(User::class, 'audited_by');
     }
 }

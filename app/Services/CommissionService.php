@@ -133,9 +133,84 @@ class CommissionService
         foreach ($regras as $regra) {
             $coluna = $regra->role_column;
             $userId = $salesService->{$coluna} ?? null;
-            $taxa = $regra->percentage / 100;
 
-            if (!$userId || $taxa <= 0) continue;
+            if (!$userId) continue;
+
+            // ===== REGRA TIPO OPC / PROMOTOR (TABELAS DE PONTUAÇÃO E QUALIFICAÇÃO) =====
+            if ($regra->rule_type === 'opc' || $coluna === 'opc_id') {
+                $scoreAmount = 0;
+                $qualAmount  = 0;
+
+                // 1. Tabela de Pontuação / Produto
+                if (!empty($regra->score_rules) && is_array($regra->score_rules)) {
+                    $proposalPoints = (float) ($proposal->quantity ?? 0);
+                    $proposalProductId = $proposal->product_id ?? null;
+
+                    // Tenta casar primeiro pelo ID exato do Produto cadastrado
+                    foreach ($regra->score_rules as $sr) {
+                        if (!empty($sr['product_id']) && $proposalProductId && (int)$sr['product_id'] === (int)$proposalProductId) {
+                            $scoreAmount = (float) ($sr['amount'] ?? 0);
+                            break;
+                        }
+                    }
+
+                    // Se não casou por ID, busca por faixa de pontuação mínima
+                    if ($scoreAmount <= 0) {
+                        $sortedScoreRules = collect($regra->score_rules)->sortByDesc('min_points');
+                        foreach ($sortedScoreRules as $sr) {
+                            $minP = (float) ($sr['min_points'] ?? 0);
+                            if ($minP > 0 && $proposalPoints >= $minP) {
+                                $scoreAmount = (float) ($sr['amount'] ?? 0);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 2. Tabela de Qualificação
+                if (!empty($regra->qualification_rules) && is_array($regra->qualification_rules)) {
+                    $serviceQual = trim($salesService->qualification ?? '');
+                    foreach ($regra->qualification_rules as $qr) {
+                        if (strcasecmp(trim($qr['code'] ?? ''), $serviceQual) === 0) {
+                            $qualAmount = (float) ($qr['amount'] ?? 0);
+                            break;
+                        }
+                    }
+                }
+
+                $comissaoTotal = round($scoreAmount + $qualAmount, 2);
+                if ($comissaoTotal <= 0) {
+                    continue;
+                }
+
+                $commission = Commission::create([
+                    'proposal_id'                 => $proposal->id,
+                    'user_id'                     => $userId,
+                    'role'                        => $regra->name,
+                    'origin_type'                 => 'opc',
+                    'total_amount'                => $comissaoTotal,
+                    'base_sale_value'             => $vendaValor,
+                    'base_commission_percentage'  => 0
+                ]);
+
+                $generatedCommissions[] = $commission;
+
+                // Pagamento Único no mês seguinte (M+1)
+                CommissionInstallment::create([
+                    'commission_id'   => $commission->id,
+                    'month_offset'    => 1,
+                    'due_date'        => $mesVenda->copy()->addMonth(),
+                    'reference_month' => $mesVenda->copy()->addMonth()->format('m/Y'),
+                    'amount'          => $comissaoTotal,
+                    'origin_type'     => 'opc'
+                ]);
+
+                continue;
+            }
+
+            // ===== REGRA TIPO PERCENTUAL (LINER / CLOSER) =====
+            $taxa = $regra->percentage / 100;
+            if ($taxa <= 0) continue;
 
             $baseCalculo = round($vendaValor * ($regra->distribution_base_percentage / 100), 2);
             $comissaoTotal = round($baseCalculo * $taxa, 2);
@@ -143,6 +218,7 @@ class CommissionService
             if ($comissaoTotal <= 0) {
                 continue;
             }
+
 
             $propAvista = $valorAvista / $somaPagamentos;
             $propCartao = $valorCartao / $somaPagamentos;

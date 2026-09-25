@@ -53,4 +53,9 @@ class Client extends Authenticatable
     {
         return $this->hasMany(Bill::class);
     }
+
+    public function proposals()
+    {
+        return $this->hasMany(Proposal::class);
+    }
 }
