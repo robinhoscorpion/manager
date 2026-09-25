@@ -178,7 +178,14 @@ class SocioAuthController extends Controller
 
         // Calculo da validade e vigencia real do contrato
         $startDate = $proposal ? ($proposal->salesService?->date ?? $proposal->created_at) : now();
-        $startCarbon = Carbon::parse($startDate);
+        // A data do atendimento (sales_services.date) é texto e pode estar em "d/m/Y"
+        try {
+            $startCarbon = is_string($startDate) && str_contains($startDate, '/')
+                ? Carbon::createFromFormat('d/m/Y', trim($startDate))->startOfDay()
+                : Carbon::parse($startDate);
+        } catch (\Throwable $e) {
+            $startCarbon = $proposal?->created_at ? Carbon::parse($proposal->created_at) : now();
+        }
 
         $durationYears = 10;
         if ($product && !empty($product->duration)) {
