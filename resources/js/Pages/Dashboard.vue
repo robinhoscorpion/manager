@@ -412,24 +412,19 @@ const chartData = computed(() => {
         </div>
 
 
-        <!-- ── Informações dos Vendedores ────────────────── -->
-        <div v-if="false" class="animate-fade-in-up stagger-5">
+        <!-- ── Ranking de Vendas ─────────────────────────── -->
+        <div class="animate-fade-in-up stagger-5">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">Informações dos Vendedores</h2>
-                    <p class="section-subtitle">Ranking por categoria de atuação</p>
+                    <h2 class="section-title">Ranking de Vendas</h2>
+                    <p class="section-subtitle">Top 5 por valor em propostas · {{ currentMonthName }} de {{ currentYear }}</p>
                 </div>
-                <button class="action-btn" title="Imprimir">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-                <RankingCard title="Promotores" :sellers="ranking_promotores" :header-color="'bg-indigo-500'" />
-                <RankingCard title="Consultores" :sellers="ranking_consultores" :header-color="'bg-violet-500'" />
-                <RankingCard title="Supervisores" :sellers="ranking_supervisores" :header-color="'bg-purple-600'" />
+                <RankingCard title="Promotores" subtitle="OPC" :sellers="ranking_promotores" accent="#5A6B46" />
+                <RankingCard title="Consultores" subtitle="Liner" :sellers="ranking_consultores" accent="#2C5160" />
+                <RankingCard title="Supervisores" subtitle="Closer" :sellers="ranking_supervisores" accent="#A26B45" />
             </div>
         </div>
     </AuthenticatedLayout>
