@@ -95,16 +95,27 @@ class WelcomeController extends Controller
 
     public function sendWelcomeEmail(Request $request, SalesService $salesService)
     {
+        $salesService->loadMissing(['client', 'proposal.product']);
         $client = $salesService->client;
         if (!$client || empty($client->email)) {
             return back()->with('error', 'O cliente não possui e-mail cadastrado.');
         }
 
         $message = $request->input('message', '');
+        $subject = $request->input('subject', null);
+        $generateTemp = (bool) $request->input('generate_temp_password', false);
         $tempPassword = $request->input('temp_password', null);
 
+        if ($generateTemp && !$tempPassword) {
+            $tempPassword = \Illuminate\Support\Str::random(8);
+            $client->update([
+                'password' => \Illuminate\Support\Facades\Hash::make($tempPassword),
+                'password_set_at' => now(),
+            ]);
+        }
+
         try {
-            Mail::to($client->email)->send(new SocioWelcomeMail($client, config('app.url'), $message, $tempPassword));
+            Mail::to($client->email)->send(new SocioWelcomeMail($client, 'https://itacarevacationclub.com.br/', $message, $tempPassword, $subject, $salesService));
         } catch (\Throwable $e) {
             // Caso as configurações de SMTP falhem, ainda assim atualizamos o registro e informamos o operador
             $salesService->update([
@@ -123,6 +134,87 @@ class WelcomeController extends Controller
         ]);
 
         return back()->with('success', 'E-mail de boas-vindas disparado com sucesso para ' . $client->email);
+    }
+
+    public function bulkSendCredentials(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'exists:sales_services,id',
+            'generate_temp_password' => 'nullable|boolean',
+            'subject' => 'nullable|string',
+            'message' => 'nullable|string',
+        ]);
+
+        $ids = $request->input('ids', []);
+        $generateTemp = (bool) $request->input('generate_temp_password', false);
+        $customSubject = $request->input('subject', null);
+        $customMessage = $request->input('message', null);
+
+        $salesServices = SalesService::with('client', 'proposal.product')
+            ->whereIn('id', $ids)
+            ->get();
+
+        $sentCount = 0;
+        $failedCount = 0;
+        $noEmailCount = 0;
+
+        foreach ($salesServices as $sales) {
+            $client = $sales->client;
+            if (!$client || empty($client->email)) {
+                $noEmailCount++;
+                continue;
+            }
+
+            $tempPassword = null;
+            if ($generateTemp) {
+                $tempPassword = Str::random(8);
+                $client->update([
+                    'password' => Hash::make($tempPassword),
+                    'password_set_at' => now(),
+                ]);
+            }
+
+            try {
+                Mail::to($client->email)->send(new SocioWelcomeMail($client, 'https://itacarevacationclub.com.br/', $customMessage ?? '', $tempPassword, $customSubject, $sales));
+
+                $sales->update([
+                    'welcome_status' => 'sent_email',
+                    'welcome_sent_at' => now(),
+                    'welcome_sent_by' => auth()->id(),
+                ]);
+
+                $sentCount++;
+            } catch (\Throwable $e) {
+                $failedCount++;
+                $sales->update([
+                    'welcome_status' => 'sent_email',
+                    'welcome_sent_at' => now(),
+                    'welcome_sent_by' => auth()->id(),
+                ]);
+            }
+        }
+
+        $msgParts = [];
+        if ($sentCount > 0) {
+            $msgParts[] = "{$sentCount} e-mail(s) disparado(s) com sucesso.";
+        }
+        if ($noEmailCount > 0) {
+            $msgParts[] = "{$noEmailCount} sócio(s) ignorado(s) por falta de e-mail cadastrado.";
+        }
+        if ($failedCount > 0) {
+            $msgParts[] = "{$failedCount} envio(s) com erro no servidor SMTP.";
+        }
+
+        $summaryMessage = "Disparo em lote concluído: " . implode(" | ", $msgParts);
+
+        if ($sentCount > 0) {
+            return back()->with('success', $summaryMessage);
+        } elseif ($failedCount > 0) {
+            return back()->with('warning', $summaryMessage);
+        } else {
+            return back()->with('error', $summaryMessage);
+        }
     }
 
     public function generateTempPassword(Request $request, SalesService $salesService)

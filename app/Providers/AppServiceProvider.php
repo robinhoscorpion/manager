@@ -27,5 +27,14 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
         });
+
+        // Configura dinamicamente o SMTP salvo no banco de dados
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                \App\Http\Controllers\Admin\MailSettingsController::applyMailConfig();
+            }
+        } catch (\Throwable $e) {
+            // Silenciosamente ignorado durante execuções iniciais do console/migrações
+        }
     }
 }

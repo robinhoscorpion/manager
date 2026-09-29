@@ -225,6 +225,11 @@ Route::middleware('auth')->group(function () {
     Route::get('admin/configuracoes-boas-vindas', [\App\Http\Controllers\Admin\WelcomeSettingsController::class, 'index'])->name('admin.settings.welcome_access.index')->middleware('permission:configuracoes.colunas.acessar');
     Route::post('admin/configuracoes-boas-vindas', [\App\Http\Controllers\Admin\WelcomeSettingsController::class, 'update'])->name('admin.settings.welcome_access.update')->middleware('permission:configuracoes.colunas.acessar');
 
+    // Configurações de Servidor de E-mail (SMTP)
+    Route::get('admin/configuracoes-email', [\App\Http\Controllers\Admin\MailSettingsController::class, 'index'])->name('admin.settings.mail.index')->middleware('permission:configuracoes.colunas.acessar');
+    Route::post('admin/configuracoes-email', [\App\Http\Controllers\Admin\MailSettingsController::class, 'update'])->name('admin.settings.mail.update')->middleware('permission:configuracoes.colunas.acessar');
+    Route::post('admin/configuracoes-email/test', [\App\Http\Controllers\Admin\MailSettingsController::class, 'testConnection'])->name('admin.settings.mail.test')->middleware('permission:configuracoes.colunas.acessar');
+
 
     // Módulo Financeiro
     Route::prefix('financeiro')->name('finance.')->group(function () {
@@ -243,6 +248,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/boas-vindas/{salesService}/status', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'updateStatus'])->name('welcome.status.update')->middleware('permission:pos_venda.boas_vindas.gerenciar');
         Route::post('/boas-vindas/{salesService}/send-email', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'sendWelcomeEmail'])->name('welcome.send-email')->middleware('permission:pos_venda.boas_vindas.gerenciar');
         Route::post('/boas-vindas/{salesService}/temp-password', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'generateTempPassword'])->name('welcome.temp-password')->middleware('permission:pos_venda.boas_vindas.gerenciar');
+        Route::post('/boas-vindas/bulk-send-credentials', [\App\Http\Controllers\AfterSales\WelcomeController::class, 'bulkSendCredentials'])->name('welcome.bulk-send-credentials')->middleware('permission:pos_venda.boas_vindas.gerenciar');
         
         Route::get('/entrega-contrato', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'index'])->name('contract-delivery.index')->middleware('permission:pos_venda.gestao_contratos.acessar');
         Route::patch('/entrega-contrato/{salesService}/status', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'updateStatus'])->name('contract-delivery.status.update')->middleware('permission:pos_venda.gestao_contratos.gerenciar');

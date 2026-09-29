@@ -72,9 +72,144 @@ const showEmailModal = ref(false);
 const showTempPasswordModal = ref(false);
 const selectedClient = ref(null);
 
+// Selection & Bulk State
+const selectedIds = ref([]);
+
+const selectedClients = computed(() => {
+    return clients.value.filter(client => selectedIds.value.includes(client.id));
+});
+
+const isAllSelected = computed(() => {
+    if (filteredClients.value.length === 0) return false;
+    return filteredClients.value.every(client => selectedIds.value.includes(client.id));
+});
+
+const toggleSelectAll = () => {
+    if (isAllSelected.value) {
+        const filteredIdSet = new Set(filteredClients.value.map(c => c.id));
+        selectedIds.value = selectedIds.value.filter(id => !filteredIdSet.has(id));
+    } else {
+        const currentSelected = new Set(selectedIds.value);
+        filteredClients.value.forEach(c => currentSelected.add(c.id));
+        selectedIds.value = Array.from(currentSelected);
+    }
+};
+
+const clearSelection = () => {
+    selectedIds.value = [];
+};
+
+// Bulk Modal & Disparo em Lote State
+const showBulkModal = ref(false);
+const bulkGenerateTempPassword = ref(false);
+const bulkSubject = ref('');
+const bulkMessage = ref('');
+const isSendingBulk = ref(false);
+const bulkProgress = ref(0);
+const bulkStepText = ref('');
+const bulkStatusResult = ref(null);
+
+const clientsWithEmailCount = computed(() => {
+    return selectedClients.value.filter(c => !!c.email && c.email.trim() !== '').length;
+});
+
+const clientsWithoutEmailCount = computed(() => {
+    return selectedClients.value.filter(c => !c.email || c.email.trim() === '').length;
+});
+
+const openBulkModal = () => {
+    bulkGenerateTempPassword.value = false;
+    isSendingBulk.value = false;
+    bulkProgress.value = 0;
+    bulkStepText.value = '';
+    bulkStatusResult.value = null;
+
+    const subjectTpl = props.welcomeSettings?.email_subject;
+    const bodyTpl = props.welcomeSettings?.email_template;
+
+    bulkSubject.value = subjectTpl ? subjectTpl : 'Bem-vindo(a) ao Portal do Sócio!';
+    bulkMessage.value = bodyTpl ? bodyTpl : "Olá {nome},\n\nSeja muito bem-vindo(a)!\n\nSeu cadastro no serviço {produto} já está disponível no Portal do Sócio.\n\nPara acessar, acesse o portal ({link_portal}), vá na opção 'Primeiro Acesso', digite seu CPF ({cpf}) e crie sua senha com segurança.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\nEquipe de Pós-venda";
+    
+    showBulkModal.value = true;
+};
+
+const executeBulkSend = () => {
+    if (selectedIds.value.length === 0) return;
+
+    isSendingBulk.value = true;
+    bulkProgress.value = 15;
+    bulkStepText.value = `Conectando ao servidor e agrupando ${selectedIds.value.length} sócio(s)...`;
+    bulkStatusResult.value = null;
+
+    let progressInterval = setInterval(() => {
+        if (bulkProgress.value < 85) {
+            bulkProgress.value += 15;
+            if (bulkProgress.value >= 40 && bulkProgress.value < 70) {
+                bulkStepText.value = 'Compilando credenciais e disparando e-mails...';
+            } else if (bulkProgress.value >= 70) {
+                bulkStepText.value = 'Finalizando atualizações dos status...';
+            }
+        }
+    }, 400);
+
+    router.post(route('after-sales.welcome.bulk-send-credentials'), {
+        ids: selectedIds.value,
+        generate_temp_password: bulkGenerateTempPassword.value,
+        subject: bulkSubject.value,
+        message: bulkMessage.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            clearInterval(progressInterval);
+            bulkProgress.value = 100;
+            isSendingBulk.value = false;
+
+            const flashWarning = page.props?.flash?.warning || usePage().props?.flash?.warning;
+            const flashSuccess = page.props?.flash?.success || usePage().props?.flash?.success;
+            const flashError = page.props?.flash?.error || usePage().props?.flash?.error;
+
+            if (flashError) {
+                bulkStepText.value = 'Falha no disparo em lote.';
+                bulkStatusResult.value = {
+                    type: 'error',
+                    title: 'Erro no Disparo em Lote',
+                    message: flashError
+                };
+            } else if (flashWarning) {
+                bulkStepText.value = 'Disparo concluído com avisos.';
+                bulkStatusResult.value = {
+                    type: 'warning',
+                    title: 'Disparo Concluído com Avisos',
+                    message: flashWarning
+                };
+            } else {
+                bulkStepText.value = 'Disparo em lote realizado com sucesso!';
+                bulkStatusResult.value = {
+                    type: 'success',
+                    title: 'Disparo Concluído com Sucesso!',
+                    message: flashSuccess || 'E-mails de boas-vindas e credenciais enviados para os sócios selecionados.'
+                };
+            }
+        },
+        onError: () => {
+            clearInterval(progressInterval);
+            bulkProgress.value = 100;
+            isSendingBulk.value = false;
+            
+            bulkStepText.value = 'Falha durante o disparo em lote.';
+            bulkStatusResult.value = {
+                type: 'error',
+                title: 'Falha no Servidor',
+                message: 'Ocorreu um erro ao processar o disparo em lote. Verifique as configurações de SMTP ou conexão.'
+            };
+        }
+    });
+};
+
 const whatsappMessage = ref('');
 const emailSubject = ref('');
 const emailBody = ref('');
+const emailGenerateTempPassword = ref(false);
 
 // Email Modal & Progress State
 const isSendingEmail = ref(false);
@@ -148,6 +283,7 @@ const sendWhatsapp = () => {
 const openEmail = (client) => {
     selectedClient.value = client;
     isSendingEmail.value = false;
+    emailGenerateTempPassword.value = false;
     emailProgress.value = 0;
     emailStepText.value = '';
     emailStatusResult.value = null;
@@ -185,6 +321,7 @@ const sendEmail = () => {
     router.post(route('after-sales.welcome.send-email', selectedClient.value.id), {
         message: emailBody.value,
         subject: emailSubject.value,
+        generate_temp_password: emailGenerateTempPassword.value,
     }, {
         preserveScroll: true,
         onSuccess: (page) => {
@@ -422,11 +559,35 @@ const sendTempPasswordWhatsapp = () => {
                     </div>
                 </div>
 
+                <!-- Selection Action Bar -->
+                <div v-if="selectedIds.length > 0" class="p-3 bg-slate-900 dark:bg-slate-800 text-white flex flex-wrap items-center justify-between gap-3 border-b border-slate-700 animate-fade-in">
+                    <div class="flex items-center gap-3">
+                        <span class="bg-brand-green/20 text-brand-green border border-brand-green/30 px-2.5 py-1 rounded-lg text-xs font-bold font-mono">
+                            {{ selectedIds.length }} sócio(s) selecionado(s)
+                        </span>
+                        <span class="text-xs text-slate-300 font-medium hidden sm:inline">
+                            Ações em lote para os registros selecionados
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button @click="clearSelection" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                            Limpar Seleção
+                        </button>
+                        <button v-if="can('pos_venda.boas_vindas.gerenciar')" @click="openBulkModal" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-green hover:bg-brand-green/90 text-white transition-all shadow-md flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            Disparar Credenciais ({{ selectedIds.length }})
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Data Table -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800">
+                                <th class="px-3 py-2 w-10 text-center" v-if="can('pos_venda.boas_vindas.gerenciar')">
+                                    <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" class="rounded border-slate-300 dark:border-slate-700 text-brand-green focus:ring-brand-green/20 cursor-pointer" title="Selecionar Todos">
+                                </th>
                                 <th class="px-3 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Cliente</th>
                                 <th class="px-3 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contato / CPF</th>
                                 <th class="px-3 py-2 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Produto/Serviço</th>
@@ -437,9 +598,12 @@ const sendTempPasswordWhatsapp = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50">
-                            <tr v-for="client in filteredClients" :key="client.id" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                            <tr v-for="client in filteredClients" :key="client.id" :class="{'bg-brand-green/5 dark:bg-brand-green/10': selectedIds.includes(client.id)}" class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                                <td class="px-3 py-2 text-center" v-if="can('pos_venda.boas_vindas.gerenciar')">
+                                    <input type="checkbox" :value="client.id" v-model="selectedIds" class="rounded border-slate-300 dark:border-slate-700 text-brand-green focus:ring-brand-green/20 cursor-pointer">
+                                </td>
                                 <td class="px-3 py-2">
-                                    <div class="flex items-center gap-2" v-if="can('pos_venda.boas_vindas.gerenciar')">
+                                    <div class="flex items-center gap-2">
                                         <div class="w-6 h-6 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center font-bold text-xs">
                                             {{ client.name.charAt(0) }}
                                         </div>
@@ -500,7 +664,7 @@ const sendTempPasswordWhatsapp = () => {
                                 </td>
                             </tr>
                             <tr v-if="filteredClients.length === 0">
-                                <td colspan="7" class="px-3 py-8 text-center text-slate-500 text-xs">
+                                <td colspan="8" class="px-3 py-8 text-center text-slate-500 text-xs">
                                     Nenhum cliente encontrado com os filtros atuais.
                                 </td>
                             </tr>
@@ -634,13 +798,23 @@ const sendTempPasswordWhatsapp = () => {
                 </div>
 
                 <div v-if="!emailStatusResult && !isSendingEmail" class="space-y-4">
+                    <!-- Opção de Geração de Senha Provisória -->
+                    <div class="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/50 dark:bg-purple-950/10 flex items-start gap-3">
+                        <input id="single_temp_pass" v-model="emailGenerateTempPassword" type="checkbox" class="mt-0.5 rounded border-purple-300 text-purple-600 focus:ring-purple-500/20 cursor-pointer">
+                        <label for="single_temp_pass" class="text-xs text-slate-800 dark:text-slate-200 cursor-pointer select-none">
+                            <span class="font-bold text-purple-700 dark:text-purple-300 block mb-0.5">Gerar senha provisória automática</span>
+                            Ao marcar esta opção, o sistema irá gerar uma senha aleatória de 8 dígitos para o sócio e incluí-la no e-mail de boas-vindas.
+                        </label>
+                    </div>
+
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Assunto</label>
                         <input v-model="emailSubject" type="text" :disabled="isSendingEmail" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs px-3 py-2 focus:ring-brand-green/20">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Mensagem Adicional / Personalizada</label>
-                        <textarea v-model="emailBody" rows="6" :disabled="isSendingEmail" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs p-3 focus:ring-brand-green/20"></textarea>
+                        <textarea v-model="emailBody" rows="5" :disabled="isSendingEmail" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs p-3 font-mono focus:ring-brand-green/20"></textarea>
+                        <p class="text-[9px] text-slate-400 mt-1">Variáveis disponíveis: {nome}, {cpf}, {email}, {contrato}, {produto}, {link_portal}</p>
                     </div>
                 </div>
 
@@ -729,6 +903,147 @@ const sendTempPasswordWhatsapp = () => {
                         </button>
                     </div>
                 </form>
+            </div>
+        </Modal>
+
+        <!-- Modal Disparo em Lote de Credenciais -->
+        <Modal :show="showBulkModal" @close="showBulkModal = false" maxWidth="lg">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Disparo de Credenciais em Lote</h3>
+                        <p class="text-xs text-slate-500">Envio de e-mail e credenciais para sócios selecionados</p>
+                    </div>
+                </div>
+
+                <!-- Painel de Progresso / Carregamento / Resultado -->
+                <div v-if="isSendingBulk || bulkStatusResult" class="p-4 rounded-xl border space-y-3 mb-5 transition-all duration-300"
+                    :class="{
+                        'bg-blue-500/10 border-blue-500/30': isSendingBulk,
+                        'bg-emerald-500/10 border-emerald-500/30': bulkStatusResult?.type === 'success',
+                        'bg-amber-500/10 border-amber-500/30': bulkStatusResult?.type === 'warning',
+                        'bg-red-500/10 border-red-500/30': bulkStatusResult?.type === 'error'
+                    }"
+                >
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div v-if="isSendingBulk" class="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                            
+                            <svg v-else-if="bulkStatusResult?.type === 'success'" class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+
+                            <svg v-else-if="bulkStatusResult?.type === 'warning'" class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+
+                            <svg v-else-if="bulkStatusResult?.type === 'error'" class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+
+                            <span class="text-xs font-bold uppercase tracking-wider"
+                                :class="{
+                                    'text-blue-600 dark:text-blue-400': isSendingBulk,
+                                    'text-emerald-600 dark:text-emerald-400': bulkStatusResult?.type === 'success',
+                                    'text-amber-600 dark:text-amber-400': bulkStatusResult?.type === 'warning',
+                                    'text-red-600 dark:text-red-400': bulkStatusResult?.type === 'error'
+                                }"
+                            >
+                                {{ isSendingBulk ? 'Disparando Credenciais...' : bulkStatusResult?.title }}
+                            </span>
+                        </div>
+                        <span class="font-mono text-xs font-bold"
+                            :class="{
+                                'text-blue-600 dark:text-blue-400': isSendingBulk,
+                                'text-emerald-600 dark:text-emerald-400': bulkStatusResult?.type === 'success',
+                                'text-amber-600 dark:text-amber-400': bulkStatusResult?.type === 'warning',
+                                'text-red-600 dark:text-red-400': bulkStatusResult?.type === 'error'
+                            }"
+                        >
+                            {{ bulkProgress }}%
+                        </span>
+                    </div>
+
+                    <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                        <div class="h-2.5 rounded-full transition-all duration-300 ease-out"
+                            :style="{ width: bulkProgress + '%' }"
+                            :class="{
+                                'bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse': isSendingBulk,
+                                'bg-emerald-500': bulkStatusResult?.type === 'success',
+                                'bg-amber-500': bulkStatusResult?.type === 'warning',
+                                'bg-red-500': bulkStatusResult?.type === 'error'
+                            }"
+                        ></div>
+                    </div>
+
+                    <p class="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                        {{ bulkStepText }}
+                    </p>
+
+                    <div v-if="bulkStatusResult?.message" class="text-xs p-2.5 rounded-lg bg-white dark:bg-slate-900 border"
+                        :class="{
+                            'border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-200': bulkStatusResult?.type === 'success',
+                            'border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-200': bulkStatusResult?.type === 'warning',
+                            'border-red-200 dark:border-red-800/50 text-red-800 dark:text-red-200': bulkStatusResult?.type === 'error'
+                        }"
+                    >
+                        {{ bulkStatusResult.message }}
+                    </div>
+                </div>
+
+                <div v-if="!bulkStatusResult && !isSendingBulk" class="space-y-4">
+                    <!-- Cards informativos de seleção -->
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-wrap gap-3 items-center justify-between">
+                        <div class="text-xs text-slate-700 dark:text-slate-300">
+                            <strong>Total selecionado:</strong> {{ selectedIds.length }} sócio(s)
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                                {{ clientsWithEmailCount }} com e-mail
+                            </span>
+                            <span v-if="clientsWithoutEmailCount > 0" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                                {{ clientsWithoutEmailCount }} sem e-mail (serão ignorados)
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Opção de Geração de Senha -->
+                    <div class="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/50 dark:bg-purple-950/10 flex items-start gap-3">
+                        <input id="bulk_temp_pass" v-model="bulkGenerateTempPassword" type="checkbox" class="mt-0.5 rounded border-purple-300 text-purple-600 focus:ring-purple-500/20 cursor-pointer">
+                        <label for="bulk_temp_pass" class="text-xs text-slate-800 dark:text-slate-200 cursor-pointer select-none">
+                            <span class="font-bold text-purple-700 dark:text-purple-300 block mb-0.5">Gerar senhas provisórias automáticas</span>
+                            Ao marcar esta opção, o sistema irá gerar uma senha aleatória de 8 dígitos para cada sócio e incluí-la no e-mail de boas-vindas.
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Assunto do E-mail</label>
+                        <input v-model="bulkSubject" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs px-3 py-2 focus:ring-brand-green/20">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Mensagem (Template de Boas-Vindas)</label>
+                        <textarea v-model="bulkMessage" rows="5" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs p-3 font-mono focus:ring-brand-green/20"></textarea>
+                        <p class="text-[9px] text-slate-400 mt-1">Variáveis disponíveis: {nome}, {cpf}, {email}, {contrato}, {produto}, {link_portal}</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-6">
+                    <button v-if="!isSendingBulk && !bulkStatusResult" type="button" @click="showBulkModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+                    
+                    <button v-if="bulkStatusResult" type="button" @click="showBulkModal = false; clearSelection()" class="px-5 py-2 rounded-xl text-xs font-bold bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 hover:bg-slate-900 transition-colors">
+                        Concluir / Fechar
+                    </button>
+
+                    <button v-if="!bulkStatusResult" type="button" @click="executeBulkSend" :disabled="isSendingBulk || clientsWithEmailCount === 0" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-green text-white hover:bg-brand-green/90 disabled:opacity-50 transition-colors flex items-center gap-2">
+                        <span v-if="isSendingBulk">Disparando Credenciais...</span>
+                        <span v-else>Confirmar Disparo em Lote</span>
+                        <svg v-if="!isSendingBulk" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    </button>
+                </div>
             </div>
         </Modal>
         </div>
