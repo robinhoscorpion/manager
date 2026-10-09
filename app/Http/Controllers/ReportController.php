@@ -147,7 +147,7 @@ class ReportController extends Controller
         // Query Sales Services associated with the user as this specific role in the date range
         $services = SalesService::with('proposal')
             ->where($roleColumn, $user->id)
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()])
             ->get();
 
 
