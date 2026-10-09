@@ -67,45 +67,8 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
 
-        // Fetch active qualifications
-        $activeQualifications = Qualification::where('is_active', true)->get(['code', 'name']);
-
-        // Fetch active users with their roles
-        $users = User::with('roles')->where('status', true)->whereHas('roles', function ($q) {
-            $q->whereIn('slug', ['promotor', 'consultor', 'supervisor']);
-        })->get();
-
-        $opcs = [];
-        $liners = [];
-        $closers = [];
-
-        foreach ($users as $user) {
-            if ($user->hasRole('promotor')) {
-                $opcs[] = $this->calculateMetrics($user, 'opc_id', $startDate, $endDate, $activeQualifications);
-            }
-            if ($user->hasRole('consultor')) {
-                $liners[] = $this->calculateMetrics($user, 'liner_id', $startDate, $endDate, $activeQualifications);
-            }
-            if ($user->hasRole('supervisor')) {
-                $closers[] = $this->calculateMetrics($user, 'closer_id', $startDate, $endDate, $activeQualifications);
-            }
-        }
-
-        // Sort by Total Descending
-        usort($opcs, fn($a, $b) => $b['total'] <=> $a['total']);
-        usort($liners, fn($a, $b) => $b['total'] <=> $a['total']);
-        usort($closers, fn($a, $b) => $b['total'] <=> $a['total']);
-
-        $rankingData = [
-            'period' => Carbon::parse($startDate)->format('d/m/Y') . ' - ' . Carbon::parse($endDate)->format('d/m/Y'),
-            'active_qualifications' => $activeQualifications,
-            'opcs' => $opcs,
-            'liners' => $liners,
-            'closers' => $closers
-        ];
-
         return Inertia::render('Reports/SalesRanking', [
-            'rankingData' => $rankingData
+            'rankingData' => $this->buildRankingData($startDate, $endDate)
         ]);
     }
 
@@ -117,11 +80,25 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
 
+        $rankingData = $this->buildRankingData($startDate, $endDate);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-ranking', compact('rankingData'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('ranking-vendas-' . date('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Monta o ranking de OPCs, Liners e Closers do período.
+     * Usuários desativados só entram se tiverem dados (shows) no período.
+     */
+    private function buildRankingData($startDate, $endDate): array
+    {
         // Fetch active qualifications
         $activeQualifications = Qualification::where('is_active', true)->get(['code', 'name']);
 
-        // Fetch active users with their roles
-        $users = User::with('roles')->where('status', true)->whereHas('roles', function ($q) {
+        // Fetch users with their roles (including deactivated ones)
+        $users = User::with('roles')->whereHas('roles', function ($q) {
             $q->whereIn('slug', ['promotor', 'consultor', 'supervisor']);
         })->get();
 
@@ -131,13 +108,13 @@ class ReportController extends Controller
 
         foreach ($users as $user) {
             if ($user->hasRole('promotor')) {
-                $opcs[] = $this->calculateMetrics($user, 'opc_id', $startDate, $endDate, $activeQualifications);
+                $this->pushIfVisible($opcs, $user, $this->calculateMetrics($user, 'opc_id', $startDate, $endDate, $activeQualifications));
             }
             if ($user->hasRole('consultor')) {
-                $liners[] = $this->calculateMetrics($user, 'liner_id', $startDate, $endDate, $activeQualifications);
+                $this->pushIfVisible($liners, $user, $this->calculateMetrics($user, 'liner_id', $startDate, $endDate, $activeQualifications));
             }
             if ($user->hasRole('supervisor')) {
-                $closers[] = $this->calculateMetrics($user, 'closer_id', $startDate, $endDate, $activeQualifications);
+                $this->pushIfVisible($closers, $user, $this->calculateMetrics($user, 'closer_id', $startDate, $endDate, $activeQualifications));
             }
         }
 
@@ -146,18 +123,23 @@ class ReportController extends Controller
         usort($liners, fn($a, $b) => $b['total'] <=> $a['total']);
         usort($closers, fn($a, $b) => $b['total'] <=> $a['total']);
 
-        $rankingData = [
+        return [
             'period' => Carbon::parse($startDate)->format('d/m/Y') . ' - ' . Carbon::parse($endDate)->format('d/m/Y'),
             'active_qualifications' => $activeQualifications,
             'opcs' => $opcs,
             'liners' => $liners,
             'closers' => $closers
         ];
+    }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-ranking', compact('rankingData'))
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download('ranking-vendas-' . date('Y-m-d') . '.pdf');
+    /**
+     * Usuário ativo sempre aparece; desativado só aparece se tiver shows no período.
+     */
+    private function pushIfVisible(array &$list, User $user, array $metrics): void
+    {
+        if ($user->status || $metrics['qualificacao']['show'] > 0) {
+            $list[] = $metrics;
+        }
     }
 
     private function calculateMetrics(User $user, string $roleColumn, $startDate, $endDate, $activeQualifications)
