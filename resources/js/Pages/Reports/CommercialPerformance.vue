@@ -47,7 +47,7 @@ const professionalTabs = [
 const activeProfessional = ref('closer');
 
 const sections = computed(() => [
-    { key: 'profile', title: 'Por Perfil', subtitle: 'Qualificação do casal', column: 'Perfil', rows: props.byProfile },
+    { key: 'profile', title: 'Por Perfil', subtitle: 'Quantidade de casais, ticket médio e VGV por perfil', column: 'Perfil', rows: props.byProfile },
     { key: 'point', title: 'Por Ponto de Captação', subtitle: 'Onde o casal foi captado', column: 'Ponto', rows: props.byPoint },
     { key: 'professional', title: 'Por Profissional', subtitle: 'Função exercida no atendimento', column: 'Profissional', rows: props.professionals?.[activeProfessional.value] ?? [], tabs: true },
 ]);
@@ -64,6 +64,7 @@ const kpis = computed(() => [
     { label: 'Conversão', value: formatPercent(props.totals?.conversao), hint: 'Vendas / casais atendidos' },
     { label: 'VGV', value: formatCurrency(props.totals?.vgv), hint: 'Valor geral de vendas', highlight: true },
     { label: 'Ticket médio', value: formatCurrency(props.totals?.ticket_medio), hint: 'VGV / vendas' },
+    { label: 'VGV por casal', value: formatCurrency(props.totals?.vgv_por_casal), hint: 'VGV / casais atendidos' },
 ]);
 </script>
 
@@ -97,13 +98,13 @@ const kpis = computed(() => [
                     </div>
 
                     <!-- KPIs: faixa única dividida, dentro do cabeçalho -->
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-px bg-slate-200/60 dark:bg-slate-800/60 rounded-b-[20px] overflow-hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-px bg-slate-200/60 dark:bg-slate-800/60 rounded-b-[20px] overflow-hidden">
                         <div
                             v-for="kpi in kpis"
                             :key="kpi.label"
                             class="px-5 py-4 min-w-0"
                             :class="kpi.highlight
-                                ? 'col-span-2 md:col-span-1 bg-[#f4f6f1] dark:bg-[#161d17]'
+                                ? 'bg-[#f4f6f1] dark:bg-[#161d17]'
                                 : 'bg-white dark:bg-slate-900'"
                         >
                             <div class="flex items-center gap-1.5">
@@ -140,13 +141,14 @@ const kpis = computed(() => [
 
                         <div class="ledger-card flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-brand-green/20 dark:border-brand-green/40 rounded-[20px] shadow-sm dark:shadow-none">
                             <div class="w-full overflow-x-auto">
-                                <div class="min-w-[760px]">
+                                <div class="min-w-[880px]">
                                     <div class="ledger-header-row flex items-center gap-3 px-6 py-3">
                                         <div class="flex-1 ledger-th !text-black dark:!text-slate-400">{{ section.column }}</div>
                                         <div class="w-32 text-right ledger-th !text-black dark:!text-slate-400">Casais atendidos</div>
                                         <div class="w-20 text-right ledger-th !text-black dark:!text-slate-400">Vendas</div>
                                         <div class="w-44 ledger-th !text-black dark:!text-slate-400">Conversão</div>
                                         <div class="w-32 text-right ledger-th !text-black dark:!text-slate-400">Ticket médio</div>
+                                        <div class="w-32 text-right ledger-th !text-black dark:!text-slate-400">VGV por casal</div>
                                         <div class="w-36 text-right ledger-th !text-black dark:!text-slate-400">VGV</div>
                                     </div>
 
@@ -156,7 +158,10 @@ const kpis = computed(() => [
                                         class="ledger-row flex items-center gap-3 px-6 py-3 relative"
                                     >
                                         <div class="ledger-row-accent"></div>
-                                        <div class="flex-1 min-w-0 truncate ledger-client-name">{{ row.label }}</div>
+                                        <div class="flex-1 min-w-0 flex items-center gap-2">
+                                            <span v-if="row.code" class="ledger-time-tag !px-2 shrink-0">{{ row.code }}</span>
+                                            <span class="truncate ledger-client-name">{{ row.label }}</span>
+                                        </div>
                                         <div class="w-32 text-right tabular-nums text-sm text-slate-600 dark:text-slate-300">{{ formatNumber(row.atendidos) }}</div>
                                         <div class="w-20 text-right">
                                             <span class="ledger-time-tag tabular-nums">{{ formatNumber(row.vendas) }}</span>
@@ -168,6 +173,7 @@ const kpis = computed(() => [
                                             <span class="w-12 text-right tabular-nums text-xs font-semibold text-slate-700 dark:text-slate-300">{{ formatPercent(row.conversao) }}</span>
                                         </div>
                                         <div class="w-32 text-right tabular-nums text-sm text-slate-600 dark:text-slate-300">{{ formatCurrency(row.ticket_medio) }}</div>
+                                        <div class="w-32 text-right tabular-nums text-sm text-slate-600 dark:text-slate-300">{{ formatCurrency(row.vgv_por_casal) }}</div>
                                         <div class="w-36 text-right">
                                             <div class="tabular-nums text-sm font-bold text-slate-900 dark:text-white">{{ formatCurrency(row.vgv) }}</div>
                                             <div class="tabular-nums text-[10px] ledger-cell-muted">{{ formatPercent(vgvShare(row.vgv)) }} do VGV</div>

@@ -213,12 +213,22 @@ class ReportController extends Controller
             ];
         });
 
-        $qualifications = Qualification::pluck('name', 'code');
+        $qualificationList = Qualification::orderBy('code')->get(['code', 'name', 'is_active']);
+        $qualifications = $qualificationList->pluck('name', 'code');
         $capturePoints = \App\Models\CapturePoint::pluck('name', 'value');
         $userNames = User::pluck('name', 'id');
 
-        $byProfile = $this->groupPerformance($rows, fn($s) => strtoupper(trim($s->qualification ?? '')) ?: null,
-            fn($code) => $code ? ($qualifications[$code] ?? $code) . " ({$code})" : 'Sem perfil');
+        // Por perfil: todos os perfis ativos aparecem (mesmo zerados), em ordem de código (A1, A2, B1, B2, ... NF, NQ, NT)
+        $profileGroups = $rows->groupBy(fn($r) => strtoupper(trim($r['service']->qualification ?? '')));
+        $profileCodes = $qualificationList->where('is_active', true)->pluck('code')
+            ->merge($profileGroups->keys())
+            ->map(fn($code) => strtoupper(trim($code)))
+            ->unique()
+            ->values();
+        $byProfile = $profileCodes->map(fn($code) => array_merge(
+            $this->performanceMetrics($code === '' ? 'Sem perfil' : ($qualifications[$code] ?? $code), $profileGroups->get($code, collect())),
+            ['code' => $code === '' ? '—' : $code]
+        ))->values()->all();
 
         $byPoint = $this->groupPerformance($rows, fn($s) => $s->local ?: null,
             fn($value) => $value ? ($capturePoints[$value] ?? ucfirst(strtolower($value))) : 'Sem ponto');
@@ -266,6 +276,7 @@ class ReportController extends Controller
             'conversao' => $atendidos > 0 ? round($vendas / $atendidos * 100, 2) : 0,
             'vgv' => round($vgv, 2),
             'ticket_medio' => $vendas > 0 ? round($vgv / $vendas, 2) : 0,
+            'vgv_por_casal' => $atendidos > 0 ? round($vgv / $atendidos, 2) : 0,
         ];
     }
 }
