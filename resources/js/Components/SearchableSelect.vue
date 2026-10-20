@@ -28,6 +28,15 @@ const props = defineProps({
     placement: {
         type: String,
         default: 'bottom'
+    },
+    // Permite usar o texto digitado quando não existe na lista (ex.: profissão nova)
+    allowCreate: {
+        type: Boolean,
+        default: false
+    },
+    createLabel: {
+        type: String,
+        default: 'Usar'
     }
 });
 
@@ -56,8 +65,28 @@ const selectedLabel = computed(() => {
         return `${props.modelValue.length} selecionados`;
     }
     const selected = props.options.find(opt => opt.value === props.modelValue);
-    return selected ? selected.label : '';
+    if (selected) return selected.label;
+    // Valor gravado que não está na lista: mostra o próprio texto em vez de deixar o campo vazio
+    return props.allowCreate && props.modelValue ? String(props.modelValue) : '';
 });
+
+const normalizeText = (text) => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+// Texto digitado que pode virar uma opção nova (se não houver opção com o mesmo nome)
+const createCandidate = computed(() => {
+    if (!props.allowCreate || props.multiple) return '';
+    const typed = search.value.trim().replace(/\s+/g, ' ');
+    if (!typed) return '';
+    const exists = props.options.some(opt => normalizeText(opt.label) === normalizeText(typed));
+    return exists ? '' : typed.charAt(0).toUpperCase() + typed.slice(1);
+});
+
+const createOption = () => {
+    if (!createCandidate.value) return;
+    emit('update:modelValue', createCandidate.value);
+    isOpen.value = false;
+    search.value = '';
+};
 
 const isSelected = (value) => {
     if (props.multiple) {
@@ -136,8 +165,9 @@ onUnmounted(() => {
                     type="text"
                     autofocus
                     class="w-full bg-white dark:bg-black/20 border border-slate-200 dark:border-white/5 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500/30 placeholder:text-slate-400 dark:placeholder:text-gray-600 transition-all font-medium"
-                    placeholder="Filtrar..."
+                    :placeholder="allowCreate ? 'Filtrar ou digitar nova...' : 'Filtrar...'"
                     @click.stop
+                    @keydown.enter.prevent="filteredOptions.length === 1 ? selectOption(filteredOptions[0]) : createOption()"
                 >
             </div>
             
@@ -154,7 +184,15 @@ onUnmounted(() => {
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
                 </div>
-                <div v-if="filteredOptions.length === 0" class="px-4 py-3 text-[10px] text-gray-600 uppercase font-bold text-center italic">
+                <div 
+                    v-if="createCandidate"
+                    @click.stop="createOption"
+                    class="px-4 py-2.5 text-[12px] text-brand-green hover:bg-brand-green/10 cursor-pointer transition-colors flex items-center gap-2 border-t border-slate-100 dark:border-white/5 font-bold"
+                >
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+                    <span class="truncate">{{ createLabel }} "{{ createCandidate }}"</span>
+                </div>
+                <div v-if="filteredOptions.length === 0 && !createCandidate" class="px-4 py-3 text-[10px] text-gray-600 uppercase font-bold text-center italic">
                     Nenhum resultado encontrado
                 </div>
             </div>

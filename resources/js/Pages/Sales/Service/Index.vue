@@ -19,6 +19,7 @@ const props = defineProps({
     qualifications: Array,
     complimentaryItems: Array,
     capturePoints: Array,
+    professions: Array,
     columnSettings: Object,
     filters: Object // Added for search persistence
 });
@@ -940,6 +941,7 @@ const hasCortesia = (cortesia) => {
             :qualifications="qualifications"
             :complimentary-items="complimentaryItems"
             :capture-points="capturePoints"
+            :profession-names="professions"
             @close="closeServiceModal"
             @created="handleCreateService"
         />

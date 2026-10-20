@@ -49,6 +49,7 @@ class SalesService extends Model
         'quantidade_filhos',
         'tempo_juntos',
         'renda_familiar',
+        'viagens_por_ano',
         'cortesia',
         'observacoes',
         'welcome_status',

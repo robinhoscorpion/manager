@@ -45,6 +45,12 @@ class HandleInertiaRequests extends Middleware
                 'generated_protocol_number' => $request->session()->get('generated_protocol_number'),
                 'temp_password' => $request->session()->get('temp_password'),
             ],
+            // Profissões digitadas pela equipe aguardando revisão (badge no menu de Configurações)
+            'pendingProfessions' => fn () => $request->user()
+                && ($request->user()->hasRole('admin') || $request->user()->hasPermission('configuracoes.profissoes.acessar'))
+                && \Illuminate\Support\Facades\Schema::hasTable('professions')
+                    ? \App\Models\Profession::where('reviewed', false)->count()
+                    : 0,
 
         ];
     }

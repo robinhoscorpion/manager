@@ -9,15 +9,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
-import { professions } from '@/Constants/Professions';
 
 const props = defineProps({
     schedules: Array,
     metrics: Object,
     complimentaryItems: Array,
+    professions: Array,
     users: Array,
     filters: Object,
 });
+
+// Profissões do cadastro (Configurações → Profissões); as que não existirem podem ser digitadas
+const professionOptions = computed(() => (props.professions || []).map(name => ({ label: name, value: name })));
 
 const isPromoter = computed(() => {
     const roles = usePage().props.auth.roles || [];
@@ -416,7 +419,7 @@ const updateStatus = (schedule, newStatus) => {
                     </div>
 
                     <div class="z-[70] relative">
-                        <SearchableSelect v-model="form.profissao" :options="professions" label="Profissão" placeholder="SELECIONE A PROFISSÃO" />
+                        <SearchableSelect v-model="form.profissao" :options="professionOptions" allow-create create-label="Usar profissão" label="Profissão" placeholder="SELECIONE A PROFISSÃO" />
                     </div>
 
                     <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800/50 space-y-4">
@@ -456,7 +459,7 @@ const updateStatus = (schedule, newStatus) => {
                         </div>
 
                         <div v-if="form.has_spouse" class="animate-in fade-in slide-in-from-top-2 z-[60] relative mt-4">
-                            <SearchableSelect v-model="form.spouse_profissao" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE A PROFISSÃO" />
+                            <SearchableSelect v-model="form.spouse_profissao" :options="professionOptions" allow-create create-label="Usar profissão" label="Profissão do 2º Titular" placeholder="SELECIONE A PROFISSÃO" />
                         </div>
                     </div>
                     <div>

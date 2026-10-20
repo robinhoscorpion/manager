@@ -120,6 +120,9 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Acessar Pontos de Captação', 'slug' => 'configuracoes.pontos_captacao.acessar', 'group' => 'Configurações'],
             ['name' => 'Gerenciar Pontos de Captação', 'slug' => 'configuracoes.pontos_captacao.gerenciar', 'group' => 'Configurações'],
 
+            ['name' => 'Acessar Profissões', 'slug' => 'configuracoes.profissoes.acessar', 'group' => 'Configurações'],
+            ['name' => 'Gerenciar Profissões', 'slug' => 'configuracoes.profissoes.gerenciar', 'group' => 'Configurações'],
+
             ['name' => 'Acessar Logs do Sistema', 'slug' => 'configuracoes.logs.acessar', 'group' => 'Configurações'],
 
             // Relatórios

@@ -9,7 +9,6 @@ const can = (permission) => {
 import Modal from '@/Components/Modal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
-import { professions } from '@/Constants/Professions';
 import { states } from '@/Constants/States';
 import { nationalities } from '@/Constants/Nationalities';
 import { SERVICE_STATUS } from '@/Constants/ServiceStatus';
@@ -20,10 +19,14 @@ const props = defineProps({
     qualifications: Array,
     complimentaryItems: Array,
     capturePoints: { type: Array, default: () => [] },
+    professionNames: { type: Array, default: () => [] },
     initialData: Object,
 });
 
 const emit = defineEmits(['close', 'created']);
+
+// Profissões do cadastro (Configurações → Profissões); as que não existirem podem ser digitadas
+const professions = computed(() => props.professionNames.map(name => ({ label: name, value: name })));
 
 const statuses = Object.values(SERVICE_STATUS).map(s => ({
     label: s.label,
@@ -104,6 +107,7 @@ const form = ref({
     complemento: '',
     pontoReferencia: '',
     cortesia: [],
+    viagensPorAno: '',
     observacoes: '',
 });
 
@@ -120,6 +124,7 @@ watch(() => props.initialData, (newVal) => {
         form.value.qualification = newVal.qualification;
         form.value.cortesia = Array.isArray(newVal.cortesia) ? newVal.cortesia : (newVal.cortesia ? [newVal.cortesia] : []);
         form.value.observacoes = newVal.observacoes;
+        form.value.viagensPorAno = newVal.viagens_por_ano ?? '';
         
         // Dados do Cliente (Relação)
         if (newVal.client) {
@@ -172,7 +177,7 @@ watch(() => props.initialData, (newVal) => {
             isEstrangeiro: false, nome: '', cpf: '', rg: '', nacionalidade: 'Brasileira', dataNascimento: '', idade: '', profissao: '', estadoCivil: 'solteiro', celular1: '', celular2: '', email: '',
             temConjuge: false, tipoRelacionamento: '', nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira', dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: 'solteiro',
             quantidadeFilhos: 0, tempoJuntos: '', rendaFamiliar: '',
-            cep: '', rua: '', bairro: '', numero: '', cidade: '', estado: '', pais: 'Brasil', complemento: '', pontoReferencia: '', cortesia: [], observacoes: ''
+            cep: '', rua: '', bairro: '', numero: '', cidade: '', estado: '', pais: 'Brasil', complemento: '', pontoReferencia: '', cortesia: [], viagensPorAno: '', observacoes: ''
         });
         isReadOnly.value = false;
     }
@@ -493,7 +498,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-else></div>
                         </div>
                         <div class="col-span-12 sm:col-span-5 flex flex-col">
-                            <SearchableSelect v-model="form.profissao" :options="professions" label="Profissão" placeholder="SELECIONE" :error="errors.profissao" :disabled="isReadOnly"  required />
+                            <SearchableSelect v-model="form.profissao" :options="professions" allow-create create-label="Usar profissão" label="Profissão" placeholder="SELECIONE" :error="errors.profissao" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.profissao"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
@@ -560,7 +565,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate">Estado civil legal (vai para o contrato)</div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
-                                <SearchableSelect v-model="form.profissaoConjuge" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly"  required />
+                                <SearchableSelect v-model="form.profissaoConjuge" :options="professions" allow-create create-label="Usar profissão" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly"  required />
                                 <div class="h-[14px]"></div>
                             </div>
                         </div>
@@ -661,6 +666,11 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     <div class="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
                         <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
                         <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">5. Observações do Atendimento</h3>
+                    </div>
+                    <div class="flex flex-col sm:w-64">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Quantidade de Viagens por Ano</label>
+                        <input v-model="form.viagensPorAno" type="number" min="0" max="365" step="1" inputmode="numeric" :disabled="isReadOnly" placeholder="EX: 2" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm disabled:opacity-50 placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                        <div v-if="errors.viagensPorAno" class="text-red-500 text-[10px] mt-1 px-1 font-medium">{{ errors.viagensPorAno }}</div>
                     </div>
                     <div class="flex flex-col">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Detalhes Adicionais</label>

@@ -50,6 +50,7 @@ class SalesServiceController extends Controller
             'qualifications' => Qualification::where('is_active', true)->get(),
             'complimentaryItems' => ComplimentaryItem::where('is_active', true)->where('type', 'atendimento')->orderBy('name')->get(),
             'capturePoints' => \App\Models\CapturePoint::orderBy('name')->get(['name', 'value', 'active']),
+            'professions' => \App\Models\Profession::activeNames(),
             'columnSettings' => \App\Models\Setting::where('key', 'service_list_columns')->first()?->value ?? [
                 'id' => true,
                 'date' => true,
@@ -96,6 +97,7 @@ class SalesServiceController extends Controller
 
             // Família
             'quantidadeFilhos' => 'nullable|integer|min:0',
+            'viagensPorAno' => 'nullable|integer|min:0|max:365',
             'tempoJuntos' => 'nullable|string',
             'rendaFamiliar' => 'nullable|string',
             'tipoRelacionamento' => 'nullable|string',
@@ -156,6 +158,7 @@ class SalesServiceController extends Controller
             'celular1' => 'Celular',
             'email' => 'E-mail',
             'quantidadeFilhos' => 'Quantidade de Filhos',
+            'viagensPorAno' => 'Quantidade de Viagens por Ano',
             'tempoJuntos' => 'Tempo Juntos',
             'rendaFamiliar' => 'Renda Mensal',
             'cep' => 'CEP',
@@ -171,6 +174,12 @@ class SalesServiceController extends Controller
         ];
 
         $request->validate($rules, $messages, $attributes);
+
+        // Profissão digitada que não existe entra no cadastro como "a revisar" (Configurações → Profissões)
+        $request->merge([
+            'profissao' => \App\Models\Profession::register($request->profissao),
+            'profissaoConjuge' => \App\Models\Profession::register($request->profissaoConjuge),
+        ]);
 
         DB::transaction(function () use ($request) {
             // 1. Criar Cliente
@@ -231,6 +240,7 @@ class SalesServiceController extends Controller
 
                 // Logística
                 'cortesia' => $request->cortesia,
+                'viagens_por_ano' => $request->filled('viagensPorAno') ? (int) $request->viagensPorAno : null,
                 'observacoes' => $request->observacoes,
             ]);
         });
@@ -256,6 +266,13 @@ class SalesServiceController extends Controller
             'profissaoConjuge' => 'nullable|string',
             'tipoRelacionamento' => 'nullable|string',
             'tempoJuntos' => 'nullable|string',
+            'viagensPorAno' => 'nullable|integer|min:0|max:365',
+        ]);
+
+        // Profissão digitada que não existe entra no cadastro como "a revisar" (Configurações → Profissões)
+        $request->merge([
+            'profissao' => \App\Models\Profession::register($request->profissao),
+            'profissaoConjuge' => \App\Models\Profession::register($request->profissaoConjuge),
         ]);
 
         DB::transaction(function () use ($request, $service) {
@@ -310,6 +327,7 @@ class SalesServiceController extends Controller
                 'tempo_juntos' => $request->tempoJuntos,
                 'renda_familiar' => $request->rendaFamiliar,
                 'cortesia' => $request->cortesia,
+                'viagens_por_ano' => $request->filled('viagensPorAno') ? (int) $request->viagensPorAno : null,
                 'observacoes' => $request->observacoes,
             ]);
 

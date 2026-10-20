@@ -60,6 +60,7 @@ class ScheduleController extends Controller
             'schedules' => $schedules,
             'metrics' => $metrics,
             'complimentaryItems' => ComplimentaryItem::where('is_active', true)->where('type', 'atendimento')->orderBy('name')->get(),
+            'professions' => \App\Models\Profession::activeNames(),
             'users' => User::select('id', 'name')->with('roles:name,slug')->get()->map(function($u) {
                 return [ 'id' => $u->id, 'name' => $u->name, 'roles' => $u->roles->pluck('slug') ];
             }),
@@ -96,6 +97,10 @@ class ScheduleController extends Controller
             'cortesia.*' => 'nullable|string',
             'user_id' => 'nullable|exists:users,id',
         ]);
+
+        // Profissão digitada que não existe entra no cadastro como "a revisar"
+        $validated['profissao'] = \App\Models\Profession::register($validated['profissao'] ?? null);
+        $validated['spouse_profissao'] = \App\Models\Profession::register($validated['spouse_profissao'] ?? null);
 
         $validated['user_id'] = $request->input('user_id') ?? auth()->id();
         $validated['status'] = 'scheduled';

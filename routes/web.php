@@ -198,6 +198,14 @@ Route::middleware('auth')->group(function () {
     Route::put('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'update'])->name('admin.protocol_subjects.update')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
     Route::delete('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'destroy'])->name('admin.protocol_subjects.destroy')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
 
+    // Profissões
+    Route::get('admin/professions', [\App\Http\Controllers\Admin\ProfessionController::class, 'index'])->name('admin.professions.index')->middleware('permission:configuracoes.profissoes.acessar');
+    Route::post('admin/professions', [\App\Http\Controllers\Admin\ProfessionController::class, 'store'])->name('admin.professions.store')->middleware('permission:configuracoes.profissoes.gerenciar');
+    Route::put('admin/professions/{profession}', [\App\Http\Controllers\Admin\ProfessionController::class, 'update'])->name('admin.professions.update')->middleware('permission:configuracoes.profissoes.gerenciar');
+    Route::post('admin/professions/{profession}/approve', [\App\Http\Controllers\Admin\ProfessionController::class, 'approve'])->name('admin.professions.approve')->middleware('permission:configuracoes.profissoes.gerenciar');
+    Route::post('admin/professions/{profession}/merge', [\App\Http\Controllers\Admin\ProfessionController::class, 'merge'])->name('admin.professions.merge')->middleware('permission:configuracoes.profissoes.gerenciar');
+    Route::delete('admin/professions/{profession}', [\App\Http\Controllers\Admin\ProfessionController::class, 'destroy'])->name('admin.professions.destroy')->middleware('permission:configuracoes.profissoes.gerenciar');
+
     // Pontos de Captação
     Route::get('admin/capture-points', [\App\Http\Controllers\Admin\CapturePointController::class, 'index'])->name('admin.capture_points.index')->middleware('permission:configuracoes.pontos_captacao.acessar');
     Route::post('admin/capture-points', [\App\Http\Controllers\Admin\CapturePointController::class, 'store'])->name('admin.capture_points.store')->middleware('permission:configuracoes.pontos_captacao.gerenciar');

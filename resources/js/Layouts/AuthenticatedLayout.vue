@@ -310,7 +310,7 @@ const toggleSidebar = () => {
                         <span>Cargos</span>
                     </Link>
 
-                    <div v-if="hasAnyPermission(['configuracoes.tabela_pontos.acessar', 'configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar', 'configuracoes.pontos_captacao.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
+                    <div v-if="hasAnyPermission(['configuracoes.tabela_pontos.acessar', 'configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar', 'configuracoes.pontos_captacao.acessar', 'configuracoes.profissoes.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleConfig">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -396,6 +396,11 @@ const toggleSidebar = () => {
                             <Link v-if="can('configuracoes.pontos_captacao.acessar')" :href="route('admin.capture_points.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.capture_points.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.capture_points.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Pontos de Captação
+                            </Link>
+                            <Link v-if="can('configuracoes.profissoes.acessar')" :href="route('admin.professions.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.professions.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.professions.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Profissões
+                                <span v-if="$page.props.pendingProfessions" class="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">{{ $page.props.pendingProfessions }}</span>
                             </Link>
                         </div>
                     </div>
