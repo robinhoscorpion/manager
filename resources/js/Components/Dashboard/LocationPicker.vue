@@ -5,22 +5,32 @@ const props = defineProps({
     modelValue: {
         type: String,
         default: 'Todos'
+    },
+    capturePoints: {
+        type: Array,
+        default: () => []
     }
 });
 
 const emit = defineEmits(['update:modelValue']);
 
 const isOpen = ref(false);
-const options = [
-    { label: 'Todos os Locais', value: 'Todos', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-    { label: 'Hotel', value: 'hotel', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-    { label: 'Sindicato', value: 'sindicato', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-    { label: 'Externo', value: 'externo', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z' },
-    { label: 'Aeroporto', value: 'aeroporto', icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2 2 2 0 012 2v.1a2 2 0 002 2 2 2 0 012 2v1.5a2.5 2.5 0 01-2.5 2.5 2.5 2.5 0 01-2.5-2.5V17a2 2 0 00-2-2 2 2 0 01-2-2c0-1.105-.895-2-2-2H10a2 2 0 00-2 2v3.5a2.5 2.5 0 01-2.5 2.5 2.5 2.5 0 01-2.5-2.5V12a2 2 0 00-2-2 2 2 0 01-2-2V7a2 2 0 012-2 2 2 0 002-2 2 2 0 012-2h1.5a2.5 2.5 0 012.5 2.5z' }
-];
+const iconByValue = {
+    Todos: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+    hotel: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+    sindicato: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+    externo: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z',
+    aeroporto: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2 2 2 0 012 2v.1a2 2 0 002 2 2 2 0 012 2v1.5a2.5 2.5 0 01-2.5 2.5 2.5 2.5 0 01-2.5-2.5V17a2 2 0 00-2-2 2 2 0 01-2-2c0-1.105-.895-2-2-2H10a2 2 0 00-2 2v3.5a2.5 2.5 0 01-2.5 2.5 2.5 2.5 0 01-2.5-2.5V12a2 2 0 00-2-2 2 2 0 01-2-2V7a2 2 0 012-2 2 2 0 002-2 2 2 0 012-2h1.5a2.5 2.5 0 012.5 2.5z',
+};
+const defaultIcon = iconByValue.externo;
+
+const options = computed(() => [
+    { label: 'Todos os Locais', value: 'Todos', icon: iconByValue.Todos },
+    ...props.capturePoints.map(p => ({ label: p.name, value: p.value, icon: iconByValue[p.value] ?? defaultIcon })),
+]);
 
 const selectedLabel = computed(() => {
-    const option = options.find(o => o.value === props.modelValue);
+    const option = options.value.find(o => o.value === props.modelValue);
     return option ? option.label : 'Todos os Locais';
 });
 

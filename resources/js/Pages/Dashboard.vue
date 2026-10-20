@@ -108,6 +108,9 @@ const goalPercentage = computed(() => {
 });
 
 const dailyGoal = computed(() => daysInMonth.value > 0 ? (revenueTarget.value / daysInMonth.value) : 0);
+// Ticket médio = valor vendido ÷ contratos aprovados no mês
+const averageTicket = computed(() => props.total_contracts > 0 ? props.total_sales_revenue / props.total_contracts : 0);
+
 const dailyAverage = computed(() => currentDay.value > 0 ? (props.total_sales_revenue / currentDay.value) : 0);
 const isDailyGoalExceeded = computed(() => dailyAverage.value >= dailyGoal.value);
 
@@ -377,11 +380,19 @@ const chartData = computed(() => {
         </div>
 
         <!-- ── Secondary KPI Cards (Atendimentos & Sócios) ── -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 animate-fade-in-up stagger-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6 animate-fade-in-up stagger-2">
             <StatCard title="Total de Vendas" :value="formatCurrency(total_sales_revenue)" trend="+8,4%" :trend-up="true">
                 <template #icon>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </template>
+            </StatCard>
+
+            <StatCard title="Ticket Médio" :value="formatCurrency(averageTicket)" :trend="null" :subtitle="`${total_contracts} contrato(s) no mês`">
+                <template #icon>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                 </template>
             </StatCard>

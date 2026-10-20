@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/protocols/bulk-update', [\App\Http\Controllers\ProtocolController::class, 'bulkUpdate'])->name('sales.protocols.bulk-update')->middleware('permission:atendimentos.editar');
     Route::post('/protocols/{protocol}/replies', [\App\Http\Controllers\ProtocolReplyController::class, 'store'])->name('sales.protocols.replies.store')->middleware('permission:atendimentos.editar');
     Route::get('/linha-atendimento', [ServiceLineController::class, 'index'])->name('sales.linha')->middleware('permission:atendimentos.acessar');
+    Route::get('/linha-atendimento/pdf', [ServiceLineController::class, 'exportPdf'])->name('sales.linha.pdf')->middleware('permission:atendimentos.acessar');
     Route::patch('/linha-atendimento/order', [ServiceLineController::class, 'updateOrder'])->name('sales.linha.order')->middleware('permission:atendimentos.acessar');
     Route::patch('/linha-atendimento/{position}/status', [ServiceLineController::class, 'updateStatus'])->name('sales.linha.status')->middleware('permission:atendimentos.acessar');
     Route::post('/linha-atendimento/{group}/call-next', [ServiceLineController::class, 'callNext'])->name('sales.linha.call-next')->middleware('permission:atendimentos.acessar');
@@ -197,6 +198,12 @@ Route::middleware('auth')->group(function () {
     Route::put('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'update'])->name('admin.protocol_subjects.update')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
     Route::delete('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'destroy'])->name('admin.protocol_subjects.destroy')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
 
+    // Pontos de Captação
+    Route::get('admin/capture-points', [\App\Http\Controllers\Admin\CapturePointController::class, 'index'])->name('admin.capture_points.index')->middleware('permission:configuracoes.pontos_captacao.acessar');
+    Route::post('admin/capture-points', [\App\Http\Controllers\Admin\CapturePointController::class, 'store'])->name('admin.capture_points.store')->middleware('permission:configuracoes.pontos_captacao.gerenciar');
+    Route::put('admin/capture-points/{capturePoint}', [\App\Http\Controllers\Admin\CapturePointController::class, 'update'])->name('admin.capture_points.update')->middleware('permission:configuracoes.pontos_captacao.gerenciar');
+    Route::delete('admin/capture-points/{capturePoint}', [\App\Http\Controllers\Admin\CapturePointController::class, 'destroy'])->name('admin.capture_points.destroy')->middleware('permission:configuracoes.pontos_captacao.gerenciar');
+
     // Tabela de Pontos, Temporadas e Feriados
     Route::get('admin/tabela-pontos', [\App\Http\Controllers\Admin\PointTableController::class, 'index'])->name('admin.tabela_pontos.index')->middleware('permission:configuracoes.tabela_pontos.acessar');
     Route::post('admin/tabela-pontos/score', [\App\Http\Controllers\Admin\PointTableController::class, 'updateScore'])->name('admin.tabela_pontos.score')->middleware('permission:configuracoes.tabela_pontos.acessar');
@@ -299,6 +306,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('relatorios')->name('reports.')->middleware('permission:relatorios.acessar')->group(function () {
         Route::get('/ranking-de-vendas', [ReportController::class, 'salesRanking'])->name('sales-ranking');
         Route::get('/ranking-de-vendas/pdf', [ReportController::class, 'exportPdf'])->name('sales-ranking.pdf');
+        Route::get('/desempenho-comercial', [ReportController::class, 'commercialPerformance'])->name('commercial-performance');
         // [DEBUG TEMPORÁRIO] Remover após diagnóstico
         Route::get('/debug-shows', [ReportController::class, 'debugShows'])->name('debug-shows');
     });

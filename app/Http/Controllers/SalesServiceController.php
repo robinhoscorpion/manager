@@ -15,7 +15,7 @@ class SalesServiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SalesService::with(['client.address', 'proposal.payments', 'proposal.product', 'opcUser', 'linerUser', 'closerUser', 'mktUser']);
+        $query = SalesService::with(['client.address', 'proposal.payments', 'proposal.product', 'opcUser', 'linerUser', 'closerUser', 'mktUser', 'schedule.user:id,name']);
 
         // Controle de Acesso Restrito (RBAC)
         $user = auth()->user();
@@ -49,6 +49,7 @@ class SalesServiceController extends Controller
             'filters' => $request->only(['search']),
             'qualifications' => Qualification::where('is_active', true)->get(),
             'complimentaryItems' => ComplimentaryItem::where('is_active', true)->where('type', 'atendimento')->orderBy('name')->get(),
+            'capturePoints' => \App\Models\CapturePoint::orderBy('name')->get(['name', 'value', 'active']),
             'columnSettings' => \App\Models\Setting::where('key', 'service_list_columns')->first()?->value ?? [
                 'id' => true,
                 'date' => true,
@@ -143,7 +144,7 @@ class SalesServiceController extends Controller
         $attributes = [
             'date' => 'Data',
             'time' => 'Hora',
-            'local' => 'Local',
+            'local' => 'Ponto de captação',
             'status' => 'Status',
             'opc_id' => 'OPC (Atendente)',
             'qualification' => 'Qualificação',
@@ -151,6 +152,7 @@ class SalesServiceController extends Controller
             'dataNascimento' => 'Data de Nascimento',
             'profissao' => 'Profissão',
             'estadoCivil' => 'Estado Civil',
+            'tipoRelacionamento' => 'Relação com o 1º Titular',
             'celular1' => 'Celular',
             'email' => 'E-mail',
             'quantidadeFilhos' => 'Quantidade de Filhos',
@@ -387,7 +389,8 @@ class SalesServiceController extends Controller
             'proposal.product.contractTemplate',
             'protocols.user',
             'protocols.replies.user',
-            'reservationRequests.user'
+            'reservationRequests.user',
+            'schedule.user:id,name'
         ]);
 
         $destinations = \App\Models\PointTable\Resort::with(['accommodations' => function($q) { $q->with(['scores.season']); }])->orderBy('name')->get();

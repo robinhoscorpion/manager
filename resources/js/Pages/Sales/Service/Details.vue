@@ -570,7 +570,7 @@ const getPriorityLabel = (priority) => {
 const getPriorityColor = (priority) => {
     const colors = {
         'baixa': 'border-green-200 text-green-600 bg-green-50 dark:border-green-500/30 dark:text-green-400 dark:bg-green-500/10',
-        'media': 'border-brand-green text-brand-green bg-brand-green dark:border-brand-green/30 dark:text-brand-green dark:bg-brand-green/10',
+        'media': 'border-brand-green/30 text-brand-green bg-brand-green/10 dark:border-brand-green/30 dark:text-brand-green dark:bg-brand-green/10',
         'alta': 'border-orange-200 text-orange-600 bg-orange-50 dark:border-orange-500/30 dark:text-orange-400 dark:bg-orange-500/10',
         'urgente': 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30'
     };
@@ -588,7 +588,7 @@ const getProtocolStatusLabel = (status) => {
 
 const getProtocolStatusColor = (status) => {
     const colors = {
-        'aberto': 'bg-brand-green text-brand-green border-brand-green dark:bg-brand-green/10 dark:text-brand-green dark:border-brand-green/30',
+        'aberto': 'bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-green/10 dark:text-brand-green dark:border-brand-green/30',
         'em_andamento': 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30',
         'fechado': 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
     };
@@ -627,7 +627,7 @@ const updateProtocolStatus = (protocolId, status) => {
                     
                     <div class="relative z-20 p-8 lg:p-10">
                         <!-- Breadcrumb -->
-                        <nav class="flex items-center gap-2 text-[10px] font-bold text-slate-400/60 uppercase tracking-widest mb-6">
+                        <nav class="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">
                             <Link :href="route('sales.atendimentos')" class="hover:text-slate-400 transition-colors">Sala de Vendas</Link>
                             <span class="text-white/20">/</span>
                             <span class="text-slate-400">Contrato #{{ proposal?.contract_number || 'S/N' }}</span>
@@ -637,7 +637,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <!-- Identity -->
                             <div class="space-y-4">
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+                                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border"
                                         :class="proposal?.status === 'cancelled'
                                             ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30'
                                             : (proposal?.contract_number
@@ -646,7 +646,14 @@ const updateProtocolStatus = (protocolId, status) => {
                                         {{ proposal?.status === 'cancelled' ? '● Contrato Cancelado' : (proposal?.contract_number ? '● Contrato Ativo' : '○ Sem Contrato') }}
                                     </span>
                                     <span class="text-white/30 text-xs">|</span>
-                                    <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{{ formatDate(service.date) }} às {{ service.time }}</span>
+                                    <span class="text-slate-400 text-[11px] font-bold uppercase tracking-widest">{{ formatDate(service.date) }} às {{ service.time }}</span>
+                                    <template v-if="service.schedule_id">
+                                        <span class="text-white/30 text-xs">|</span>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border bg-sky-500/10 text-sky-500 dark:text-sky-400 border-sky-200 dark:border-sky-500/30">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                            Veio de agendamento<template v-if="service.schedule?.user?.name"> · {{ service.schedule.user.name }}</template>
+                                        </span>
+                                    </template>
                                 </div>
 
                                 <h1 class="text-3xl lg:text-4xl font-bold text-white uppercase tracking-tight leading-none">
@@ -654,8 +661,8 @@ const updateProtocolStatus = (protocolId, status) => {
                                 </h1>
 
                                 <div class="flex flex-wrap items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                    <span v-if="client?.cpf">CPF: <span class="text-white/70 font-mono">{{ client.cpf }}</span></span>
-                                    <span v-if="product">Produto: <span class="text-white/70">{{ product.name }}</span></span>
+                                    <span v-if="client?.cpf">CPF: <span class="text-white font-mono">{{ client.cpf }}</span></span>
+                                    <span v-if="product">Produto: <span class="text-white">{{ product.name }}</span></span>
                                     <span v-if="proposal?.contract_number">Contrato: <span class="text-brand-green font-mono font-bold">{{ proposal.contract_number }}</span></span>
                                 </div>
                             </div>
@@ -664,7 +671,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <div class="flex flex-wrap gap-3 shrink-0">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
-                                        <button class="flex items-center gap-2.5 bg-brand-green hover:bg-brand-green/90 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-brand-green/20 active:scale-95">
+                                        <button class="flex items-center gap-2.5 bg-brand-green hover:bg-brand-green/90 text-white px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-brand-green/20 active:scale-95">
                                             Opções
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -692,7 +699,7 @@ const updateProtocolStatus = (protocolId, status) => {
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border" :class="getReservationStatusColor(selectedReservation.status)">
+                        <span class="px-2.5 py-1 text-[11px] font-bold uppercase rounded-md border" :class="getReservationStatusColor(selectedReservation.status)">
                             {{ getReservationStatusLabel(selectedReservation.status) }}
                         </span>
                         <button @click="closeReservationViewModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -706,21 +713,21 @@ const updateProtocolStatus = (protocolId, status) => {
                     <!-- Grid Principal -->
                     <div class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Destino</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Destino</span>
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ selectedReservation.destination || '—' }}</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Acomodação</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Acomodação</span>
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ selectedReservation.accommodation || 'Não informada' }}</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Período de Estada</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Período de Estada</span>
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
                                 {{ selectedReservation.check_in }} → {{ selectedReservation.check_out }}
                             </span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Pontos Consumidos</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Pontos Consumidos</span>
                             <span class="text-xs font-bold text-amber-600 dark:text-amber-400">
                                 {{ (selectedReservation.points_used || 0).toLocaleString('pt-BR') }} pts
                             </span>
@@ -746,10 +753,10 @@ const updateProtocolStatus = (protocolId, status) => {
                             <div v-for="(day, idx) in modalBreakdown.dailyList" :key="idx" class="px-4 py-2.5 flex items-center justify-between text-xs bg-white dark:bg-slate-900">
                                 <div class="flex items-center gap-3">
                                     <span class="font-bold text-slate-800 dark:text-slate-200">{{ day.date }}</span>
-                                    <span v-if="day.isHoliday" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40">
+                                    <span v-if="day.isHoliday" class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40">
                                         Feriado: {{ day.holidayName }}
                                     </span>
-                                    <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                                    <span v-else class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
                                         Tipo: {{ day.seasonName }}
                                     </span>
                                 </div>
@@ -783,7 +790,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <span class="font-bold text-slate-800 dark:text-slate-200">
                                     {{ guest.name || `Hóspede ${gIdx + 1}` }}
                                 </span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                                     {{ guest.type === 'child' ? 'Criança' : 'Adulto' }}
                                 </span>
                             </div>
@@ -832,22 +839,22 @@ const updateProtocolStatus = (protocolId, status) => {
                                 </Dropdown>
                                 
                                 <button @click="printDocument('sales.atendimentos.contrato.pdf')"
-                                    class="flex items-center gap-2.5 bg-white text-slate-900 hover:bg-brand-green hover:text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-xl shadow-black/20 active:scale-95">
+                                    class="flex items-center gap-2.5 bg-white text-slate-900 hover:bg-brand-green hover:text-white px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-xl shadow-black/20 active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Contrato
                                 </button>
                                 <button @click="printDocument('sales.atendimentos.proposta.pdf')"
-                                    class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                                    class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                     Proposta
                                 </button>
                                 <button @click="printDocument('sales.atendimentos.checklist.pdf')"
-                                    class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                                    class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                                     Checklist
                                 </button>
                                 <button @click="printDocument('sales.atendimentos.ficha.pdf')"
-                                    class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                                    class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                     Ficha
                                 </button>
@@ -873,12 +880,12 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="w-8 h-8 rounded-xl bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center">
                                     <svg class="w-4 h-4 text-brand-green dark:text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                 </div>
-                                <p class="text-[10px] font-bold text-slate-500 dark:text-gray-500 uppercase tracking-widest">Valor do Contrato</p>
+                                <p class="text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Valor do Contrato</p>
                             </div>
                             <p class="text-3xl font-bold text-slate-900 dark:text-white font-mono leading-none">{{ formatCurrency(totalValue) }}</p>
                             <div class="mt-3 flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-md bg-brand-green dark:bg-brand-green/10 text-brand-green dark:text-brand-green text-[9px] font-bold uppercase tracking-widest">{{ totalPoints.toLocaleString() }} pts</span>
-                                <span class="text-[10px] text-slate-500 font-medium">{{ product?.duration || 'S/D' }}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-brand-green/10 dark:bg-brand-green/10 text-brand-green dark:text-brand-green text-[11px] font-bold uppercase tracking-widest">{{ totalPoints.toLocaleString() }} pts</span>
+                                <span class="text-[11px] text-slate-500 font-medium">{{ product?.duration || 'S/D' }}</span>
                             </div>
                         </div>
                     </div>
@@ -894,7 +901,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
                                     <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 </div>
-                                <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500/80 uppercase tracking-widest">Total Pago</p>
+                                <p class="text-[11px] font-bold text-emerald-600 dark:text-emerald-500/80 uppercase tracking-widest">Total Pago</p>
                             </div>
                             <p class="text-3xl font-bold text-emerald-700 dark:text-emerald-400 font-mono leading-none">{{ formatCurrency(totalPaid) }}</p>
                             <div class="mt-3 space-y-1.5">
@@ -903,7 +910,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                         class="h-full bg-brand-green rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
                                     </div>
                                 </div>
-                                <p class="text-[10px] text-emerald-600/70 dark:text-emerald-500/60 font-bold">{{ percentPaid }}% quitado</p>
+                                <p class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">{{ percentPaid }}% quitado</p>
                             </div>
                         </div>
                     </div>
@@ -919,11 +926,11 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="w-8 h-8 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 flex items-center justify-center">
                                     <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </div>
-                                <p class="text-[10px] font-bold text-orange-600 dark:text-orange-500/80 uppercase tracking-widest">Saldo em Aberto</p>
+                                <p class="text-[11px] font-bold text-orange-600 dark:text-orange-500/80 uppercase tracking-widest">Saldo em Aberto</p>
                             </div>
                             <p class="text-3xl font-bold text-orange-700 dark:text-orange-400 font-mono leading-none">{{ formatCurrency(amountOpen) }}</p>
                             <div class="mt-3">
-                                <span class="px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[9px] font-bold uppercase tracking-widest">{{ (100 - parseFloat(percentPaid)).toFixed(1) }}% pendente</span>
+                                <span class="px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[11px] font-bold uppercase tracking-widest">{{ (100 - parseFloat(percentPaid)).toFixed(1) }}% pendente</span>
                             </div>
                         </div>
                     </div>
@@ -939,14 +946,14 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="w-8 h-8 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
                                     <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
                                 </div>
-                                <p class="text-[10px] font-bold text-amber-600 dark:text-amber-500/80 uppercase tracking-widest">Pontos Disponíveis</p>
+                                <p class="text-[11px] font-bold text-amber-600 dark:text-amber-500/80 uppercase tracking-widest">Pontos Disponíveis</p>
                             </div>
                             <p class="text-3xl font-bold text-amber-700 dark:text-amber-400 leading-none">
                                 {{ availablePoints.toLocaleString() }} <span class="text-lg font-bold opacity-50">pts</span>
                             </p>
                             <div class="mt-3 flex flex-wrap gap-1.5">
-                                <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase tracking-widest">{{ releasedPoints.toLocaleString() }} liberados</span>
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-500 text-[9px] font-bold uppercase tracking-widest">{{ utilizedPoints.toLocaleString() }} usados</span>
+                                <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold uppercase tracking-widest">{{ releasedPoints.toLocaleString() }} liberados</span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-400 text-[11px] font-bold uppercase tracking-widest">{{ utilizedPoints.toLocaleString() }} usados</span>
                             </div>
                         </div>
                     </div>
@@ -958,7 +965,7 @@ const updateProtocolStatus = (protocolId, status) => {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <!-- Vigência -->
                     <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-[20px] p-6 hover:shadow-lg transition-all duration-300">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-5 flex items-center gap-2.5">
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-5 flex items-center gap-2.5">
                             <span class="w-5 h-5 rounded-lg bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center">
                                 <svg class="w-3 h-3 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"/></svg>
                             </span>
@@ -966,15 +973,15 @@ const updateProtocolStatus = (protocolId, status) => {
                         </h3>
                         <div class="grid grid-cols-3 gap-6">
                             <div class="space-y-2">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Duração</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Duração</p>
                                 <p class="text-lg font-bold text-slate-900 dark:text-white leading-none">{{ product?.duration || 'N/A' }}</p>
                             </div>
                             <div class="space-y-2">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Expira em</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Expira em</p>
                                 <p class="text-lg font-bold text-slate-900 dark:text-white leading-none">{{ usableUntilStr }}</p>
                             </div>
                             <div class="space-y-2">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Restam</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Restam</p>
                                 <p class="text-lg font-bold text-brand-green dark:text-brand-green leading-none">{{ yearsRemainingVal }} <span class="text-sm font-bold opacity-60">anos</span></p>
                             </div>
                         </div>
@@ -982,7 +989,7 @@ const updateProtocolStatus = (protocolId, status) => {
 
                     <!-- Dados do Titular -->
                     <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 rounded-[20px] p-6 hover:shadow-lg transition-all duration-300">
-                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-5 flex items-center gap-2.5">
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-5 flex items-center gap-2.5">
                             <span class="w-5 h-5 rounded-lg bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center">
                                 <svg class="w-3 h-3 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                             </span>
@@ -990,19 +997,19 @@ const updateProtocolStatus = (protocolId, status) => {
                         </h3>
                         <div class="grid grid-cols-2 gap-x-6 gap-y-4">
                             <div class="space-y-1">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Celular</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Celular</p>
                                 <p class="text-sm font-bold text-slate-900 dark:text-white">{{ client?.celular1 || '—' }}</p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Estado Civil</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Estado Civil</p>
                                 <p class="text-sm font-bold text-slate-900 dark:text-white capitalize">{{ client?.estado_civil || '—' }}</p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Cidade / UF</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Cidade / UF</p>
                                 <p class="text-sm font-bold text-slate-900 dark:text-white">{{ [client?.address?.cidade, client?.address?.estado].filter(Boolean).join(' / ') || '—' }}</p>
                             </div>
                             <div class="space-y-1">
-                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">E-mail</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">E-mail</p>
                                 <p class="text-sm font-bold text-slate-900 dark:text-white truncate">{{ client?.email || '—' }}</p>
                             </div>
                         </div>
@@ -1020,7 +1027,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                 Histórico de Protocolos
                             </h3>
-                            <span class="px-2 py-0.5 rounded-full bg-brand-green/10 text-brand-green dark:text-brand-green text-[10px] font-bold uppercase tracking-widest">
+                            <span class="px-2 py-0.5 rounded-full bg-brand-green/10 text-brand-green dark:text-brand-green text-[11px] font-bold uppercase tracking-widest">
                                 {{ service.protocols.length }} Registros
                             </span>
                         </div>
@@ -1038,7 +1045,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="absolute -left-[17px] top-1">
                                     <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-white dark:border-[#141925] shadow-sm flex items-center justify-center ring-1 ring-slate-200 dark:ring-white/10 z-10 overflow-hidden group-hover/timeline:scale-110 transition-transform duration-300">
                                         <img v-if="protocol.user?.profile_photo_url" :src="protocol.user.profile_photo_url" class="w-full h-full object-cover">
-                                        <div v-else class="w-full h-full bg-brand-green dark:bg-brand-green/20 text-brand-green dark:text-brand-green flex items-center justify-center text-[10px] font-bold uppercase">
+                                        <div v-else class="w-full h-full bg-brand-green/10 dark:bg-brand-green/20 text-brand-green dark:text-brand-green flex items-center justify-center text-[11px] font-bold uppercase">
                                             {{ protocol.user?.name?.substring(0, 2) || 'S' }}
                                         </div>
                                     </div>
@@ -1053,21 +1060,21 @@ const updateProtocolStatus = (protocolId, status) => {
                                                 <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                                     {{ protocol.subject }}
                                                 </h4>
-                                                <span class="text-xs font-mono font-bold text-brand-green dark:text-brand-green bg-brand-green dark:bg-brand-green/10 px-2 py-0.5 rounded-md">
+                                                <span class="text-xs font-mono font-bold text-brand-green dark:text-brand-green bg-brand-green/10 dark:bg-brand-green/10 px-2 py-0.5 rounded-md">
                                                     {{ protocol.protocol_number }}
                                                 </span>
                                             </div>
-                                            <p class="text-[10px] font-medium text-slate-500 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                            <p class="text-[11px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                                 <span>Adicionado por <strong class="text-slate-700 dark:text-gray-300">{{ protocol.user?.name || 'Sistema' }}</strong></span>
                                                 <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-gray-600"></span>
                                                 <span>{{ formatDateTime(protocol.created_at) }}</span>
                                             </p>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-widest shadow-sm" :class="getPriorityColor(protocol.priority)">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[11px] font-bold uppercase tracking-widest shadow-sm" :class="getPriorityColor(protocol.priority)">
                                                 {{ getPriorityLabel(protocol.priority) }}
                                             </span>
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-widest shadow-sm" :class="getProtocolStatusColor(protocol.status || 'aberto')">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[11px] font-bold uppercase tracking-widest shadow-sm" :class="getProtocolStatusColor(protocol.status || 'aberto')">
                                                 {{ getProtocolStatusLabel(protocol.status || 'aberto') }}
                                             </span>
 
@@ -1102,28 +1109,28 @@ const updateProtocolStatus = (protocolId, status) => {
 
                                     <!-- Attachments -->
                                     <div v-if="protocol.attachments && protocol.attachments.length > 0" class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                             Anexos ({{ protocol.attachments.length }})
                                         </p>
                                         <div class="flex flex-wrap gap-2">
-                                            <a v-for="(attachment, index) in protocol.attachments" :key="index" :href="attachment.url || attachment" target="_blank" class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-brand-green dark:hover:border-brand-green/50 hover:bg-brand-green dark:hover:bg-brand-green/10 transition-colors group/attach">
+                                            <a v-for="(attachment, index) in protocol.attachments" :key="index" :href="attachment.url || attachment" target="_blank" class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-brand-green dark:hover:border-brand-green/50 hover:bg-brand-green/10 dark:hover:bg-brand-green/10 transition-colors group/attach">
                                                 <svg class="w-3.5 h-3.5 text-brand-green group-hover/attach:text-brand-green dark:group-hover/attach:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                                <span class="text-[10px] font-bold text-slate-600 dark:text-gray-300 truncate max-w-[150px]">Anexo {{ index + 1 }}</span>
+                                                <span class="text-[11px] font-bold text-slate-600 dark:text-gray-300 truncate max-w-[150px]">Anexo {{ index + 1 }}</span>
                                             </a>
                                         </div>
                                     </div>
 
                                     <!-- Nested Replies Section -->
                                     <div v-if="protocol.replies && protocol.replies.length > 0" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                                             Interações ({{ protocol.replies.length }})
                                         </p>
                                         <div class="space-y-4">
                                             <div v-for="reply in protocol.replies" :key="reply.id" class="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                                                 <!-- Reply Avatar -->
-                                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-green dark:bg-brand-green/20 flex items-center justify-center text-[8px] font-bold text-brand-green dark:text-brand-green uppercase overflow-hidden">
+                                                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-[10px] font-bold text-brand-green dark:text-brand-green uppercase overflow-hidden">
                                                     <img v-if="reply.user?.profile_photo_url" :src="reply.user.profile_photo_url" class="w-full h-full object-cover">
                                                     <span v-else>{{ reply.user?.name?.substring(0, 2) || 'S' }}</span>
                                                 </div>
@@ -1131,12 +1138,12 @@ const updateProtocolStatus = (protocolId, status) => {
                                                 <div class="flex-1 min-w-0">
                                                     <div class="flex items-center gap-2 mb-1">
                                                         <span class="text-xs font-bold text-slate-900 dark:text-white">{{ reply.user?.name || 'Sistema' }}</span>
-                                                        <span class="text-[9px] font-medium text-slate-500 uppercase tracking-widest">{{ formatDateTime(reply.created_at) }}</span>
+                                                        <span class="text-[11px] font-medium text-slate-500 uppercase tracking-widest">{{ formatDateTime(reply.created_at) }}</span>
                                                     </div>
                                                     <div class="text-xs text-slate-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed" v-html="reply.message"></div>
                                                     <!-- Reply Attachments -->
                                                     <div v-if="reply.attachments && reply.attachments.length > 0" class="mt-2 flex flex-wrap gap-2">
-                                                        <a v-for="(att, i) in reply.attachments" :key="i" :href="att" target="_blank" class="flex items-center gap-1 text-[9px] font-bold text-brand-green hover:text-brand-green dark:hover:text-brand-green">
+                                                        <a v-for="(att, i) in reply.attachments" :key="i" :href="att" target="_blank" class="flex items-center gap-1 text-[11px] font-bold text-brand-green hover:text-brand-green dark:hover:text-brand-green">
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                                             Anexo {{ i + 1 }}
                                                         </a>
@@ -1198,7 +1205,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <div>
                                 <div class="flex items-center gap-2">
                                     <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-widest">Solicitações de Reserva & Uso de Pontos</h3>
-                                    <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-widest">
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold uppercase tracking-widest">
                                         {{ props.service.reservation_requests.length }} {{ props.service.reservation_requests.length === 1 ? 'Reserva' : 'Reservas' }}
                                     </span>
                                 </div>
@@ -1218,12 +1225,12 @@ const updateProtocolStatus = (protocolId, status) => {
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/80">
-                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">ID</th>
-                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Destino & Acomodação</th>
-                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Pontos Consumidos</th>
-                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Período</th>
-                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
-                                    <th class="px-6 py-3.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Ações</th>
+                                    <th class="px-6 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">ID</th>
+                                    <th class="px-6 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Destino & Acomodação</th>
+                                    <th class="px-6 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-center">Pontos Consumidos</th>
+                                    <th class="px-6 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Período</th>
+                                    <th class="px-6 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                    <th class="px-6 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1240,7 +1247,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                         {{ res.check_in }} → {{ res.check_out }}
                                     </td>
                                     <td class="px-6 py-3.5 text-center">
-                                        <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border shadow-xs" :class="getReservationStatusColor(res.status)">
+                                        <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-bold uppercase rounded-md border shadow-xs" :class="getReservationStatusColor(res.status)">
                                             {{ getReservationStatusLabel(res.status) }}
                                         </span>
                                     </td>
@@ -1273,18 +1280,18 @@ const updateProtocolStatus = (protocolId, status) => {
                             <div class="hidden sm:flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 pl-4">
                                 <div v-for="(cfg, key) in { pending: { label: 'A Receber', color: 'bg-brand-green' }, paid: { label: 'Baixado', color: 'bg-emerald-500' }, overdue: { label: 'Inadimplente', color: 'bg-orange-500' }, cancelled: { label: 'Cancelado', color: 'bg-red-500' } }" :key="key" class="flex items-center gap-1.5">
                                     <div :class="cfg.color" class="w-2 h-2 rounded-full"></div>
-                                    <span class="text-[9px] font-bold text-slate-500 dark:text-gray-500 uppercase tracking-widest">{{ cfg.label }}</span>
+                                    <span class="text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">{{ cfg.label }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button v-if="proposal" @click="isEditProposalModalOpen = true"
-                                class="flex items-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border border-emerald-500/20 dark:border-emerald-500/30">
+                                class="flex items-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all border border-emerald-500/20 dark:border-emerald-500/30">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 Editar Proposta
                             </button>
                             <button v-if="proposal" @click="openCreateModal"
-                                class="flex items-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-green/20 active:scale-95">
+                                class="flex items-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-green/20 active:scale-95">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 Nova Parcela
                             </button>
@@ -1296,8 +1303,8 @@ const updateProtocolStatus = (protocolId, status) => {
                             <!-- Cabeçalho do grupo -->
                             <div class="px-6 py-3.5 bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
                                 <span class="w-1.5 h-1.5 rounded-full bg-brand-green"></span>
-                                <h4 class="text-[10px] font-bold text-slate-700 dark:text-gray-300 uppercase tracking-widest">{{ group.label }}</h4>
-                                <span class="ml-auto text-[9px] px-2 py-0.5 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 font-bold text-slate-500 dark:text-gray-500 uppercase tracking-widest">{{ group.items.length }} parcela{{ group.items.length > 1 ? 's' : '' }}</span>
+                                <h4 class="text-[11px] font-bold text-slate-700 dark:text-gray-300 uppercase tracking-widest">{{ group.label }}</h4>
+                                <span class="ml-auto text-[11px] px-2 py-0.5 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">{{ group.items.length }} parcela{{ group.items.length > 1 ? 's' : '' }}</span>
                             </div>
 
                             <!-- Tabela -->
@@ -1308,15 +1315,15 @@ const updateProtocolStatus = (protocolId, status) => {
                                             <th class="px-6 py-4 w-10 text-center">
                                                 <span class="sr-only">Seleção</span>
                                             </th>
-                                            <th class="px-4 py-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parcela</th>
-                                            <th class="px-4 py-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Vencimento</th>
-                                            <th class="px-4 py-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest hidden md:table-cell">Data Pagto</th>
-                                            <th class="px-4 py-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest hidden lg:table-cell">Forma</th>
-                                            <th class="px-4 py-4 text-right text-[9px] font-bold text-slate-500 uppercase tracking-widest">Valor</th>
-                                            <th class="px-4 py-4 text-right text-[9px] font-bold text-slate-500 uppercase tracking-widest hidden xl:table-cell">Juros</th>
-                                            <th class="px-4 py-4 text-right text-[9px] font-bold text-slate-500 uppercase tracking-widest">Pago</th>
-                                            <th class="px-4 py-4 text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
-                                            <th class="px-6 py-4 text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest">Ações</th>
+                                            <th class="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Parcela</th>
+                                            <th class="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vencimento</th>
+                                            <th class="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest hidden md:table-cell">Data Pagto</th>
+                                            <th class="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest hidden lg:table-cell">Forma</th>
+                                            <th class="px-4 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Valor</th>
+                                            <th class="px-4 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest hidden xl:table-cell">Juros</th>
+                                            <th class="px-4 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Pago</th>
+                                            <th class="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                                            <th class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 dark:divide-white/[0.02]">
@@ -1347,12 +1354,12 @@ const updateProtocolStatus = (protocolId, status) => {
 
                                             <!-- Data Pagamento -->
                                             <td class="px-4 py-4.5 hidden md:table-cell">
-                                                <span class="text-sm font-mono font-medium text-slate-500 dark:text-gray-500">{{ formatDate(bill.paid_at) || '—' }}</span>
+                                                <span class="text-sm font-mono font-medium text-slate-500 dark:text-gray-400">{{ formatDate(bill.paid_at) || '—' }}</span>
                                             </td>
 
                                             <!-- Forma Pgto -->
                                             <td class="px-4 py-4.5 hidden lg:table-cell">
-                                                <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-slate-700 text-[9px] font-bold uppercase tracking-widest text-slate-600 dark:text-gray-400">
+                                                <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-slate-700 text-[11px] font-bold uppercase tracking-widest text-slate-600 dark:text-gray-400">
                                                     {{ bill.payment_method }}
                                                 </span>
                                             </td>
@@ -1378,9 +1385,9 @@ const updateProtocolStatus = (protocolId, status) => {
 
                                             <!-- Status Badge -->
                                             <td class="px-4 py-4.5 text-center">
-                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-[9px] font-bold uppercase tracking-widest"
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-bold uppercase tracking-widest"
                                                     :class="{
-                                                        'bg-brand-green dark:bg-brand-green/10 text-brand-green dark:text-brand-green border-brand-green dark:border-brand-green/20': bill.status === 'pending',
+                                                        'bg-brand-green/10 dark:bg-brand-green/10 text-brand-green dark:text-brand-green border-brand-green/30 dark:border-brand-green/20': bill.status === 'pending',
                                                         'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20': bill.status === 'paid',
                                                         'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20': bill.status === 'overdue',
                                                         'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20': bill.status === 'cancelled',
@@ -1399,7 +1406,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                             <!-- Ações Kebab -->
                                             <td class="px-6 py-4.5 text-center">
                                                 <div class="relative group/kebab flex justify-center">
-                                                    <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-500 dark:text-gray-400 hover:text-brand-green dark:hover:text-brand-green hover:border-brand-green dark:hover:border-brand-green/30 hover:bg-brand-green dark:hover:bg-brand-green/10 transition-all">
+                                                    <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-500 dark:text-gray-400 hover:text-brand-green dark:hover:text-brand-green hover:border-brand-green dark:hover:border-brand-green/30 hover:bg-brand-green/10 dark:hover:bg-brand-green/10 transition-all">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                                                     </button>
                                                     <div class="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl py-1.5 z-50 opacity-0 invisible group-hover/kebab:opacity-100 group-hover/kebab:visible transition-all duration-200 translate-y-1 group-hover/kebab:translate-y-0">
@@ -1429,7 +1436,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <div class="w-16 h-16 rounded-[20px] bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto mb-4">
                                 <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             </div>
-                            <p class="text-[11px] font-bold text-slate-500 dark:text-gray-500 uppercase tracking-widest">Nenhum extrato gerado</p>
+                            <p class="text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Nenhum extrato gerado</p>
                             <p class="text-xs text-slate-500 mt-2 font-medium">Crie a proposta para gerar as parcelas automaticamente</p>
                         </div>
                     </div>
@@ -1451,7 +1458,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 Adicionar Nova Parcela
                             </h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
                         </div>
                     </div>
                     <button @click="closeCreateModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
@@ -1460,7 +1467,7 @@ const updateProtocolStatus = (protocolId, status) => {
                 <form @submit.prevent="submitCreate" class="p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-transparent flex-1 overflow-y-auto">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Categoria</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Categoria</label>
                             <select v-model="createForm.category" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                                 <option value="taxa_contrato">Taxa de Contrato</option>
                                 <option value="entrada">Entrada</option>
@@ -1469,7 +1476,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             </select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pgto</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pgto</label>
                             <select v-model="createForm.payment_method" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                                 <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
                             </select>
@@ -1478,18 +1485,18 @@ const updateProtocolStatus = (protocolId, status) => {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Valor Original</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Valor Original</label>
                             <input :value="formatCurrencyInput(createForm.amount)" @input="e => updateCurrencyInput(e, createForm, 'amount')" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Vencimento</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vencimento</label>
                             <input v-model="createForm.due_date" type="date" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</label>
                             <select v-model="createForm.status" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                                 <option value="pending">A Receber</option>
                                 <option value="paid">Baixado</option>
@@ -1498,17 +1505,17 @@ const updateProtocolStatus = (protocolId, status) => {
                             </select>
                         </div>
                         <div class="space-y-1" v-if="createForm.status === 'paid'">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Data Pago</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Data Pago</label>
                             <input v-model="createForm.paid_at" type="date" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                         <div class="space-y-1" v-if="createForm.status === 'paid'">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Valor Pago</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Valor Pago</label>
                             <input :value="formatCurrencyInput(createForm.paid_amount)" @input="e => updateCurrencyInput(e, createForm, 'paid_amount')" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Observações Internas</label>
+                        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Observações Internas</label>
                         <textarea v-model="createForm.observations" rows="2" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20 resize-none"></textarea>
                     </div>
 
@@ -1536,7 +1543,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 Editar Parcela
                             </h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
                         </div>
                     </div>
                     <button @click="closeEditModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
@@ -1545,22 +1552,22 @@ const updateProtocolStatus = (protocolId, status) => {
                 <form @submit.prevent="submitEdit" class="p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-transparent flex-1 overflow-y-auto">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Vencimento</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vencimento</label>
                             <input v-model="editForm.due_date" type="date" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Data de Pago</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Data de Pago</label>
                             <input v-model="editForm.paid_at" type="date" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Valor Original</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Valor Original</label>
                             <input :value="formatCurrencyInput(editForm.amount)" @input="e => updateCurrencyInput(e, editForm, 'amount')" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pgto</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pgto</label>
                             <select v-model="editForm.payment_method" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                                 <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
                             </select>
@@ -1569,22 +1576,22 @@ const updateProtocolStatus = (protocolId, status) => {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Juros/Mora</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Juros/Mora</label>
                             <input :value="formatCurrencyInput(editForm.interest_amount)" @input="e => updateCurrencyInput(e, editForm, 'interest_amount')" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                         <div class="space-y-1" v-if="editForm.status === 'paid' || editForm.paid_amount > 0">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Valor Pago</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Valor Pago</label>
                             <input :value="formatCurrencyInput(editForm.paid_amount)" @input="e => updateCurrencyInput(e, editForm, 'paid_amount')" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                         </div>
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Observações Internas</label>
+                        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Observações Internas</label>
                         <textarea v-model="editForm.observations" rows="3" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20 resize-none"></textarea>
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</label>
+                        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</label>
                         <select v-model="editForm.status" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20">
                             <option value="pending">A Receber</option>
                             <option value="paid">Baixado</option>
@@ -1617,11 +1624,11 @@ const updateProtocolStatus = (protocolId, status) => {
         <div v-show="selectedBills.length > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700 px-6 py-3 rounded-[20px] shadow-[0_0_40px_rgba(34,197,94,0.15)] z-40 flex items-center gap-6 animate-in slide-in-from-bottom-5">
             <span class="text-xs font-bold text-brand-green dark:text-brand-green uppercase tracking-widest">{{ selectedBills.length }} Selecionadas</span>
             <div class="flex gap-2">
-                <button v-if="selectedBills.length > 1" @click="openRenegotiateModal" class="px-5 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-green/20 transition-all flex items-center gap-2">
+                <button v-if="selectedBills.length > 1" @click="openRenegotiateModal" class="px-5 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white rounded-xl text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-green/20 transition-all flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                     Renegociar
                 </button>
-                <button @click="openBulkPayModal" class="px-5 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-green/20 transition-all flex items-center gap-2">
+                <button @click="openBulkPayModal" class="px-5 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white rounded-xl text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-green/20 transition-all flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Baixar Selecionadas
                 </button>
@@ -1640,7 +1647,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 Visualizar Parcela
                             </h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
                         </div>
                     </div>
                     <button @click="closeViewModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
@@ -1650,11 +1657,11 @@ const updateProtocolStatus = (protocolId, status) => {
                     <!-- Head -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Categoria</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Categoria</p>
                             <p class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{{ viewBill.category?.replace('_', ' ') }}</p>
                         </div>
                         <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Forma de Pgto.</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Forma de Pgto.</p>
                             <p class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{{ viewBill.payment_method }}</p>
                         </div>
                     </div>
@@ -1662,15 +1669,15 @@ const updateProtocolStatus = (protocolId, status) => {
                     <!-- Financial -->
                     <div class="bg-brand-green/5 dark:bg-brand-green/10 border border-brand-green/10 dark:border-brand-green/20 p-4 rounded-xl grid grid-cols-3 gap-4">
                         <div>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Original</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Original</p>
                             <p class="text-sm font-bold text-brand-green">R$ {{ Number(viewBill.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
                         </div>
                         <div v-if="viewBill.interest_amount > 0">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Juros / Mora</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Juros / Mora</p>
                             <p class="text-sm font-bold text-amber-500">+ R$ {{ Number(viewBill.interest_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
                         </div>
                         <div v-if="viewBill.paid_amount > 0 || viewBill.status === 'paid'">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Pago</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Pago</p>
                             <p class="text-sm font-bold text-emerald-500">R$ {{ Number(viewBill.paid_amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
                         </div>
                     </div>
@@ -1678,15 +1685,15 @@ const updateProtocolStatus = (protocolId, status) => {
                     <!-- Dates & Status -->
                     <div class="grid grid-cols-3 gap-4">
                         <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-3 rounded-xl">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Vencimento</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Vencimento</p>
                             <p class="text-xs font-bold text-slate-900 dark:text-white">{{ formatDate(viewBill.due_date) }}</p>
                         </div>
                         <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-3 rounded-xl" v-if="viewBill.paid_at">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data Pagamento</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Data Pagamento</p>
                             <p class="text-xs font-bold text-slate-900 dark:text-white">{{ formatDate(viewBill.paid_at) }}</p>
                         </div>
                         <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-3 rounded-xl">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</p>
                             <div class="inline-flex items-center gap-1.5 px-2 py-1 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700" 
                                 :class="{
                                     'bg-brand-green/10 text-brand-green': viewBill.status === 'pending',
@@ -1694,7 +1701,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                     'bg-amber-500/10 text-amber-600 dark:text-amber-400': viewBill.status === 'overdue',
                                     'bg-rose-500/10 text-rose-600 dark:text-rose-400': viewBill.status === 'cancelled'
                                 }">
-                                <span class="text-[10px] font-bold uppercase tracking-widest">
+                                <span class="text-[11px] font-bold uppercase tracking-widest">
                                     {{ viewBill.status === 'pending' ? 'A Receber' : viewBill.status === 'paid' ? 'Baixado' : viewBill.status === 'overdue' ? 'Inadimplente' : 'Cancelado' }}
                                 </span>
                             </div>
@@ -1703,7 +1710,7 @@ const updateProtocolStatus = (protocolId, status) => {
 
                     <!-- Observations -->
                     <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl relative">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Observações</p>
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Observações</p>
                         <p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-wrap">{{ viewBill.observations || 'Nenhuma observação registrada.' }}</p>
                     </div>
                     
@@ -1756,7 +1763,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 Renegociar Parcelas
                             </h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
                         </div>
                     </div>
                     <button @click="closeRenegotiateModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
@@ -1764,18 +1771,18 @@ const updateProtocolStatus = (protocolId, status) => {
 
                 <form @submit.prevent="submitRenegotiate" class="p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-transparent flex-1 overflow-y-auto">
                     <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl text-center">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Total Agrupado</p>
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Total Agrupado</p>
                         <p class="text-2xl font-bold text-slate-900 dark:text-white">R$ {{ Number(renegotiateTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
-                        <p class="text-[10px] font-bold text-slate-500 mt-2">Corresponde a {{ selectedBills.length }} parcelas selecionadas</p>
+                        <p class="text-[11px] font-bold text-slate-500 mt-2">Corresponde a {{ selectedBills.length }} parcelas selecionadas</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nova Data de Vencimento</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Nova Data de Vencimento</label>
                             <input v-model="renegotiateForm.due_date" type="date" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nova Forma de Pgto</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Nova Forma de Pgto</label>
                             <select v-model="renegotiateForm.payment_method" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                                 <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
                             </select>
@@ -1806,7 +1813,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 Baixa em Lote
                             </h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Financeiro</p>
                         </div>
                     </div>
                     <button @click="closeBulkPayModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
@@ -1814,28 +1821,28 @@ const updateProtocolStatus = (protocolId, status) => {
 
                 <form @submit.prevent="submitBulkPay" class="p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-transparent flex-1 overflow-y-auto">
                     <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl text-center">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Total a Baixar</p>
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Valor Total a Baixar</p>
                         <p class="text-2xl font-bold text-slate-900 dark:text-white">R$ {{ Number(bulkPayTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
-                        <p class="text-[10px] font-bold text-slate-500 mt-2">Corresponde a {{ selectedBills.length }} parcelas selecionadas</p>
+                        <p class="text-[11px] font-bold text-slate-500 mt-2">Corresponde a {{ selectedBills.length }} parcelas selecionadas</p>
                     </div>
 
                     <!-- Toggle Mode -->
                     <div class="bg-white dark:bg-slate-800/50 p-1 rounded-xl flex border border-slate-200 dark:border-slate-700">
-                        <button type="button" @click="bulkPayForm.mode = 'single'" :class="bulkPayForm.mode === 'single' ? 'bg-slate-900 dark:bg-brand-green text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'" class="flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all">
+                        <button type="button" @click="bulkPayForm.mode = 'single'" :class="bulkPayForm.mode === 'single' ? 'bg-slate-900 dark:bg-brand-green text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'" class="flex-1 py-2 text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all">
                             Mesma Data
                         </button>
-                        <button type="button" @click="bulkPayForm.mode = 'individual'" :class="bulkPayForm.mode === 'individual' ? 'bg-slate-900 dark:bg-brand-green text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'" class="flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all">
+                        <button type="button" @click="bulkPayForm.mode = 'individual'" :class="bulkPayForm.mode === 'individual' ? 'bg-slate-900 dark:bg-brand-green text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'" class="flex-1 py-2 text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all">
                             Datas Individuais
                         </button>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4" v-if="bulkPayForm.mode === 'single'">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Data do Pagamento</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Data do Pagamento</label>
                             <input v-model="bulkPayForm.paid_at" type="date" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pagamento</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pagamento</label>
                             <select v-model="bulkPayForm.payment_method" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                                 <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
                             </select>
@@ -1844,7 +1851,7 @@ const updateProtocolStatus = (protocolId, status) => {
 
                     <div class="space-y-4" v-else>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pagamento (Geral)</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Forma de Pagamento (Geral)</label>
                             <select v-model="bulkPayForm.payment_method" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20" required>
                                 <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
                             </select>
@@ -1853,7 +1860,7 @@ const updateProtocolStatus = (protocolId, status) => {
                         <div class="max-h-[200px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                             <div v-for="billId in selectedBills" :key="billId" class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex items-center justify-between gap-4">
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-[10px] font-bold text-slate-500 uppercase truncate">
+                                    <p class="text-[11px] font-bold text-slate-500 uppercase truncate">
                                         {{ bills.find(b => b.id === billId)?.category?.replace('_', ' ') }}
                                     </p>
                                     <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
@@ -1866,7 +1873,7 @@ const updateProtocolStatus = (protocolId, status) => {
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Observação (Opcional)</label>
+                        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Observação (Opcional)</label>
                         <textarea v-model="bulkPayForm.observations" rows="2" class="w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:ring-brand-green/20 resize-none"></textarea>
                     </div>
 
@@ -1894,7 +1901,7 @@ const updateProtocolStatus = (protocolId, status) => {
                             <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">
                                 Gerar Novo Protocolo
                             </h3>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Administrativo</p>
+                            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Módulo Administrativo</p>
                         </div>
                     </div>
                     <button @click="closeProtocolModal" class="text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
@@ -1950,11 +1957,11 @@ const updateProtocolStatus = (protocolId, status) => {
                         <form v-if="activeProtocolTab === 'edit'" @submit.prevent="submitProtocol" class="space-y-6">
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assunto do Protocolo</label>
+                                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Assunto do Protocolo</label>
                                     <input v-model="protocolForm.subject" type="text" class="w-full bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-brand-green/20" required placeholder="Ex: Solicitação de Cancelamento">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Prioridade</label>
+                                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Prioridade</label>
                                     <select v-model="protocolForm.priority" class="w-full bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-brand-green/20">
                                         <option value="baixa">Baixa</option>
                                         <option value="media">Média</option>
@@ -1964,7 +1971,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                 </div>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Mensagem ou Histórico</label>
+                                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Mensagem ou Histórico</label>
                                 <textarea v-model="protocolForm.message" rows="5" class="w-full bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-brand-green/20 resize-none" placeholder="Descreva os detalhes deste protocolo..."></textarea>
                             </div>
 
@@ -1983,7 +1990,7 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="flex justify-between items-start border-b border-slate-200 dark:border-slate-700 pb-4 mb-4">
                                     <div>
                                         <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase">{{ protocolForm.subject }}</h4>
-                                        <p class="text-[10px] text-slate-500 mt-1">Prioridade: <span class="uppercase font-bold">{{ protocolForm.priority }}</span></p>
+                                        <p class="text-[11px] text-slate-500 mt-1">Prioridade: <span class="uppercase font-bold">{{ protocolForm.priority }}</span></p>
                                     </div>
                                 </div>
                                 <div class="text-sm text-slate-700 dark:text-gray-300 min-h-[100px] whitespace-pre-wrap">{{ protocolForm.message || 'Nenhuma mensagem.' }}</div>

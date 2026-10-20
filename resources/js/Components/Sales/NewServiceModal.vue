@@ -19,6 +19,7 @@ const props = defineProps({
     availableAvatars: Array,
     qualifications: Array,
     complimentaryItems: Array,
+    capturePoints: { type: Array, default: () => [] },
     initialData: Object,
 });
 
@@ -56,7 +57,7 @@ const form = ref({
     date: new Date().toLocaleDateString('pt-BR'),
     time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h',
     clients: '',
-    local: 'hotel',
+    local: '',
     opc_id: null,
     qualification: 'Q',
     status: 'table',
@@ -77,7 +78,7 @@ const form = ref({
     
     // Acompanhante
     temConjuge: false,
-    tipoRelacionamento: 'Casal/Namorados',
+    tipoRelacionamento: '',
     nomeConjuge: '',
     cpfConjuge: '',
     rgConjuge: '',
@@ -150,7 +151,7 @@ watch(() => props.initialData, (newVal) => {
         
         // Dados específicos do atendimento (Acompanhante/Família)
         form.value.temConjuge = !!newVal.tem_conjuge;
-        form.value.tipoRelacionamento = newVal.tipo_relacionamento || 'Casal/Namorados';
+        form.value.tipoRelacionamento = newVal.tipo_relacionamento || '';
         form.value.nomeConjuge = newVal.nome_conjuge;
         form.value.cpfConjuge = newVal.cpf_conjuge || '';
         form.value.rgConjuge = newVal.rg_conjuge || '';
@@ -167,9 +168,9 @@ watch(() => props.initialData, (newVal) => {
         Object.assign(form.value, {
             date: new Date().toLocaleDateString('pt-BR'),
             time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h',
-            clients: '', local: 'hotel', opc_id: null, qualification: 'Q', status: 'table',
+            clients: '', local: '', opc_id: null, qualification: 'Q', status: 'table',
             isEstrangeiro: false, nome: '', cpf: '', rg: '', nacionalidade: 'Brasileira', dataNascimento: '', idade: '', profissao: '', estadoCivil: 'solteiro', celular1: '', celular2: '', email: '',
-            temConjuge: false, tipoRelacionamento: 'Casal/Namorados', nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira', dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: 'solteiro',
+            temConjuge: false, tipoRelacionamento: '', nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira', dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: 'solteiro',
             quantidadeFilhos: 0, tempoJuntos: '', rendaFamiliar: '',
             cep: '', rua: '', bairro: '', numero: '', cidade: '', estado: '', pais: 'Brasil', complemento: '', pontoReferencia: '', cortesia: [], observacoes: ''
         });
@@ -322,12 +323,10 @@ const submit = () => {
     }
 };
 
-const locations = [
-    { label: 'Hotel', value: 'hotel' },
-    { label: 'Sindicato', value: 'sindicato' },
-    { label: 'Externo', value: 'externo' },
-    { label: 'Aeroporto', value: 'aeroporto' },
-];
+// Pontos de captação ativos (+ o atual do atendimento, mesmo se desativado depois)
+const locations = computed(() => props.capturePoints
+    .filter(p => p.active || p.value === form.value.local)
+    .map(p => ({ label: p.name, value: p.value })));
 
 // statuses foi movido para o topo e definido via SERVICE_STATUS
 
@@ -401,6 +400,10 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <p class="text-[9px] text-brand-green/60 font-bold uppercase tracking-widest mt-0.5">
                                 {{ !isEdit ? 'Ficha de Qualificação Completa' : (isReadOnly ? 'Detalhamento do Registro' : 'Edição de Dados cadastrados') }}
                             </p>
+                            <span v-if="initialData?.schedule_id" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                Veio de agendamento<template v-if="initialData.schedule?.user?.name"> · {{ initialData.schedule.user.name }}</template>
+                            </span>
                         </div>
                     </div>
                     <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-white transition-colors">
@@ -495,7 +498,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
                             <SearchableSelect v-model="form.estadoCivil" :options="maritals" label="Estado Civil" :error="errors.estadoCivil" :disabled="isReadOnly"  required />
-                            <div class="h-[14px]" v-if="!errors.estadoCivil"></div>
+                            <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate" v-if="!errors.estadoCivil">Estado civil legal do titular (vai para o contrato)</div>
                         </div>
                             <!-- tempoJuntos movido para baixo -->
                     </div>
@@ -520,8 +523,8 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         <!-- Dados do Acompanhante (Condicional) -->
                         <div v-if="form.temConjuge" class="col-span-12 grid grid-cols-12 gap-x-4 gap-y-2 p-4 bg-white dark:bg-slate-900 rounded-[16px] border border-brand-green/20 dark:border-brand-green/20 animate-in fade-in slide-in-from-top-2">
                             <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.tipoRelacionamento" :options="relationships" label="Tipo de Relação" placeholder="SELECIONE" :error="errors.tipoRelacionamento" :disabled="isReadOnly"  required />
-                                <div class="h-[14px]" v-if="!errors.tipoRelacionamento"></div>
+                                <SearchableSelect v-model="form.tipoRelacionamento" :options="relationships" label="Relação com o 1º Titular" placeholder="SELECIONE" :error="errors.tipoRelacionamento" :disabled="isReadOnly"  required />
+                                <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate" v-if="!errors.tipoRelacionamento">Vínculo desta pessoa com o 1º titular</div>
                             </div>
                             <div class="col-span-12 sm:col-span-9 flex flex-col">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome do 2º Titular / Acompanhante <span class="text-red-500">*</span></label>
@@ -553,8 +556,8 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil" :disabled="isReadOnly"  required />
-                                <div class="h-[14px]"></div>
+                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil do 2º Titular" :disabled="isReadOnly"  required />
+                                <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate">Estado civil legal (vai para o contrato)</div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
                                 <SearchableSelect v-model="form.profissaoConjuge" :options="professions" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly"  required />
@@ -635,7 +638,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                         </div>
                         
                         <div class="col-span-12 sm:col-span-6 flex flex-col">
-                            <SearchableSelect v-model="form.local" :options="locations" label="Local de Atendimento" :error="errors.local" :disabled="isReadOnly"  required />
+                            <SearchableSelect v-model="form.local" :options="locations" label="Ponto de captação" placeholder="SELECIONE" :error="errors.local" :disabled="isReadOnly"  required />
                             <div class="h-[14px]" v-if="!errors.local"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-6 flex flex-col">

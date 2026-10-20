@@ -450,6 +450,8 @@ const isTaxaContratoValid = computed(() => {
     if (isViewMode.value || !selectedProduct.value) return true;
     const expected = parseFloat(selectedProduct.value.contract_fee) || 0;
     if (expected === 0) return true;
+    // Taxa de contrato é opcional: se todas as linhas foram removidas, a proposta segue sem ela
+    if (!form.payments.some(p => p.category === 'taxa_contrato')) return true;
     const actual = getCategoryTotal('taxa_contrato');
     return Math.abs(expected - actual) <= TOLERANCE;
 });

@@ -9,6 +9,18 @@ use Inertia\Inertia;
 
 class ServiceLineController extends Controller
 {
+    private const GROUPS = [
+        'promotor'   => ['label' => 'Promotores',   'sublabel' => 'OPC / Captador'],
+        'consultor'  => ['label' => 'Consultores',  'sublabel' => 'Liner'],
+        'supervisor' => ['label' => 'Supervisores', 'sublabel' => 'Closer / Gerente'],
+    ];
+
+    private const STATUS_LABELS = [
+        'available' => 'Disponível',
+        'busy'      => 'Em Atendimento',
+        'absent'    => 'Ausente',
+    ];
+
     /**
      * Group keywords mapping based on Spatie roles. Returns null if the user doesn't match any target group.
      */
@@ -64,21 +76,63 @@ class ServiceLineController extends Controller
             }
         }
 
-        // Load all positions grouped
+        return Inertia::render('Sales/ServiceLine/Index', [
+            'groups' => $this->loadGroups(),
+        ]);
+    }
+
+    /**
+     * Export the service line report (one table per role group) to PDF.
+     */
+    public function exportPdf()
+    {
+        $groups = $this->loadGroups();
+
+        $sections = [];
+        $totals = ['total' => 0, 'available' => 0, 'busy' => 0, 'absent' => 0];
+
+        foreach (self::GROUPS as $key => $meta) {
+            $positions = $groups[$key];
+
+            $stats = [
+                'total'     => $positions->count(),
+                'available' => $positions->where('status', 'available')->count(),
+                'busy'      => $positions->where('status', 'busy')->count(),
+                'absent'    => $positions->where('status', 'absent')->count(),
+            ];
+
+            foreach ($totals as $stat => $value) {
+                $totals[$stat] = $value + $stats[$stat];
+            }
+
+            $sections[] = $meta + $stats + ['positions' => $positions];
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.service-line', [
+            'sections'     => $sections,
+            'totals'       => $totals,
+            'statusLabels' => self::STATUS_LABELS,
+            'issuedAt'     => now(),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('linha-atendimento-' . date('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * Load all queue positions (with user and roles), grouped by role group and ordered by queue position.
+     */
+    private function loadGroups(): array
+    {
         $rawGroups = ServiceLinePosition::with(['user.roles'])
             ->orderBy('position_order')
             ->get()
             ->groupBy('group');
 
-        $groups = [
+        return [
             'promotor'   => $rawGroups->get('promotor', collect())->values(),
             'consultor'  => $rawGroups->get('consultor', collect())->values(),
             'supervisor' => $rawGroups->get('supervisor', collect())->values(),
         ];
-
-        return Inertia::render('Sales/ServiceLine/Index', [
-            'groups' => $groups,
-        ]);
     }
 
     /**

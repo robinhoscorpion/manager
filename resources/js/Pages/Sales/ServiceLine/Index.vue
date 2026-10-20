@@ -18,7 +18,7 @@ const callingGroup = ref(null);   // which group is being "called" right now (an
 const toast        = ref({ show: false, message: '' });
 
 const printPage = () => {
-    window.print();
+    window.open(route('sales.linha.pdf'), '_blank');
 };
 
 const currentDateFormatted = computed(() => {

@@ -113,7 +113,8 @@ class ScheduleController extends Controller
 
         $schedule->update(['status' => $validated['status']]);
 
-        if ($validated['status'] === 'show') {
+        // Gera o atendimento apenas uma vez por agendamento
+        if ($validated['status'] === 'show' && !\App\Models\SalesService::where('schedule_id', $schedule->id)->exists()) {
             \Illuminate\Support\Facades\DB::transaction(function () use ($schedule) {
                 $client = \App\Models\Client::create([
                     'nome' => $schedule->name,
@@ -140,6 +141,7 @@ class ScheduleController extends Controller
                 }
 
                 $client->services()->create([
+                    'schedule_id' => $schedule->id,
                     'date' => $schedule->date,
                     'time' => $schedule->time ?? '00:00',
                     'clients' => $clientsName,
@@ -153,7 +155,7 @@ class ScheduleController extends Controller
                     'nacionalidade_conjuge' => $schedule->spouse_nacionalidade,
                     'data_nascimento_conjuge' => $schedule->spouse_data_nascimento,
                     'profissao_conjuge' => $schedule->spouse_profissao,
-                    'tipo_relacionamento' => 'Casal/Namorados', // default
+                    'tipo_relacionamento' => $schedule->has_spouse ? 'Casal/Namorados' : null,
                     'observacoes' => $schedule->observations,
                     'renda_familiar' => $schedule->renda_familiar,
                     'cortesia' => $schedule->cortesia,

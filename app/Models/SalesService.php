@@ -23,6 +23,7 @@ class SalesService extends Model
 
     protected $fillable = [
         'client_id',
+        'schedule_id',
         'date',
         'time',
         'clients',
@@ -66,6 +67,11 @@ class SalesService extends Model
     public function reservationRequests()
     {
         return $this->hasMany(\App\Models\ReservationRequest::class, 'sales_service_id');
+    }
+
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class);
     }
 
     public function client()

@@ -264,6 +264,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('reports.sales-ranking') ? 'opacity-100' : 'opacity-30'"></div>
                                 Ranking de Vendas
                             </Link>
+                            <Link :href="route('reports.commercial-performance')" class="nav-sub-item" :class="{ 'active': route().current('reports.commercial-performance') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('reports.commercial-performance') ? 'opacity-100' : 'opacity-30'"></div>
+                                Desempenho Comercial
+                            </Link>
                         </div>
                     </div>
 
@@ -306,7 +310,7 @@ const toggleSidebar = () => {
                         <span>Cargos</span>
                     </Link>
 
-                    <div v-if="hasAnyPermission(['configuracoes.tabela_pontos.acessar', 'configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
+                    <div v-if="hasAnyPermission(['configuracoes.tabela_pontos.acessar', 'configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar', 'configuracoes.pontos_captacao.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleConfig">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,6 +392,10 @@ const toggleSidebar = () => {
                             <Link v-if="can('configuracoes.assuntos_protocolo.acessar')" :href="route('admin.protocol_subjects.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.protocol_subjects.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.protocol_subjects.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Assuntos de Protocolo
+                            </Link>
+                            <Link v-if="can('configuracoes.pontos_captacao.acessar')" :href="route('admin.capture_points.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.capture_points.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.capture_points.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Pontos de Captação
                             </Link>
                         </div>
                     </div>

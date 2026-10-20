@@ -4,6 +4,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 import DateRangePicker from '@/Components/Dashboard/DateRangePicker.vue';
 import LocationPicker from '@/Components/Dashboard/LocationPicker.vue';
+import SaleResultPicker from '@/Components/Dashboard/SaleResultPicker.vue';
+import QualificationPicker from '@/Components/Dashboard/QualificationPicker.vue';
+import TeamPicker from '@/Components/Dashboard/TeamPicker.vue';
 import ActionsPicker from '@/Components/Dashboard/ActionsPicker.vue';
 import NewServiceModal from '@/Components/Sales/NewServiceModal.vue';
 import ServiceActionsModal from '@/Components/Sales/ServiceActionsModal.vue';
@@ -15,6 +18,7 @@ const props = defineProps({
     availableAvatars: Array,
     qualifications: Array,
     complimentaryItems: Array,
+    capturePoints: Array,
     columnSettings: Object,
     filters: Object // Added for search persistence
 });
@@ -39,6 +43,51 @@ const can = (permission) => {
 };
 
 const selectedLocation = ref('Todos');
+const selectedSaleResult = ref('Todos');
+const selectedQualification = ref('Todos');
+const selectedTeam = ref({ role: 'any', userId: null });
+
+const teamRoleFields = { opc: 'opc_id', liner: 'liner_id', closer: 'closer_id', mkt: 'mkt_id' };
+
+// Cargos que podem ocupar cada função no atendimento (mesma regra do seletor de avatar da tabela)
+const ROLE_CARGOS = {
+    mkt: ['mkt', 'promotor', 'marketing'],
+    opc: ['opc', 'promotor'],
+    liner: ['liner', 'consultor'],
+    closer: ['closer', 'supervisor'],
+};
+
+// Funcionários para o filtro de equipe: quem tem cargo compatível + quem já atuou em algum atendimento (inclui inativos).
+// "functions" lista todas as funções da pessoa — um usuário com vários cargos aparece em várias funções.
+const teamPeople = computed(() => {
+    const map = new Map();
+    const add = (id, name, fn) => {
+        if (!id || !name) return;
+        if (!map.has(id)) map.set(id, { id, name, functions: new Set() });
+        map.get(id).functions.add(fn);
+    };
+
+    (props.availableAvatars || []).forEach(a => {
+        Object.entries(ROLE_CARGOS).forEach(([fn, cargos]) => {
+            if ((a.roles || []).some(r => cargos.includes(r))) add(a.id, a.name, fn);
+        });
+    });
+
+    (serviceData.value || []).forEach(item => {
+        Object.entries(teamRoleFields).forEach(([fn, field]) => {
+            const id = item[field];
+            const name = item[`${fn}_user`]?.name || props.availableAvatars?.find(a => a.id === id)?.name;
+            add(id, name, fn);
+        });
+    });
+
+    return [...map.values()]
+        .map(p => ({ ...p, functions: [...p.functions] }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+});
+
+// Venda = proposta aprovada ou finalizada (mesma regra do relatório)
+const hasSale = (item) => ['approved', 'completed'].includes((item.proposal?.status || '').toLowerCase());
 const today = new Date();
 const selectedDateRange = ref({
     start: today,
@@ -193,7 +242,20 @@ const filteredServiceData = computed(() => {
             // Location Filter
             const matchesLocation = selectedLocation.value === 'Todos' || item.local === selectedLocation.value;
             
-            return matchesDate && matchesLocation;
+            // Resultado (venda)
+            const matchesSale = selectedSaleResult.value === 'Todos'
+                || (selectedSaleResult.value === 'com_venda' ? hasSale(item) : !hasSale(item));
+
+            // Qualificação
+            const matchesQualification = selectedQualification.value === 'Todos' || item.qualification === selectedQualification.value;
+
+            // Equipe (funcionário + função no atendimento)
+            const { role, userId } = selectedTeam.value;
+            const matchesTeam = !userId || (role === 'any'
+                ? Object.values(teamRoleFields).some(field => item[field] === userId)
+                : item[teamRoleFields[role]] === userId);
+
+            return matchesDate && matchesLocation && matchesSale && matchesQualification && matchesTeam;
         } catch (e) {
             return false;
         }
@@ -210,10 +272,10 @@ const filteredAvatars = computed(() => {
     
     // Mapeamento exato solicitado: Cargo Real -> Coluna
     const fieldToRoles = {
-        'avatar': ['mkt', 'promotor', 'marketing'], // MKT/Seller
-        'opcAvatar': ['opc', 'promotor'],          // OPC
-        'linerAvatar': ['liner', 'consultor'],     // Liner
-        'closerAvatar': ['closer', 'supervisor']   // Closer
+        'avatar': ROLE_CARGOS.mkt,          // MKT/Seller
+        'opcAvatar': ROLE_CARGOS.opc,       // OPC
+        'linerAvatar': ROLE_CARGOS.liner,   // Liner
+        'closerAvatar': ROLE_CARGOS.closer  // Closer
     };
     
     const allowedRoles = fieldToRoles[activeField.value] || [];
@@ -489,12 +551,21 @@ const hasCortesia = (cortesia) => {
 
                     <!-- Bottom Row: Filters Toolbar -->
                     <div class="px-6 py-4 bg-slate-50/40 dark:bg-slate-800/20 rounded-b-[20px] flex flex-col md:flex-row items-center justify-end gap-3">
-                        <div class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                        <div class="w-full md:w-auto flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-3">
                             <div class="w-full sm:w-[280px]">
                                 <DateRangePicker v-model="selectedDateRange" class="w-full" />
                             </div>
+                            <div class="w-full sm:w-56">
+                                <TeamPicker v-model="selectedTeam" :people="teamPeople" class="w-full" />
+                            </div>
+                            <div class="w-full sm:w-52">
+                                <QualificationPicker v-model="selectedQualification" :qualifications="qualifications" class="w-full" />
+                            </div>
+                            <div class="w-full sm:w-52">
+                                <SaleResultPicker v-model="selectedSaleResult" class="w-full" />
+                            </div>
                             <div class="w-full sm:w-48">
-                                <LocationPicker v-model="selectedLocation" class="w-full" />
+                                <LocationPicker v-model="selectedLocation" :capture-points="capturePoints" class="w-full" />
                             </div>
                             <div class="w-full sm:w-40">
                                 <ActionsPicker @select="handleAction" class="w-full" />
@@ -544,6 +615,10 @@ const hasCortesia = (cortesia) => {
                                 </div>
                                 <div v-if="columnSettings.clients" class="flex-1 min-w-[150px] text-left truncate" :title="item.client?.nome + (item.nome_conjuge ? ' & ' + item.nome_conjuge : '')">
                                     <span class="ledger-client-name group-hover:text-brand-green transition-colors">{{ formatShortName(item.client?.nome || item.clients) }}</span><template v-if="item.nome_conjuge"><span class="ledger-ampersand">&amp;</span><span class="ledger-client-name group-hover:text-brand-green transition-colors">{{ formatShortName(item.nome_conjuge) }}</span></template>
+                                    <span v-if="item.schedule_id" class="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 align-middle" :title="'Veio de agendamento' + (item.schedule?.user?.name ? ' de ' + item.schedule.user.name : '')">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                        Agendamento
+                                    </span>
                                 </div>
                                 
                                 <!-- Staff Avatars -->
@@ -864,6 +939,7 @@ const hasCortesia = (cortesia) => {
             :available-avatars="availableAvatars"
             :qualifications="qualifications"
             :complimentary-items="complimentaryItems"
+            :capture-points="capturePoints"
             @close="closeServiceModal"
             @created="handleCreateService"
         />

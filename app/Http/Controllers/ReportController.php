@@ -188,4 +188,84 @@ class ReportController extends Controller
             'total' => $total
         ];
     }
+
+    /**
+     * Relatório de Desempenho Comercial: casais atendidos, vendas, conversão e VGV
+     * por perfil (qualificação), ponto de captação e profissional (OPC, Liner, Closer, MKT).
+     * Venda = proposta aprovada ou finalizada; VGV = soma do valor total dessas propostas.
+     */
+    public function commercialPerformance(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        $services = SalesService::with(['proposal:id,sales_service_id,status,total_value'])
+            ->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()])
+            ->get(['id', 'qualification', 'local', 'opc_id', 'liner_id', 'closer_id', 'mkt_id']);
+
+        // Venda e VGV de cada atendimento
+        $rows = $services->map(function ($service) {
+            $sold = $service->proposal && in_array(strtolower($service->proposal->status ?? ''), ['approved', 'completed']);
+            return [
+                'service' => $service,
+                'sold' => $sold,
+                'vgv' => $sold ? (float) ($service->proposal->total_value ?? 0) : 0,
+            ];
+        });
+
+        $qualifications = Qualification::pluck('name', 'code');
+        $capturePoints = \App\Models\CapturePoint::pluck('name', 'value');
+        $userNames = User::pluck('name', 'id');
+
+        $byProfile = $this->groupPerformance($rows, fn($s) => strtoupper(trim($s->qualification ?? '')) ?: null,
+            fn($code) => $code ? ($qualifications[$code] ?? $code) . " ({$code})" : 'Sem perfil');
+
+        $byPoint = $this->groupPerformance($rows, fn($s) => $s->local ?: null,
+            fn($value) => $value ? ($capturePoints[$value] ?? ucfirst(strtolower($value))) : 'Sem ponto');
+
+        $professionals = [];
+        foreach (['opc' => 'opc_id', 'liner' => 'liner_id', 'closer' => 'closer_id', 'mkt' => 'mkt_id'] as $role => $column) {
+            $professionals[$role] = $this->groupPerformance(
+                $rows->filter(fn($r) => !empty($r['service']->{$column})),
+                fn($s) => $s->{$column},
+                fn($id) => $userNames[$id] ?? "Usuário #{$id}"
+            );
+        }
+
+        return Inertia::render('Reports/CommercialPerformance', [
+            'period' => Carbon::parse($startDate)->format('d/m/Y') . ' - ' . Carbon::parse($endDate)->format('d/m/Y'),
+            'totals' => $this->performanceMetrics('Total', $rows),
+            'byProfile' => $byProfile,
+            'byPoint' => $byPoint,
+            'professionals' => $professionals,
+        ]);
+    }
+
+    /**
+     * Agrupa os atendimentos por uma chave e calcula as métricas de cada grupo (ordenado por VGV).
+     */
+    private function groupPerformance($rows, callable $keyOf, callable $labelOf): array
+    {
+        return $rows->groupBy(fn($r) => $keyOf($r['service']) ?? '')
+            ->map(fn($group, $key) => $this->performanceMetrics($labelOf($key === '' ? null : $key), $group))
+            ->sortByDesc(fn($m) => [$m['vgv'], $m['atendidos']])
+            ->values()
+            ->all();
+    }
+
+    private function performanceMetrics(string $label, $group): array
+    {
+        $atendidos = $group->count();
+        $vendas = $group->where('sold', true)->count();
+        $vgv = $group->sum('vgv');
+
+        return [
+            'label' => $label,
+            'atendidos' => $atendidos,
+            'vendas' => $vendas,
+            'conversao' => $atendidos > 0 ? round($vendas / $atendidos * 100, 2) : 0,
+            'vgv' => round($vgv, 2),
+            'ticket_medio' => $vendas > 0 ? round($vgv / $vendas, 2) : 0,
+        ];
+    }
 }

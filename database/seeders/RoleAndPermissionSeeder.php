@@ -117,6 +117,9 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Acessar Assuntos de Protocolo', 'slug' => 'configuracoes.assuntos_protocolo.acessar', 'group' => 'Configurações'],
             ['name' => 'Gerenciar Assuntos de Protocolo', 'slug' => 'configuracoes.assuntos_protocolo.gerenciar', 'group' => 'Configurações'],
 
+            ['name' => 'Acessar Pontos de Captação', 'slug' => 'configuracoes.pontos_captacao.acessar', 'group' => 'Configurações'],
+            ['name' => 'Gerenciar Pontos de Captação', 'slug' => 'configuracoes.pontos_captacao.gerenciar', 'group' => 'Configurações'],
+
             ['name' => 'Acessar Logs do Sistema', 'slug' => 'configuracoes.logs.acessar', 'group' => 'Configurações'],
 
             // Relatórios
