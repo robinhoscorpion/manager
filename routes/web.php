@@ -198,6 +198,10 @@ Route::middleware('auth')->group(function () {
     Route::put('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'update'])->name('admin.protocol_subjects.update')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
     Route::delete('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'destroy'])->name('admin.protocol_subjects.destroy')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
 
+    // Ficha de Atendimento
+    Route::get('/configuracoes/ficha-atendimento', [\App\Http\Controllers\Admin\ServiceFormSettingsController::class, 'index'])->name('admin.settings.service_form.index')->middleware('permission:configuracoes.colunas.acessar');
+    Route::put('/configuracoes/ficha-atendimento', [\App\Http\Controllers\Admin\ServiceFormSettingsController::class, 'update'])->name('admin.settings.service_form.update')->middleware('permission:configuracoes.colunas.gerenciar');
+
     // Profissões
     Route::get('admin/professions', [\App\Http\Controllers\Admin\ProfessionController::class, 'index'])->name('admin.professions.index')->middleware('permission:configuracoes.profissoes.acessar');
     Route::post('admin/professions', [\App\Http\Controllers\Admin\ProfessionController::class, 'store'])->name('admin.professions.store')->middleware('permission:configuracoes.profissoes.gerenciar');

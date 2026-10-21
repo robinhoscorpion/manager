@@ -20,6 +20,7 @@ const props = defineProps({
     complimentaryItems: Array,
     capturePoints: { type: Array, default: () => [] },
     professionNames: { type: Array, default: () => [] },
+    formSettings: { type: Object, default: () => ({ relationship_field: true }) },
     initialData: Object,
 });
 
@@ -368,6 +369,30 @@ const giftOptions = computed(() => {
 });
 
 // Lógica para limpar seleções se 'nenhuma' for escolhida ou vice-versa
+// ─── Relação com o 1º Titular (Configurações → Ficha de Atendimento) ───
+const relationshipEnabled = computed(() => props.formSettings?.relationship_field !== false);
+
+// Atendimento antigo com relação diferente de casal: continua visível (somente leitura) mesmo com o campo desligado
+const hasLegacyRelation = computed(() => !relationshipEnabled.value && isEdit.value
+    && !!props.initialData?.tipo_relacionamento && props.initialData.tipo_relacionamento !== 'Casal/Namorados');
+
+const showRelationField = computed(() => relationshipEnabled.value || hasLegacyRelation.value);
+
+// Campo desligado + casal: estado civil do 2º titular acompanha o do 1º
+const mirrorMaritalStatus = computed(() => !relationshipEnabled.value && form.value.tipoRelacionamento === 'Casal/Namorados');
+
+watch(() => [form.value.temConjuge, relationshipEnabled.value, form.value.tipoRelacionamento], ([temConjuge, enabled]) => {
+    if (temConjuge && !enabled && !form.value.tipoRelacionamento) {
+        form.value.tipoRelacionamento = 'Casal/Namorados';
+    }
+}, { immediate: true });
+
+watch(() => [form.value.estadoCivil, mirrorMaritalStatus.value, form.value.temConjuge], ([estadoCivil, mirror, temConjuge]) => {
+    if (mirror && temConjuge) {
+        form.value.estadoCivilConjuge = estadoCivil;
+    }
+}, { immediate: true });
+
 watch(() => form.value.cortesia, (newVal, oldVal) => {
     if (!Array.isArray(newVal)) return;
     
@@ -527,11 +552,11 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                     <div class="grid grid-cols-12 gap-x-4 gap-y-6">
                         <!-- Dados do Acompanhante (Condicional) -->
                         <div v-if="form.temConjuge" class="col-span-12 grid grid-cols-12 gap-x-4 gap-y-2 p-4 bg-white dark:bg-slate-900 rounded-[16px] border border-brand-green/20 dark:border-brand-green/20 animate-in fade-in slide-in-from-top-2">
-                            <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.tipoRelacionamento" :options="relationships" label="Relação com o 1º Titular" placeholder="SELECIONE" :error="errors.tipoRelacionamento" :disabled="isReadOnly"  required />
+                            <div v-if="showRelationField" class="col-span-12 sm:col-span-3 flex flex-col">
+                                <SearchableSelect v-model="form.tipoRelacionamento" :options="relationships" label="Relação com o 1º Titular" placeholder="SELECIONE" :error="errors.tipoRelacionamento" :disabled="isReadOnly || hasLegacyRelation"  :required="relationshipEnabled" />
                                 <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate" v-if="!errors.tipoRelacionamento">Vínculo desta pessoa com o 1º titular</div>
                             </div>
-                            <div class="col-span-12 sm:col-span-9 flex flex-col">
+                            <div class="col-span-12 flex flex-col" :class="showRelationField ? 'sm:col-span-9' : ''">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Nome do 2º Titular / Acompanhante <span class="text-red-500">*</span></label>
                                 <input v-model="form.nomeConjuge" type="text" :disabled="isReadOnly" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-green/40 focus:ring-1 focus:ring-brand-green/40 transition-all shadow-sm uppercase">
                                 <div class="h-[14px]"></div>
@@ -561,8 +586,8 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil do 2º Titular" :disabled="isReadOnly"  required />
-                                <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate">Estado civil legal (vai para o contrato)</div>
+                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil do 2º Titular" :disabled="isReadOnly || mirrorMaritalStatus"  required />
+                                <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate">{{ mirrorMaritalStatus ? 'Igual ao do 1º titular' : 'Estado civil legal (vai para o contrato)' }}</div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">
                                 <SearchableSelect v-model="form.profissaoConjuge" :options="professions" allow-create create-label="Usar profissão" label="Profissão do 2º Titular" placeholder="SELECIONE" :disabled="isReadOnly"  required />

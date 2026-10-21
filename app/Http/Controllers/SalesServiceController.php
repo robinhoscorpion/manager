@@ -51,6 +51,7 @@ class SalesServiceController extends Controller
             'complimentaryItems' => ComplimentaryItem::where('is_active', true)->where('type', 'atendimento')->orderBy('name')->get(),
             'capturePoints' => \App\Models\CapturePoint::orderBy('name')->get(['name', 'value', 'active']),
             'professions' => \App\Models\Profession::activeNames(),
+            'serviceFormSettings' => \App\Models\Setting::serviceForm(),
             'columnSettings' => \App\Models\Setting::where('key', 'service_list_columns')->first()?->value ?? [
                 'id' => true,
                 'date' => true,
@@ -77,6 +78,8 @@ class SalesServiceController extends Controller
 
     public function store(Request $request)
     {
+        $this->applyRelationshipSetting($request);
+
         $rules = [
             'date' => 'required|string',
             'time' => 'required|string',
@@ -249,6 +252,8 @@ class SalesServiceController extends Controller
 
     public function update(Request $request, SalesService $service)
     {
+        $this->applyRelationshipSetting($request, $service);
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'celular1' => 'required|string|max:20',
@@ -344,6 +349,25 @@ class SalesServiceController extends Controller
         });
 
         return redirect()->back()->with('success', 'Atendimento atualizado com sucesso!');
+    }
+
+    /**
+     * Com "Relação com o 1º Titular" desligada (Configurações → Ficha de Atendimento),
+     * o 2º titular é tratado como casal e o estado civil dele acompanha o do 1º titular.
+     * Atendimentos antigos com outra relação (irmãos, sócios...) mantêm o que já estava gravado.
+     */
+    private function applyRelationshipSetting(Request $request, ?SalesService $service = null): void
+    {
+        if (\App\Models\Setting::serviceForm()['relationship_field'] || !$request->temConjuge) {
+            return;
+        }
+
+        $relation = $service?->tipo_relacionamento ?: 'Casal/Namorados';
+        $request->merge(['tipoRelacionamento' => $relation]);
+
+        if ($relation === 'Casal/Namorados') {
+            $request->merge(['estadoCivilConjuge' => $request->estadoCivil]);
+        }
     }
 
     public function quickUpdate(Request $request, SalesService $service)
@@ -665,6 +689,9 @@ class SalesServiceController extends Controller
                 '{{area_conjuge}}' => '',
                 '{{qtd_filhos}}' => $service->quantidade_filhos ?? '',
                 '{{nomes_filhos}}' => '',
+                // Texto livre: escapado e com as quebras de linha preservadas
+                '{{detalhes_adicionais}}' => nl2br(e($service->observacoes ?? '')),
+                '{{viagens_por_ano}}' => $service->viagens_por_ano === null ? '' : $service->viagens_por_ano . ($service->viagens_por_ano == 1 ? ' viagem por ano' : ' viagens por ano'),
                 '{{endereco_cliente}}' => trim(($client->address->rua ?? '') . ' ' . ($client->address->numero ?? '') . ' ' . ($client->address->complemento ?? '')),
                 '{{bairro_cliente}}' => $client->address->bairro ?? '',
                 '{{cidade_cliente}}' => $client->address->cidade ?? '',

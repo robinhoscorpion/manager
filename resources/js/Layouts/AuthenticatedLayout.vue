@@ -329,6 +329,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.columns.index') ? 'opacity-100' : 'opacity-30'"></div>
                                 Colunas do Dashboard
                             </Link>
+                            <Link v-if="can('configuracoes.colunas.acessar')" :href="route('admin.settings.service_form.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.service_form.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.service_form.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Ficha de Atendimento
+                            </Link>
                             <Link v-if="can('configuracoes.colunas.acessar')" :href="route('admin.settings.welcome_access.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.welcome_access.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.welcome_access.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Boas-vindas e Acessos

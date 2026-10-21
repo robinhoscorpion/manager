@@ -222,6 +222,10 @@
                     <span class="label">OPC / Atendente</span>
                     <span class="value">{{ $service->opc_avatar ?? 'Não informado' }}</span>
                 </div>
+                <div class="field">
+                    <span class="label">Viagens por Ano</span>
+                    <span class="value">{{ $service->viagens_por_ano ?? 'Não informado' }}</span>
+                </div>
             </div>
             <div class="obs-box">
                 <span class="label" style="margin-bottom: 10px;">Notas Adicionais:</span>

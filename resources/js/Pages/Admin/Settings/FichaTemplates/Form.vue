@@ -140,6 +140,12 @@ const submit = () => {
                                     <span class="text-brand-green" v-pre>{{nomes_filhos}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{viagens_por_ano}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
+                                    <span class="text-brand-green" v-pre>{{detalhes_adicionais}}</span>
+                                </div>
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">
                                     <span class="text-brand-green" v-pre>{{endereco_cliente}}</span>
                                 </div>
                                 <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300">

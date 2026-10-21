@@ -20,6 +20,7 @@ const props = defineProps({
     complimentaryItems: Array,
     capturePoints: Array,
     professions: Array,
+    serviceFormSettings: Object,
     columnSettings: Object,
     filters: Object // Added for search persistence
 });
@@ -942,6 +943,7 @@ const hasCortesia = (cortesia) => {
             :complimentary-items="complimentaryItems"
             :capture-points="capturePoints"
             :profession-names="professions"
+            :form-settings="serviceFormSettings"
             @close="closeServiceModal"
             @created="handleCreateService"
         />
