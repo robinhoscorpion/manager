@@ -689,8 +689,9 @@ class SalesServiceController extends Controller
                 '{{area_conjuge}}' => '',
                 '{{qtd_filhos}}' => $service->quantidade_filhos ?? '',
                 '{{nomes_filhos}}' => '',
-                // Texto livre: escapado e com as quebras de linha preservadas
-                '{{detalhes_adicionais}}' => nl2br(e($service->observacoes ?? '')),
+                // Título + texto livre (escapado, com quebras de linha); vazio quando não há detalhes
+                '{{detalhes_adicionais}}' => trim($service->observacoes ?? '') === '' ? '' :
+                    '<div class="detalhes-adicionais"><strong>Detalhes Adicionais:</strong><br>' . nl2br(e(trim($service->observacoes))) . '</div>',
                 '{{viagens_por_ano}}' => $service->viagens_por_ano === null ? '' : $service->viagens_por_ano . ($service->viagens_por_ano == 1 ? ' viagem por ano' : ' viagens por ano'),
                 '{{endereco_cliente}}' => trim(($client->address->rua ?? '') . ' ' . ($client->address->numero ?? '') . ' ' . ($client->address->complemento ?? '')),
                 '{{bairro_cliente}}' => $client->address->bairro ?? '',

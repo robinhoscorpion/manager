@@ -94,7 +94,7 @@ class FichaTemplateController extends Controller
             '{{qtd_filhos}}' => '2',
             '{{nomes_filhos}}' => 'Pedro, Ana',
             '{{viagens_por_ano}}' => '3 viagens por ano',
-            '{{detalhes_adicionais}}' => 'Casal comemorando 10 anos de casamento.<br>Interesse em destinos de praia.',
+            '{{detalhes_adicionais}}' => '<div class="detalhes-adicionais"><strong>Detalhes Adicionais:</strong><br>Casal comemorando 10 anos de casamento.<br>Interesse em destinos de praia.</div>',
             '{{endereco_cliente}}' => 'Rua Exemplo, 123',
             '{{bairro_cliente}}' => 'Centro',
             '{{cidade_cliente}}' => 'São Paulo',
