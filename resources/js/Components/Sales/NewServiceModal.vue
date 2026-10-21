@@ -75,7 +75,7 @@ const form = ref({
     dataNascimento: '',
     idade: '',
     profissao: '',
-    estadoCivil: 'solteiro',
+    estadoCivil: '',
     celular1: '',
     celular2: '',
     email: '',
@@ -90,7 +90,7 @@ const form = ref({
     dataNascimentoConjuge: '',
     idadeConjuge: '',
     profissaoConjuge: '',
-    estadoCivilConjuge: 'solteiro',
+    estadoCivilConjuge: '',
     
     // Família e Relação
     quantidadeFilhos: 0,
@@ -137,7 +137,7 @@ watch(() => props.initialData, (newVal) => {
             form.value.dataNascimento = newVal.client.data_nascimento;
             form.value.idade = newVal.client.idade;
             form.value.profissao = newVal.client.profissao;
-            form.value.estadoCivil = newVal.client.estado_civil;
+            form.value.estadoCivil = newVal.client.estado_civil || '';
             form.value.celular1 = newVal.client.celular1;
             form.value.celular2 = newVal.client.celular2;
             form.value.email = newVal.client.email;
@@ -165,7 +165,7 @@ watch(() => props.initialData, (newVal) => {
         form.value.dataNascimentoConjuge = newVal.data_nascimento_conjuge;
         form.value.idadeConjuge = newVal.idade_conjuge;
         form.value.profissaoConjuge = newVal.profissao_conjuge;
-        form.value.estadoCivilConjuge = newVal.estado_civil_conjuge || 'solteiro';
+        form.value.estadoCivilConjuge = newVal.estado_civil_conjuge || '';
         form.value.quantidadeFilhos = newVal.quantidade_filhos;
         form.value.tempoJuntos = newVal.tempo_juntos;
         form.value.rendaFamiliar = newVal.renda_familiar;
@@ -175,8 +175,8 @@ watch(() => props.initialData, (newVal) => {
             date: new Date().toLocaleDateString('pt-BR'),
             time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + 'h',
             clients: '', local: '', opc_id: null, qualification: 'Q', status: 'table',
-            isEstrangeiro: false, nome: '', cpf: '', rg: '', nacionalidade: 'Brasileira', dataNascimento: '', idade: '', profissao: '', estadoCivil: 'solteiro', celular1: '', celular2: '', email: '',
-            temConjuge: false, tipoRelacionamento: '', nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira', dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: 'solteiro',
+            isEstrangeiro: false, nome: '', cpf: '', rg: '', nacionalidade: 'Brasileira', dataNascimento: '', idade: '', profissao: '', estadoCivil: '', celular1: '', celular2: '', email: '',
+            temConjuge: false, tipoRelacionamento: '', nomeConjuge: '', cpfConjuge: '', rgConjuge: '', nacionalidadeConjuge: 'Brasileira', dataNascimentoConjuge: '', idadeConjuge: '', profissaoConjuge: '', estadoCivilConjuge: '',
             quantidadeFilhos: 0, tempoJuntos: '', rendaFamiliar: '',
             cep: '', rua: '', bairro: '', numero: '', cidade: '', estado: '', pais: 'Brasil', complemento: '', pontoReferencia: '', cortesia: [], viagensPorAno: '', observacoes: ''
         });
@@ -340,6 +340,7 @@ const maritals = [
     { label: 'Solteiro(a)', value: 'solteiro' },
     { label: 'Casado(a)', value: 'casado' },
     { label: 'União Estável', value: 'uniao_estavel' },
+    { label: 'Namorados', value: 'namorados' },
     { label: 'Divorciado(a)', value: 'divorciado' },
     { label: 'Viúvo(a)', value: 'viuvo' },
 ];
@@ -527,7 +528,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                             <div class="h-[14px]" v-if="!errors.profissao"></div>
                         </div>
                         <div class="col-span-12 sm:col-span-4 flex flex-col">
-                            <SearchableSelect v-model="form.estadoCivil" :options="maritals" label="Estado Civil" :error="errors.estadoCivil" :disabled="isReadOnly"  required />
+                            <SearchableSelect v-model="form.estadoCivil" :options="maritals" label="Estado Civil" placeholder="SELECIONE" :error="errors.estadoCivil" :disabled="isReadOnly"  required />
                             <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate" v-if="!errors.estadoCivil">Estado civil legal do titular (vai para o contrato)</div>
                         </div>
                             <!-- tempoJuntos movido para baixo -->
@@ -586,7 +587,7 @@ watch(() => form.value.cortesia, (newVal, oldVal) => {
                                 <div class="h-[14px]"></div>
                             </div>
                             <div class="col-span-12 sm:col-span-3 flex flex-col">
-                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil do 2º Titular" :disabled="isReadOnly || mirrorMaritalStatus"  required />
+                                <SearchableSelect v-model="form.estadoCivilConjuge" :options="maritals" label="Estado Civil do 2º Titular" placeholder="SELECIONE" :error="errors.estadoCivilConjuge" :disabled="isReadOnly || mirrorMaritalStatus"  required />
                                 <div class="h-[14px] px-1 text-[9px] font-medium text-slate-400 leading-[14px] truncate">{{ mirrorMaritalStatus ? 'Igual ao do 1º titular' : 'Estado civil legal (vai para o contrato)' }}</div>
                             </div>
                             <div class="col-span-12 sm:col-span-12 flex flex-col">

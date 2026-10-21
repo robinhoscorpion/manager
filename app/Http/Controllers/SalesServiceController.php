@@ -130,6 +130,7 @@ class SalesServiceController extends Controller
             $rules['dataNascimentoConjuge'] = 'required|date';
             $rules['profissaoConjuge'] = 'required|string';
             $rules['tipoRelacionamento'] = 'required|string';
+            $rules['estadoCivilConjuge'] = 'required|string';
 
             if ($request->tipoRelacionamento === 'Casal/Namorados') {
                 $rules['tempoJuntos'] = 'required|string';
@@ -157,6 +158,7 @@ class SalesServiceController extends Controller
             'dataNascimento' => 'Data de Nascimento',
             'profissao' => 'Profissão',
             'estadoCivil' => 'Estado Civil',
+            'estadoCivilConjuge' => 'Estado Civil do 2º Titular',
             'tipoRelacionamento' => 'Relação com o 1º Titular',
             'celular1' => 'Celular',
             'email' => 'E-mail',
@@ -264,7 +266,8 @@ class SalesServiceController extends Controller
             'nacionalidade' => 'nullable|string|max:100',
             'dataNascimento' => 'nullable|date',
             'profissao' => 'nullable|string',
-            'estadoCivil' => 'nullable|string',
+            'estadoCivil' => 'required|string',
+            'estadoCivilConjuge' => 'required_if:temConjuge,true,1|nullable|string',
             'rendaFamiliar' => 'nullable|string',
             'nomeConjuge' => 'nullable|string|max:255',
             'dataNascimentoConjuge' => 'nullable|date',
