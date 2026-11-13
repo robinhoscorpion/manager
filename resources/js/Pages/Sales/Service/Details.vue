@@ -12,6 +12,7 @@ import ProposalFormModal from '@/Components/Sales/ProposalFormModal.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
+import ContractSignatureModal from '@/Components/Contracts/ContractSignatureModal.vue';
 import { calculateStayBreakdown, getReservationPoints } from '@/Utils/reservationPoints';
 
 const props = defineProps({
@@ -22,6 +23,13 @@ const props = defineProps({
 
 const client = computed(() => props.service.client);
 const proposal = computed(() => props.service.proposal);
+
+// Assinatura digital do contrato
+const isSignatureModalOpen = ref(false);
+// Contrato assinado (digital ou anexado): o botão "Contrato" abre o arquivo assinado
+const isDocumentSigned = (type) => (props.service.signed_documents || []).some(d => d.document_type === type);
+const isContractSigned = computed(() => props.service.contract_signature_status === 'signed' && !!props.service.contract_file_path);
+const canSign = computed(() => can('pos_venda.gestao_contratos.acessar'));
 const product = computed(() => proposal.value?.product);
 const payments = computed(() => proposal.value?.payments || []);
 const bills = computed(() => proposal.value?.bills || []);
@@ -841,12 +849,18 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <button @click="printDocument('sales.atendimentos.contrato.pdf')"
                                     class="flex items-center gap-2.5 bg-white text-slate-900 hover:bg-brand-green hover:text-white px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-xl shadow-black/20 active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                    Contrato
+                                    {{ isContractSigned ? 'Contrato Assinado' : 'Contrato' }}
+                                    <svg v-if="isContractSigned" class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                </button>
+                                <button v-if="proposal && canSign" @click="isSignatureModalOpen = true"
+                                    class="flex items-center gap-2.5 bg-brand-green/15 hover:bg-brand-green text-brand-green hover:text-white border border-brand-green/40 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    Assinatura
                                 </button>
                                 <button @click="printDocument('sales.atendimentos.proposta.pdf')"
                                     class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                    Proposta
+                                    {{ isDocumentSigned('proposta') ? 'Proposta Assinada' : 'Proposta' }}
                                 </button>
                                 <button @click="printDocument('sales.atendimentos.checklist.pdf')"
                                     class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95">
@@ -2016,6 +2030,13 @@ const updateProtocolStatus = (protocolId, status) => {
             :service="service"
             :force-edit-mode="true"
             @close="isEditProposalModalOpen = false"
+        />
+        <ContractSignatureModal
+            :show="isSignatureModalOpen"
+            :sales-service-id="service.id"
+            :title="`${client?.nome || ''} · Contrato Nº ${proposal?.contract_number || 'S/N'}`"
+            @close="isSignatureModalOpen = false"
+            @changed="router.reload({ preserveScroll: true })"
         />
     </AuthenticatedLayout>
 </template>

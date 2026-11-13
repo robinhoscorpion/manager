@@ -145,7 +145,9 @@ const openPayModal = (bill) => {
     activeBill.value = bill;
     payForm.due_date = bill.due_date.split('T')[0];
     payForm.amount = bill.amount;
-    payForm.paid_amount = Number(bill.amount) + Number(bill.interest_amount || 0);
+    // Parcela atrasada: sugere valor da parcela + multa e juros calculados até hoje (Financeiro → Inadimplência)
+    const lateCharges = props.chargeSettings?.auto_apply ? Number(bill.charges?.total || 0) : 0;
+    payForm.paid_amount = (Number(bill.amount) + Math.max(Number(bill.interest_amount || 0), lateCharges)).toFixed(2);
     showPayModal.value = true;
 };
 
@@ -214,6 +216,7 @@ const submitCancel = () => {
 
 
 const props = defineProps({
+    chargeSettings: Object,
     receivables: Object,
     filters: Object,
     kpis: Object,
@@ -636,7 +639,11 @@ const getStatusBadge = (status) => {
                                     <span class="text-xs text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
                                 </td>
                                 <td class="px-2 py-2">
-                                    <span class="text-xs text-red-500">{{ formatCurrency(bill.interest_amount) }}</span>
+                                    <template v-if="!['paid', 'cancelled'].includes(bill.status) && bill.charges?.days_late > 0">
+                                        <span class="text-xs font-bold text-red-500" :title="`Multa ${formatCurrency(bill.charges.fine)} + juros ${formatCurrency(bill.charges.interest)} — valor atualizado ${formatCurrency(bill.charges.updated_amount)}`">{{ formatCurrency(bill.charges.total) }}</span>
+                                        <span class="block text-[9px] font-bold text-red-400 uppercase tracking-wider">{{ bill.charges.days_late }} dia(s) de atraso</span>
+                                    </template>
+                                    <span v-else class="text-xs text-red-500">{{ formatCurrency(bill.interest_amount) }}</span>
                                 </td>
                                 <td class="px-2 py-2">
                                     <span class="text-xs text-emerald-500">{{ bill.paid_amount ? formatCurrency(bill.paid_amount) : '-' }}</span>
@@ -750,7 +757,11 @@ const getStatusBadge = (status) => {
                                     <span class="text-xs text-slate-900 dark:text-white">{{ formatCurrency(bill.amount) }}</span>
                                 </td>
                                 <td class="px-2 py-2">
-                                    <span class="text-xs text-red-500">{{ formatCurrency(bill.interest_amount) }}</span>
+                                    <template v-if="!['paid', 'cancelled'].includes(bill.status) && bill.charges?.days_late > 0">
+                                        <span class="text-xs font-bold text-red-500" :title="`Multa ${formatCurrency(bill.charges.fine)} + juros ${formatCurrency(bill.charges.interest)} — valor atualizado ${formatCurrency(bill.charges.updated_amount)}`">{{ formatCurrency(bill.charges.total) }}</span>
+                                        <span class="block text-[9px] font-bold text-red-400 uppercase tracking-wider">{{ bill.charges.days_late }} dia(s) de atraso</span>
+                                    </template>
+                                    <span v-else class="text-xs text-red-500">{{ formatCurrency(bill.interest_amount) }}</span>
                                 </td>
                                 <td class="px-2 py-2">
                                     <span class="text-xs text-emerald-500">{{ bill.paid_amount ? formatCurrency(bill.paid_amount) : '-' }}</span>

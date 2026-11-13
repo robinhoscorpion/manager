@@ -9,18 +9,32 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { states } from '@/Constants/States';
 
 const props = defineProps({
     schedules: Array,
     metrics: Object,
     complimentaryItems: Array,
     professions: Array,
+    capturePoints: Array,
     users: Array,
     filters: Object,
 });
 
 // Profissões do cadastro (Configurações → Profissões); as que não existirem podem ser digitadas
 const professionOptions = computed(() => (props.professions || []).map(name => ({ label: name, value: name })));
+
+// Pontos de captação ativos (Configurações → Pontos de Captação)
+const locations = computed(() => (props.capturePoints || []).map(p => ({ label: p.name, value: p.value })));
+
+const maritals = [
+    { label: 'Solteiro(a)', value: 'solteiro' },
+    { label: 'Casado(a)', value: 'casado' },
+    { label: 'União Estável', value: 'uniao_estavel' },
+    { label: 'Namorados', value: 'namorados' },
+    { label: 'Divorciado(a)', value: 'divorciado' },
+    { label: 'Viúvo(a)', value: 'viuvo' },
+];
 
 const isPromoter = computed(() => {
     const roles = usePage().props.auth.roles || [];
@@ -146,6 +160,11 @@ const form = ref({
     nacionalidade: 'Brasileira',
     data_nascimento: '',
     profissao: '',
+    estado_civil: '',
+    cidade: '',
+    estado: '',
+    bairro: '',
+    local: '',
     date: today,
     time: '',
     has_spouse: false,
@@ -163,7 +182,7 @@ const form = ref({
 const isSubmitting = ref(false);
 
 const openNewModal = () => {
-    form.value = { name: '', phone: '', email: '', nacionalidade: 'Brasileira', data_nascimento: '', profissao: '', date: today, time: '', has_spouse: false, spouse_name: '', spouse_phone: '', spouse_email: '', spouse_nacionalidade: 'Brasileira', spouse_data_nascimento: '', spouse_profissao: '', observations: '', renda_familiar: '', cortesia: [], user_id: isPromoter.value ? usePage().props.auth.user.id : null };
+    form.value = { name: '', phone: '', email: '', nacionalidade: 'Brasileira', data_nascimento: '', profissao: '', estado_civil: '', cidade: '', estado: '', bairro: '', local: '', date: today, time: '', has_spouse: false, spouse_name: '', spouse_phone: '', spouse_email: '', spouse_nacionalidade: 'Brasileira', spouse_data_nascimento: '', spouse_profissao: '', observations: '', renda_familiar: '', cortesia: [], user_id: isPromoter.value ? usePage().props.auth.user.id : null };
     showNewModal.value = true;
 };
 
@@ -418,8 +437,29 @@ const updateStatus = (schedule, newStatus) => {
                         </div>
                     </div>
 
-                    <div class="z-[70] relative">
+                    <div class="grid grid-cols-2 gap-4 z-[80] relative">
                         <SearchableSelect v-model="form.profissao" :options="professionOptions" allow-create create-label="Usar profissão" label="Profissão" placeholder="SELECIONE A PROFISSÃO" />
+                        <SearchableSelect v-model="form.estado_civil" :options="maritals" label="Estado Civil" placeholder="SELECIONE" />
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 z-[75] relative">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cidade *</label>
+                            <input v-model="form.cidade" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20 uppercase" placeholder="Ex: Caldas Novas" required>
+                            <p v-if="$page.props.errors.cidade" class="text-[10px] text-red-500 mt-1">{{ $page.props.errors.cidade }}</p>
+                        </div>
+                        <div>
+                            <SearchableSelect v-model="form.estado" :options="states" label="UF *" placeholder="UF" required />
+                            <p v-if="$page.props.errors.estado" class="text-[10px] text-red-500 mt-1">{{ $page.props.errors.estado }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Bairro</label>
+                            <input v-model="form.bairro" type="text" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 py-2 focus:ring-brand-green/20 uppercase" placeholder="Ex: Centro">
+                        </div>
+                    </div>
+
+                    <div class="z-[70] relative">
+                        <SearchableSelect v-model="form.local" :options="locations" label="Ponto de captação" placeholder="SELECIONE" />
                     </div>
 
                     <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800/50 space-y-4">
@@ -494,7 +534,7 @@ const updateStatus = (schedule, newStatus) => {
 
                 <div class="flex justify-end gap-2 mt-6">
                     <button @click="showNewModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-                    <button @click="submitNewSchedule" :disabled="isSubmitting || !form.name || !form.date" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-green text-white hover:bg-[#485638] transition-colors flex items-center gap-2 disabled:opacity-50">
+                    <button @click="submitNewSchedule" :disabled="isSubmitting || !form.name || !form.date || !form.cidade || !form.estado" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-green text-white hover:bg-[#485638] transition-colors flex items-center gap-2 disabled:opacity-50">
                         <span v-if="isSubmitting">Salvando...</span>
                         <span v-else>Salvar Agendamento</span>
                     </button>

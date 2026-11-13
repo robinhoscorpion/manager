@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // LibreOffice: converte os contratos (Word) para PDF.
+    // Em branco: usa "soffice" do PATH ou procura nas pastas padrão do Windows.
+    'libreoffice' => [
+        'binary' => env('LIBREOFFICE_BINARY'),
+    ],
+
 ];

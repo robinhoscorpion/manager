@@ -11,6 +11,9 @@ class ReceivableController extends Controller
 {
     public function index(Request $request)
     {
+        // Garante o status "vencido" atualizado mesmo sem o agendamento (cron) rodando
+        \App\Services\Finance\LateCharges::refreshStatuses();
+
         $query = Bill::with(['client', 'salesService', 'proposal']);
 
         // Filtrar por status
@@ -75,7 +78,13 @@ class ReceivableController extends Controller
         }
 
         // Ordenar por data de vencimento
-        $receivables = (clone $query)->orderBy('due_date', 'asc')->paginate(20)->withQueryString();
+        $chargeSettings = \App\Services\Finance\LateCharges::settings();
+        $receivables = (clone $query)->orderBy('due_date', 'asc')->paginate(20)->withQueryString()
+            ->through(function ($bill) use ($chargeSettings) {
+                // Encargos calculados para hoje (multa + juros) — usados na tela e como sugestão na baixa
+                $bill->charges = \App\Services\Finance\LateCharges::for($bill, null, $chargeSettings);
+                return $bill;
+            });
 
         // Base query para os KPIs (sem o filtro de data padrão e sem o status padrão, que podem estar em $query)
         $baseKpiQuery = Bill::query();
@@ -136,6 +145,7 @@ class ReceivableController extends Controller
             'receivables' => $receivables,
             'kpis' => $kpis,
             'bankAccounts' => \App\Models\BankAccount::where('is_active', true)->orderBy('name')->get(),
+            'chargeSettings' => $chargeSettings,
         ]);
     }
 
@@ -155,7 +165,9 @@ class ReceivableController extends Controller
         $bills = Bill::whereIn('id', $validated['bill_ids'])->get();
         $globalPaidAmount = $validated['global_paid_amount'] ?? null;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($bills, $validated, $globalPaidAmount) {
+        $chargeSettings = \App\Services\Finance\LateCharges::settings();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($bills, $validated, $globalPaidAmount, $chargeSettings) {
             $totalOriginal = $bills->sum(function($b) { return $b->amount + ($b->interest_amount ?? 0); });
             $remainingGlobal = $globalPaidAmount;
 
@@ -180,6 +192,12 @@ class ReceivableController extends Controller
                     ? $validated['paid_at'] 
                     : ($validated['bill_dates'][$bill->id] ?? now()->toDateString());
                 
+                if ($globalPaidAmount === null) {
+                    // Sem valor informado: valor da parcela + encargos de atraso na data do pagamento (se ativado)
+                    $charges = $chargeSettings['auto_apply'] ? \App\Services\Finance\LateCharges::for($bill, $paidAt, $chargeSettings)['total'] : 0;
+                    $finalPaidAmount = round($bill->amount + max((float) ($bill->interest_amount ?? 0), $charges), 2);
+                }
+
                 $interestAmount = ($finalPaidAmount > $bill->amount) ? ($finalPaidAmount - $bill->amount) : 0;
 
                 $bill->update([

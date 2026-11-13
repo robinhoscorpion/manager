@@ -186,7 +186,9 @@ class BillController extends Controller
             return redirect()->back()->with('error', 'Algumas parcelas não pertencem a esta proposta.');
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($bills, $validated) {
+        $chargeSettings = \App\Services\Finance\LateCharges::settings();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($bills, $validated, $chargeSettings) {
             foreach ($bills as $bill) {
                 if ($bill->status === 'paid') continue;
 
@@ -200,7 +202,9 @@ class BillController extends Controller
                     'payment_method' => $validated['payment_method'],
                     'bank_account_id' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('bank_account_id'),
                     'recipient' => \App\Models\PaymentMethod::where('name', $validated['payment_method'])->value('recipient'),
-                    'paid_amount' => $bill->amount + ($bill->interest_amount ?? 0),
+                    // Valor da parcela + encargos de atraso na data do pagamento (se ativado)
+                    'interest_amount' => $interest = max((float) ($bill->interest_amount ?? 0), $chargeSettings['auto_apply'] ? \App\Services\Finance\LateCharges::for($bill, $paidAt, $chargeSettings)['total'] : 0),
+                    'paid_amount' => round($bill->amount + $interest, 2),
                     'observations' => trim($bill->observations . "\n[LOTE]: " . ($validated['observations'] ?? 'Baixa em lote realizada.'))
                 ]);
             }

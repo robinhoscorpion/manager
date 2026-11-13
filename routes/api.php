@@ -13,6 +13,11 @@ use App\Http\Controllers\Api\Socio\SocioProtocolApiController;
 |--------------------------------------------------------------------------
 */
 
+// Avisos (webhooks) dos provedores de assinatura digital — protegidos por token na URL
+Route::post('/webhooks/assinatura/{provider}/{token}', \App\Http\Controllers\Webhooks\SignatureWebhookController::class)
+    ->name('webhooks.signature')
+    ->middleware('throttle:120,1');
+
 Route::prefix('socio')->group(function () {
     // Autenticação Pública
     Route::post('/login', [SocioAuthController::class, 'login']);

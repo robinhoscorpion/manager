@@ -8,12 +8,27 @@ const can = (permission) => {
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage, router, useForm } from '@inertiajs/vue3';
 import Modal from '@/Components/Modal.vue';
+import ContractSignatureModal from '@/Components/Contracts/ContractSignatureModal.vue';
 
 const props = defineProps({
     contracts: Array,
     metrics: Object,
+    signatureProvider: Object,
     filters: Object,
 });
+
+// Assinatura digital
+const signatureContract = ref(null);
+const openSignatureModal = (contract) => { signatureContract.value = contract; };
+const reloadContracts = () => router.reload({ only: ['contracts', 'metrics'], preserveScroll: true });
+const digitalSignatureStyles = {
+    sent: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30',
+    viewed: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30',
+    partially_signed: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
+    signed: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
+    refused: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30',
+    error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30',
+};
 
 const pageMetrics = computed(() => props.metrics || { total: 0, pending: 0, delivered: 0, signed: 0 });
 const contracts = computed(() => props.contracts || []);
@@ -277,12 +292,20 @@ const submitUpload = () => {
                                         <span :class="getStatusBadge(contract.status, contract.method, contract.signature_status).color" class="inline-flex px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-widest">
                                             {{ getStatusBadge(contract.status, contract.method, contract.signature_status).label }}
                                         </span>
+                                        <div v-if="contract.digital_signatures?.length" class="flex flex-wrap justify-center gap-1">
+                                            <span v-for="doc in contract.digital_signatures" :key="doc.document_type" v-show="digitalSignatureStyles[doc.status]" :class="digitalSignatureStyles[doc.status]" class="inline-flex px-1.5 py-0.5 rounded-md border text-[8px] font-bold uppercase tracking-wider" :title="'Assinatura digital — ' + doc.document_label + ': ' + doc.status_label">
+                                                ✍ {{ doc.document_label }}: {{ doc.status_label }}
+                                            </span>
+                                        </div>
                                         <span v-if="contract.signature_status === 'signed' && contract.signed_at" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ contract.signed_at }}</span>
                                         <span v-else-if="contract.delivered_at" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ contract.delivered_at }}</span>
                                     </div>
                                 </td>
                                 <td class="px-3 py-2 text-right">
                                     <div class="flex items-center justify-end gap-1">
+                                        <button v-if="signatureProvider?.supports_sending || contract.digital_signatures?.length" @click="openSignatureModal(contract)" class="px-3 py-1.5 rounded-md border border-brand-green/40 text-brand-green hover:bg-brand-green/10 transition-colors text-[9px] font-bold uppercase tracking-widest" title="Assinatura digital">
+                                            ✍ Assinatura
+                                        </button>
                                         <button v-if="contract.status === 'pending'" @click="openDeliveryModal(contract)" class="px-3 py-1.5 rounded-md bg-brand-green text-white hover:bg-brand-green/90 transition-colors text-[9px] font-bold uppercase tracking-widest" title="Registrar Entrega">
                                             Entregar
                                         </button>
@@ -415,5 +438,12 @@ const submitUpload = () => {
             </form>
         </Modal>
 
+        <ContractSignatureModal
+            :show="!!signatureContract"
+            :sales-service-id="signatureContract?.id"
+            :title="signatureContract ? `${signatureContract.name} · Contrato Nº ${signatureContract.contract}` : ''"
+            @close="signatureContract = null"
+            @changed="reloadContracts"
+        />
     </AuthenticatedLayout>
 </template>

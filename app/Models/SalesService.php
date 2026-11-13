@@ -37,6 +37,8 @@ class SalesService extends Model
         'qualification',
         'status',
         'tem_conjuge',
+        'celular_conjuge',
+        'email_conjuge',
         'tipo_relacionamento',
         'nome_conjuge',
         'cpf_conjuge',
@@ -73,6 +75,27 @@ class SalesService extends Model
     public function schedule()
     {
         return $this->belongsTo(Schedule::class);
+    }
+
+    public function contractSignatures()
+    {
+        return $this->hasMany(ContractSignature::class);
+    }
+
+    /**
+     * Documentos já assinados digitalmente (com PDF assinado guardado): contrato, proposta, rci.
+     */
+    public function signedDocuments()
+    {
+        return $this->hasMany(ContractSignature::class)
+            ->where('status', ContractSignature::STATUS_SIGNED)
+            ->whereNotNull('signed_file_path')
+            ->select(['id', 'sales_service_id', 'document_type', 'status', 'signed_at']);
+    }
+
+    public function latestContractSignature()
+    {
+        return $this->hasOne(ContractSignature::class)->latestOfMany();
     }
 
     public function client()

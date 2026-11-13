@@ -12,7 +12,7 @@ class ContractDeliveryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SalesService::with(['client', 'proposal.product'])
+        $query = SalesService::with(['client', 'proposal.product', 'contractSignatures' => fn ($q) => $q->latest()])
             ->where('status', SalesService::STATUS_APROVADO);
 
         if ($request->filled('start_date')) {
@@ -48,6 +48,13 @@ class ContractDeliveryController extends Controller
                     'signature_status' => $sale->contract_signature_status ?? 'pending',
                     'signed_at' => $sale->contract_signed_at ? \Carbon\Carbon::parse($sale->contract_signed_at)->format('d/m/Y H:i') : null,
                     'has_file' => !empty($sale->contract_file_path),
+                    // Último envio de cada documento (contrato, proposta, rci)
+                    'digital_signatures' => $sale->contractSignatures->unique('document_type')->map(fn ($s) => [
+                        'document_type' => $s->document_type,
+                        'document_label' => $s->document_label,
+                        'status' => $s->status,
+                        'status_label' => $s->status_label,
+                    ])->values(),
                 ];
             });
 
@@ -61,6 +68,10 @@ class ContractDeliveryController extends Controller
         return Inertia::render('AfterSales/ContractDelivery/Index', [
             'contracts' => $sales->values(),
             'metrics' => $metrics,
+            'signatureProvider' => (function () {
+                $provider = app(\App\Services\Signature\SignatureManager::class)->provider();
+                return ['label' => $provider->label(), 'supports_sending' => $provider->supportsSending()];
+            })(),
             'filters' => [
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,

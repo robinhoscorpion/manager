@@ -170,6 +170,10 @@ const toggleSidebar = () => {
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.receivables.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Recebíveis
                             </Link>
+                            <Link v-if="can('recebiveis.acessar')" :href="route('finance.delinquency.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.delinquency.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.delinquency.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Inadimplência
+                            </Link>
                             <Link v-if="can('controle_vendas.acessar')" :href="route('finance.sales-control.index')" class="nav-sub-item" :class="{ 'active': route().current('finance.sales-control.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('finance.sales-control.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Controle de Vendas
@@ -310,7 +314,7 @@ const toggleSidebar = () => {
                         <span>Cargos</span>
                     </Link>
 
-                    <div v-if="hasAnyPermission(['configuracoes.tabela_pontos.acessar', 'configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar', 'configuracoes.pontos_captacao.acessar', 'configuracoes.profissoes.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
+                    <div v-if="hasAnyPermission(['configuracoes.tabela_pontos.acessar', 'configuracoes.colunas.acessar', 'configuracoes.metas.acessar', 'configuracoes.modelos_proposta.acessar', 'configuracoes.modelos_contrato.acessar', 'configuracoes.produtos.acessar', 'configuracoes.manutencao.acessar', 'configuracoes.formas_pagamento.acessar', 'configuracoes.qualificacao.acessar', 'configuracoes.cortesias.acessar', 'configuracoes.logs.acessar', 'configuracoes.assuntos_protocolo.acessar', 'configuracoes.pontos_captacao.acessar', 'configuracoes.profissoes.acessar', 'configuracoes.assinatura.acessar'])" class="nav-group" :class="{ 'open': configOpen }">
                         <div class="nav-item nav-item-toggle" @click="toggleConfig">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,7 +335,11 @@ const toggleSidebar = () => {
                             </Link>
                             <Link v-if="can('configuracoes.colunas.acessar')" :href="route('admin.settings.service_form.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.service_form.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.service_form.*') ? 'opacity-100' : 'opacity-30'"></div>
-                                Ficha de Atendimento
+                                Opções da Ficha
+                            </Link>
+                            <Link v-if="can('configuracoes.assinatura.acessar')" :href="route('admin.settings.signature.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.signature.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.signature.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Assinatura Digital
                             </Link>
                             <Link v-if="can('configuracoes.colunas.acessar')" :href="route('admin.settings.welcome_access.index')" class="nav-sub-item" :class="{ 'active': route().current('admin.settings.welcome_access.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('admin.settings.welcome_access.*') ? 'opacity-100' : 'opacity-30'"></div>

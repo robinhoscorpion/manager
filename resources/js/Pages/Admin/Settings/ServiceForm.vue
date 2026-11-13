@@ -22,7 +22,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Ficha de Atendimento" />
+    <Head title="Opções da Ficha" />
 
     <AuthenticatedLayout>
         <div class="min-h-screen font-sans bg-[var(--content-bg)] dark:bg-[#0f1219]">
@@ -37,7 +37,7 @@ const submit = () => {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Ficha de Atendimento</h2>
+                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Opções da Ficha de Atendimento</h2>
                             <p class="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
                                 Defina como a ficha se comporta

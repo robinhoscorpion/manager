@@ -198,6 +198,11 @@ Route::middleware('auth')->group(function () {
     Route::put('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'update'])->name('admin.protocol_subjects.update')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
     Route::delete('admin/protocol-subjects/{protocolSubject}', [\App\Http\Controllers\Admin\ProtocolSubjectController::class, 'destroy'])->name('admin.protocol_subjects.destroy')->middleware('permission:configuracoes.assuntos_protocolo.gerenciar');
 
+    // Assinatura Digital
+    Route::get('/configuracoes/assinatura-digital', [\App\Http\Controllers\Admin\SignatureSettingsController::class, 'index'])->name('admin.settings.signature.index')->middleware('permission:configuracoes.assinatura.acessar');
+    Route::put('/configuracoes/assinatura-digital', [\App\Http\Controllers\Admin\SignatureSettingsController::class, 'update'])->name('admin.settings.signature.update')->middleware('permission:configuracoes.assinatura.gerenciar');
+    Route::post('/configuracoes/assinatura-digital/testar', [\App\Http\Controllers\Admin\SignatureSettingsController::class, 'test'])->name('admin.settings.signature.test')->middleware('permission:configuracoes.assinatura.gerenciar');
+
     // Ficha de Atendimento
     Route::get('/configuracoes/ficha-atendimento', [\App\Http\Controllers\Admin\ServiceFormSettingsController::class, 'index'])->name('admin.settings.service_form.index')->middleware('permission:configuracoes.colunas.acessar');
     Route::put('/configuracoes/ficha-atendimento', [\App\Http\Controllers\Admin\ServiceFormSettingsController::class, 'update'])->name('admin.settings.service_form.update')->middleware('permission:configuracoes.colunas.gerenciar');
@@ -254,6 +259,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('financeiro')->name('finance.')->group(function () {
         Route::get('/recebiveis', [\App\Http\Controllers\Finance\ReceivableController::class, 'index'])->name('receivables.index')->middleware('permission:recebiveis.acessar');
         Route::post('/recebiveis/bulk-pay', [\App\Http\Controllers\Finance\ReceivableController::class, 'bulkPayGlobal'])->name('receivables.bulk-pay')->middleware('permission:recebiveis.gerenciar');
+        Route::get('/inadimplencia', [\App\Http\Controllers\Finance\DelinquencyController::class, 'index'])->name('delinquency.index')->middleware('permission:recebiveis.acessar');
+        Route::put('/inadimplencia/encargos', [\App\Http\Controllers\Finance\DelinquencyController::class, 'updateSettings'])->name('delinquency.settings')->middleware('permission:recebiveis.gerenciar');
         
         // Controle de Vendas (Auditoria)
         Route::get('/controle-vendas', [\App\Http\Controllers\Finance\SalesControlController::class, 'index'])->name('sales-control.index')->middleware('permission:controle_vendas.acessar');
@@ -273,6 +280,14 @@ Route::middleware('auth')->group(function () {
         Route::patch('/entrega-contrato/{salesService}/status', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'updateStatus'])->name('contract-delivery.status.update')->middleware('permission:pos_venda.gestao_contratos.gerenciar');
         Route::post('/entrega-contrato/{salesService}/upload', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'uploadSignedContract'])->name('contract-delivery.upload')->middleware('permission:pos_venda.gestao_contratos.gerenciar');
         Route::get('/entrega-contrato/{salesService}/download', [\App\Http\Controllers\AfterSales\ContractDeliveryController::class, 'downloadContract'])->name('contract-delivery.download')->middleware('permission:pos_venda.gestao_contratos.acessar');
+
+        // Assinatura digital do contrato
+        Route::get('/assinatura/{salesService}', [\App\Http\Controllers\AfterSales\ContractSignatureController::class, 'show'])->name('contract-signature.show')->middleware('permission:pos_venda.gestao_contratos.acessar');
+        Route::post('/assinatura/{salesService}', [\App\Http\Controllers\AfterSales\ContractSignatureController::class, 'store'])->name('contract-signature.store')->middleware('permission:pos_venda.gestao_contratos.gerenciar');
+        Route::post('/assinatura/envio/{contractSignature}/sincronizar', [\App\Http\Controllers\AfterSales\ContractSignatureController::class, 'sync'])->name('contract-signature.sync')->middleware('permission:pos_venda.gestao_contratos.acessar');
+        Route::post('/assinatura/envio/{contractSignature}/cancelar', [\App\Http\Controllers\AfterSales\ContractSignatureController::class, 'cancel'])->name('contract-signature.cancel')->middleware('permission:pos_venda.gestao_contratos.gerenciar');
+        Route::post('/assinatura/envio/{contractSignature}/reenviar', [\App\Http\Controllers\AfterSales\ContractSignatureController::class, 'resend'])->name('contract-signature.resend')->middleware('permission:pos_venda.gestao_contratos.gerenciar');
+        Route::get('/assinatura/envio/{contractSignature}/arquivo/{type}', [\App\Http\Controllers\AfterSales\ContractSignatureController::class, 'download'])->whereIn('type', ['original', 'assinado'])->name('contract-signature.download')->middleware('permission:pos_venda.gestao_contratos.acessar');
 
         Route::get('/aniversariantes', [\App\Http\Controllers\AfterSales\BirthdayController::class, 'index'])->name('birthdays.index')->middleware('permission:pos_venda.aniversariantes.acessar');
         

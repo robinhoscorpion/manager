@@ -20,6 +20,13 @@ const resetModal = () => {
     isDeleting.value = false;
 };
 
+// Documento já assinado: o botão abre a versão assinada (contrato também vale para o upload manual)
+const isSignedAction = (action) => {
+    if (!action.signedType || !props.service) return false;
+    if (action.signedType === 'contrato' && props.service.contract_signature_status === 'signed' && props.service.contract_file_path) return true;
+    return (props.service.signed_documents || []).some(d => d.document_type === action.signedType);
+};
+
 watch(() => props.show, (val) => {
     if (val) resetModal();
 });
@@ -28,9 +35,9 @@ const actions = [
     { id: 'details', label: 'Consultar Dados', icon: '🔍', color: 'bg-indigo-600/10 dark:bg-cyan-600/20 text-indigo-700 dark:text-cyan-400 border-indigo-500/20 dark:border-cyan-500/30', hover: 'hover:bg-indigo-600/20 dark:hover:bg-cyan-600/30', route: 'sales.atendimentos.show', type: 'visit' },
     { id: 'service', label: 'Ficha Atendimento', icon: '📄', color: 'bg-blue-600/10 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 border-blue-500/20 dark:border-blue-500/30', hover: 'hover:bg-blue-600/20 dark:hover:bg-blue-600/30', route: 'sales.atendimentos.ficha.pdf' },
     { id: 'checklist', label: 'Checklist', icon: '✅', color: 'bg-emerald-600/10 dark:bg-green-600/20 text-emerald-700 dark:text-green-400 border-emerald-500/20 dark:border-green-500/30', hover: 'hover:bg-emerald-600/20 dark:hover:bg-emerald-600/30', route: 'sales.atendimentos.checklist.pdf' },
-    { id: 'proposal', label: 'Proposta (PDF)', icon: '💰', color: 'bg-amber-600/10 dark:bg-yellow-600/20 text-amber-700 dark:text-yellow-400 border-amber-500/20 dark:border-yellow-500/30', hover: 'hover:bg-amber-600/20 dark:hover:bg-amber-600/30', route: 'sales.atendimentos.proposta.pdf' },
-    { id: 'contract', label: 'Contrato', icon: '✍️', color: 'bg-violet-600/10 dark:bg-purple-600/20 text-violet-700 dark:text-purple-400 border-violet-500/20 dark:border-purple-500/30', hover: 'hover:bg-violet-600/20 dark:hover:bg-violet-600/30', route: 'sales.atendimentos.contrato.pdf' },
-    { id: 'rci', label: 'RCI', icon: '🏝️', color: 'bg-orange-600/10 dark:bg-orange-600/20 text-orange-700 dark:text-orange-400 border-orange-500/20 dark:border-orange-500/30', hover: 'hover:bg-orange-600/20 dark:hover:bg-orange-600/30', route: 'sales.atendimentos.rci.pdf' },
+    { id: 'proposal', label: 'Proposta (PDF)', signedLabel: 'Proposta Assinada', signedType: 'proposta', icon: '💰', color: 'bg-amber-600/10 dark:bg-yellow-600/20 text-amber-700 dark:text-yellow-400 border-amber-500/20 dark:border-yellow-500/30', hover: 'hover:bg-amber-600/20 dark:hover:bg-amber-600/30', route: 'sales.atendimentos.proposta.pdf' },
+    { id: 'contract', label: 'Contrato', signedLabel: 'Contrato Assinado', signedType: 'contrato', icon: '✍️', color: 'bg-violet-600/10 dark:bg-purple-600/20 text-violet-700 dark:text-purple-400 border-violet-500/20 dark:border-purple-500/30', hover: 'hover:bg-violet-600/20 dark:hover:bg-violet-600/30', route: 'sales.atendimentos.contrato.pdf' },
+    { id: 'rci', label: 'RCI', signedLabel: 'RCI Assinado', signedType: 'rci', icon: '🏝️', color: 'bg-orange-600/10 dark:bg-orange-600/20 text-orange-700 dark:text-orange-400 border-orange-500/20 dark:border-orange-500/30', hover: 'hover:bg-orange-600/20 dark:hover:bg-orange-600/30', route: 'sales.atendimentos.rci.pdf' },
     { id: 'cortesia', label: 'Cortesias', icon: '🎁', color: 'bg-rose-600/10 dark:bg-pink-600/20 text-rose-700 dark:text-pink-400 border-rose-500/20 dark:border-pink-500/30', hover: 'hover:bg-rose-600/20 dark:hover:bg-rose-600/30', route: 'sales.atendimentos.cortesia.pdf' },
     { id: 'delete', label: 'Excluir Atendimento', icon: '🗑️', color: 'bg-red-600/10 dark:bg-red-600/20 text-red-600 dark:text-red-500 border-red-500/30 dark:border-red-500/50', hover: 'hover:bg-red-600/20 dark:hover:bg-red-600/30', type: 'delete' },
 ];
@@ -120,7 +127,7 @@ const hasCortesia = (cortesia) => {
                             {{ action.icon }}
                         </div>
                         <span class="text-[8px] font-black uppercase tracking-widest leading-tight">
-                            {{ action.label }}
+                            {{ isSignedAction(action) ? action.signedLabel : action.label }}
                         </span>
                         
                         <!-- Status Badge -->

@@ -61,6 +61,7 @@ class ScheduleController extends Controller
             'metrics' => $metrics,
             'complimentaryItems' => ComplimentaryItem::where('is_active', true)->where('type', 'atendimento')->orderBy('name')->get(),
             'professions' => \App\Models\Profession::activeNames(),
+            'capturePoints' => \App\Models\CapturePoint::where('active', true)->orderBy('name')->get(['name', 'value']),
             'users' => User::select('id', 'name')->with('roles:name,slug')->get()->map(function($u) {
                 return [ 'id' => $u->id, 'name' => $u->name, 'roles' => $u->roles->pluck('slug') ];
             }),
@@ -82,6 +83,11 @@ class ScheduleController extends Controller
             'nacionalidade' => 'nullable|string|max:255',
             'data_nascimento' => 'nullable|date',
             'profissao' => 'nullable|string|max:255',
+            'estado_civil' => 'nullable|string|max:50',
+            'cidade' => 'required|string|max:255',
+            'estado' => 'required|string|size:2',
+            'bairro' => 'nullable|string|max:255',
+            'local' => 'nullable|string|max:255',
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
             'has_spouse' => 'nullable|boolean',
@@ -96,6 +102,9 @@ class ScheduleController extends Controller
             'cortesia' => 'nullable|array',
             'cortesia.*' => 'nullable|string',
             'user_id' => 'nullable|exists:users,id',
+        ], [], [
+            'cidade' => 'Cidade',
+            'estado' => 'Estado (UF)',
         ]);
 
         // Profissão digitada que não existe entra no cadastro como "a revisar"
@@ -128,16 +137,17 @@ class ScheduleController extends Controller
                     'nacionalidade' => $schedule->nacionalidade,
                     'data_nascimento' => $schedule->data_nascimento,
                     'profissao' => $schedule->profissao,
+                    'estado_civil' => $schedule->estado_civil,
                 ]);
 
                 // Create associated address to prevent errors in Atendimentos queries
                 $client->address()->create([
                     'cep' => '',
                     'rua' => '',
-                    'bairro' => '',
+                    'bairro' => $schedule->bairro ?? '',
                     'numero' => '',
-                    'cidade' => '',
-                    'estado' => '',
+                    'cidade' => $schedule->cidade ?? '',
+                    'estado' => $schedule->estado ?? '',
                 ]);
 
                 $clientsName = $schedule->name;
@@ -150,7 +160,7 @@ class ScheduleController extends Controller
                     'date' => $schedule->date,
                     'time' => $schedule->time ?? '00:00',
                     'clients' => $clientsName,
-                    'local' => 'SALA',
+                    'local' => $schedule->local ?: 'SALA',
                     'status' => 'table', // Using 'table' as 'fila' was removed
                     'qualification' => 'Q',
                     'tem_conjuge' => $schedule->has_spouse ?? false,
