@@ -304,6 +304,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/distratos', [\App\Http\Controllers\CancellationController::class, 'store'])->name('cancellations.store')->middleware('permission:pos_venda.cancelamentos.gerenciar');
         Route::get('/distratos/buscar', [\App\Http\Controllers\CancellationController::class, 'apiSearch'])->name('cancellations.search')->middleware('permission:pos_venda.cancelamentos.gerenciar');
         Route::get('/distratos/{cancellation}/pdf', [\App\Http\Controllers\CancellationController::class, 'pdf'])->name('cancellations.pdf')->middleware('permission:pos_venda.cancelamentos.acessar');
+
+        // Upgrade / Downgrade de contrato (aditivo - mantém o número do contrato)
+        Route::get('/alteracao-contrato', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'index'])->name('contract-amendments.index')->middleware('permission:pos_venda.alteracao_contrato.acessar');
+        Route::get('/alteracao-contrato/novo', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'create'])->name('contract-amendments.create')->middleware('permission:pos_venda.alteracao_contrato.gerenciar');
+        Route::get('/alteracao-contrato/buscar', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'apiSearch'])->name('contract-amendments.search')->middleware('permission:pos_venda.alteracao_contrato.gerenciar');
+        Route::post('/alteracao-contrato/simular/{proposal}', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'preview'])->name('contract-amendments.preview')->middleware('permission:pos_venda.alteracao_contrato.gerenciar');
+        Route::post('/alteracao-contrato', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'store'])->name('contract-amendments.store')->middleware('permission:pos_venda.alteracao_contrato.gerenciar');
+        Route::get('/alteracao-contrato/{amendment}', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'show'])->name('contract-amendments.show')->middleware('permission:pos_venda.alteracao_contrato.acessar');
+        Route::patch('/alteracao-contrato/estornos/{reversal}', [\App\Http\Controllers\AfterSales\ContractAmendmentController::class, 'updateReversal'])->name('contract-amendments.reversals.update')->middleware('permission:pos_venda.alteracao_contrato.gerenciar');
     });
 
     // Busca Global

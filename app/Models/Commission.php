@@ -8,6 +8,7 @@ class Commission extends Model
 {
     protected $fillable = [
         'proposal_id',
+        'contract_amendment_id',
         'user_id',
         'role',
         'total_amount',
@@ -18,6 +19,16 @@ class Commission extends Model
     public function proposal()
     {
         return $this->belongsTo(Proposal::class);
+    }
+
+    public function amendment()
+    {
+        return $this->belongsTo(ContractAmendment::class, 'contract_amendment_id');
+    }
+
+    public function reversals()
+    {
+        return $this->hasMany(CommissionReversal::class);
     }
 
     public function user()

@@ -12,6 +12,8 @@ class Proposal extends Model
 
     protected $fillable = [
         'contract_number',
+        'current_version',
+        'credit_balance',
         'client_id',
         'sales_service_id',
         'product_id',
@@ -45,9 +47,25 @@ class Proposal extends Model
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * Pagamentos da negociação VIGENTE do contrato.
+     * Versões anteriores (antes de upgrade/downgrade) ficam em allPayments().
+     */
     public function payments()
     {
+        return $this->hasMany(ProposalPayment::class)->where('is_current', true);
+    }
+
+    /** Todos os pagamentos negociados, incluindo versões anteriores. */
+    public function allPayments()
+    {
         return $this->hasMany(ProposalPayment::class);
+    }
+
+    /** Histórico de aditivos (upgrade / downgrade) do contrato. */
+    public function amendments()
+    {
+        return $this->hasMany(ContractAmendment::class)->orderBy('to_version');
     }
 
     public function bills()

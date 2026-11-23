@@ -208,7 +208,7 @@ const toggleSidebar = () => {
                     </div>
 
                     <!-- Pós-venda Group -->
-                    <div v-if="hasAnyPermission(['pos_venda.boas_vindas.acessar', 'pos_venda.gestao_contratos.acessar', 'pos_venda.protocolos.acessar', 'pos_venda.reservas.acessar', 'pos_venda.aniversariantes.acessar', 'pos_venda.onboarding.acessar', 'pos_venda.pendencias.acessar', 'pos_venda.treinamentos.acessar', 'pos_venda.acompanhamentos.acessar', 'pos_venda.campanhas.acessar', 'pos_venda.cancelamentos.acessar'])" class="nav-group" :class="{ 'open': posVendaOpen }">
+                    <div v-if="hasAnyPermission(['pos_venda.boas_vindas.acessar', 'pos_venda.gestao_contratos.acessar', 'pos_venda.protocolos.acessar', 'pos_venda.reservas.acessar', 'pos_venda.aniversariantes.acessar', 'pos_venda.onboarding.acessar', 'pos_venda.pendencias.acessar', 'pos_venda.treinamentos.acessar', 'pos_venda.acompanhamentos.acessar', 'pos_venda.campanhas.acessar', 'pos_venda.cancelamentos.acessar', 'pos_venda.alteracao_contrato.acessar'])" class="nav-group" :class="{ 'open': posVendaOpen }">
                         <div class="nav-item nav-item-toggle" @click="togglePosVenda">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,6 +245,10 @@ const toggleSidebar = () => {
                             <Link v-if="can('pos_venda.cancelamentos.acessar')" :href="route('after-sales.cancellations.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.cancellations.*') }">
                                 <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.cancellations.*') ? 'opacity-100' : 'opacity-30'"></div>
                                 Cancelamentos
+                            </Link>
+                            <Link v-if="can('pos_venda.alteracao_contrato.acessar')" :href="route('after-sales.contract-amendments.index')" class="nav-sub-item" :class="{ 'active': route().current('after-sales.contract-amendments.*') }">
+                                <div class="w-1.5 h-1.5 rounded-full bg-current" :class="route().current('after-sales.contract-amendments.*') ? 'opacity-100' : 'opacity-30'"></div>
+                                Upgrade / Downgrade
                             </Link>
                         </div>
                     </div>

@@ -121,6 +121,12 @@ class ProposalController extends Controller
             return redirect()->back()->withErrors(['product_id' => 'O cliente deve ter um CPF ou Documento cadastrado para salvar a proposta.']);
         }
 
+        // Contratos que já passaram por upgrade/downgrade possuem histórico de versões:
+        // a edição direta apagaria esse histórico, então deve ser feita via novo aditivo.
+        if (($proposal->current_version ?? 1) > 1) {
+            return redirect()->back()->withErrors(['product_id' => 'Este contrato já possui aditivo (upgrade/downgrade). Para alterá-lo, registre um novo aditivo em Pós-venda > Upgrade/Downgrade.']);
+        }
+
         // O bloqueio de edição quando existem parcelas pagas foi removido a pedido.
         // As parcelas serão deletadas e recriadas abaixo.
 
@@ -204,101 +210,12 @@ class ProposalController extends Controller
         return redirect()->back()->with('success', 'Proposta #' . $proposal->contract_number . ' aprovada e financeiro gerado!');
     }
 
-    private function getCategoryLabel($category)
-    {
-        $labels = [
-            'taxa_contrato' => 'Taxa de Contrato',
-            'entrada' => 'Entrada',
-            'saldo' => 'Saldo',
-            'taxa_manutencao' => 'Taxa de Manutenção',
-        ];
-        return $labels[$category] ?? 'Pagamento';
-    }
-
     /**
      * Generate financial bills for a proposal.
      */
     private function generateBills(Proposal $proposal)
     {
-        $product = $proposal->product;
-        $paymentMethodsMap = \App\Models\PaymentMethod::pluck('auto_baixa', 'name')->toArray();
-        $bankAccountMap = \App\Models\PaymentMethod::pluck('bank_account_id', 'name')->toArray();
-        $recipientMap = \App\Models\PaymentMethod::pluck('recipient', 'name')->toArray();
-
-        foreach ($proposal->payments as $payment) {
-            // Se for taxa de manutenção e o produto for isento, pula
-            if ($payment->category === 'taxa_manutencao' && $product->is_maintenance_exempt) {
-                continue;
-            }
-
-            for ($i = 0; $i < $payment->installments; $i++) {
-                $dueDate = \Carbon\Carbon::parse($payment->start_date)->addMonths($i);
-
-                // Lógica especial para Taxa de Manutenção baseada nas regras do Produto
-                if ($payment->category === 'taxa_manutencao') {
-                    $baseDate = today()->addYears($product->maintenance_fee_delay_years)->startOfMonth();
-                    
-                    switch ($product->maintenance_fee_start_rule) {
-                        case 'semester_based':
-                            // Jan-Jul -> Dez do ano atual (ou ano com carência)
-                            // Ago-Dez -> Jul do ano seguinte (ou ano com carência + 1)
-                            if ($baseDate->month <= 7) {
-                                $dueDate = $baseDate->copy()->month(12)->day($product->maintenance_fee_day);
-                            } else {
-                                $dueDate = $baseDate->copy()->addYear()->month(7)->day($product->maintenance_fee_day);
-                            }
-                            // Se houver mais de uma parcela, aplica a frequência (Anual vs Semestral)
-                            if ($i > 0) {
-                                $monthsToAdd = ($product->maintenance_fee_frequency === 'annual') ? 12 : 6;
-                                $dueDate->addMonths($i * $monthsToAdd);
-                            }
-                            break;
-
-                        case 'contract_anniversary':
-                            // No mês do contrato + carência + i anos/semestres
-                            if ($product->maintenance_fee_frequency === 'semestral') {
-                                $dueDate = $baseDate->copy()->day($product->maintenance_fee_day)->addMonths($i * 6);
-                            } else {
-                                $dueDate = $baseDate->copy()->day($product->maintenance_fee_day)->addYears($i);
-                            }
-                            break;
-
-                        case 'fixed_delay':
-                        default:
-                            // Apenas carência + dia fixo + i meses/anos
-                            if ($product->maintenance_fee_frequency === 'semestral') {
-                                $dueDate = $baseDate->copy()->day($product->maintenance_fee_day)->addMonths($i * 6);
-                            } else {
-                                $dueDate = $baseDate->copy()->day($product->maintenance_fee_day)->addMonths($i * 12);
-                            }
-                            break;
-                    }
-                }
-                
-                $categoryLabel = $this->getCategoryLabel($payment->category);
-                $installmentStr = ($i + 1) . '/' . $payment->installments;
-
-                $isAutoBaixa = !empty($paymentMethodsMap[$payment->payment_method]);
-
-                \App\Models\Bill::create([
-                    'client_id' => $proposal->client_id,
-                    'proposal_id' => $proposal->id,
-                    'sales_service_id' => $proposal->sales_service_id,
-                    'category' => $payment->category,
-                    'description' => "{$categoryLabel} - {$installmentStr} - Contrato #{$proposal->contract_number}",
-                    'amount' => $payment->installment_value,
-                    'due_date' => $dueDate,
-                    'payment_method' => $payment->payment_method,
-                    'bank_account_id' => $bankAccountMap[$payment->payment_method] ?? null,
-                    'recipient' => $recipientMap[$payment->payment_method] ?? null,
-                    'installment_number' => $i + 1,
-                    'total_installments' => $payment->installments,
-                    'status' => $isAutoBaixa ? 'paid' : 'pending',
-                    'paid_amount' => $isAutoBaixa ? $payment->installment_value : null,
-                    'paid_at' => $isAutoBaixa ? $dueDate : null,
-                ]);
-            }
-        }
+        app(\App\Services\Contracts\ProposalBillGenerator::class)->generate($proposal);
     }
 
     /**

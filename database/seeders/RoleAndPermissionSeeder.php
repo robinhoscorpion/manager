@@ -72,6 +72,9 @@ class RoleAndPermissionSeeder extends Seeder
             ['name' => 'Acessar Cancelamentos', 'slug' => 'pos_venda.cancelamentos.acessar', 'group' => 'Pós-venda'],
             ['name' => 'Gerenciar Cancelamentos', 'slug' => 'pos_venda.cancelamentos.gerenciar', 'group' => 'Pós-venda'],
 
+            ['name' => 'Acessar Upgrade/Downgrade', 'slug' => 'pos_venda.alteracao_contrato.acessar', 'group' => 'Pós-venda'],
+            ['name' => 'Gerenciar Upgrade/Downgrade', 'slug' => 'pos_venda.alteracao_contrato.gerenciar', 'group' => 'Pós-venda'],
+
             // ================= Funcionários =================
             ['name' => 'Acessar Funcionários', 'slug' => 'funcionarios.acessar', 'group' => 'Funcionários'],
             ['name' => 'Gerenciar Funcionários', 'slug' => 'funcionarios.gerenciar', 'group' => 'Funcionários'],

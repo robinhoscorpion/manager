@@ -6,6 +6,8 @@ use App\Models\Proposal;
 use App\Models\CommissionRule;
 use App\Models\Commission;
 use App\Models\CommissionInstallment;
+use App\Models\CommissionReversal;
+use App\Models\ContractAmendment;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -142,30 +144,7 @@ class CommissionService
                 $qualAmount  = 0;
 
                 // 1. Tabela de Pontuação / Produto
-                if (!empty($regra->score_rules) && is_array($regra->score_rules)) {
-                    $proposalPoints = (float) ($proposal->quantity ?? 0);
-                    $proposalProductId = $proposal->product_id ?? null;
-
-                    // Tenta casar primeiro pelo ID exato do Produto cadastrado
-                    foreach ($regra->score_rules as $sr) {
-                        if (!empty($sr['product_id']) && $proposalProductId && (int)$sr['product_id'] === (int)$proposalProductId) {
-                            $scoreAmount = (float) ($sr['amount'] ?? 0);
-                            break;
-                        }
-                    }
-
-                    // Se não casou por ID, busca por faixa de pontuação mínima
-                    if ($scoreAmount <= 0) {
-                        $sortedScoreRules = collect($regra->score_rules)->sortByDesc('min_points');
-                        foreach ($sortedScoreRules as $sr) {
-                            $minP = (float) ($sr['min_points'] ?? 0);
-                            if ($minP > 0 && $proposalPoints >= $minP) {
-                                $scoreAmount = (float) ($sr['amount'] ?? 0);
-                                break;
-                            }
-                        }
-                    }
-                }
+                $scoreAmount = $this->opcScoreAmount($regra, $proposal->product_id ?? null, (float) ($proposal->quantity ?? 0));
 
                 // 2. Tabela de Qualificação
                 if (!empty($regra->qualification_rules) && is_array($regra->qualification_rules)) {
@@ -369,5 +348,208 @@ class CommissionService
         }
 
         return $generatedCommissions;
+    }
+
+    /**
+     * Valor da Tabela de Pontuação (OPC) para um produto / pontuação.
+     * Tenta casar pelo ID do produto; se não casar, usa a faixa de pontuação mínima.
+     */
+    public function opcScoreAmount($regra, $productId, float $points): float
+    {
+        if (empty($regra->score_rules) || !is_array($regra->score_rules)) {
+            return 0.0;
+        }
+
+        foreach ($regra->score_rules as $sr) {
+            if (!empty($sr['product_id']) && $productId && (int) $sr['product_id'] === (int) $productId) {
+                return (float) ($sr['amount'] ?? 0);
+            }
+        }
+
+        $sortedScoreRules = collect($regra->score_rules)->sortByDesc('min_points');
+        foreach ($sortedScoreRules as $sr) {
+            $minP = (float) ($sr['min_points'] ?? 0);
+            if ($minP > 0 && $points >= $minP) {
+                return (float) ($sr['amount'] ?? 0);
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * UPGRADE: gera comissão somente sobre a DIFERENÇA do aditivo.
+     *
+     * Só é executado se o contrato já tiver comissões geradas. Se ainda não
+     * houver, a geração mensal (em lote) já usará o novo valor do contrato.
+     * Pagamento único no mês seguinte ao aditivo (M+1).
+     */
+    public function generateAmendmentCommissions(Proposal $proposal, ContractAmendment $amendment): array
+    {
+        $diff = (float) $amendment->difference_amount;
+        if ($diff <= 0 || !$this->hasBaseCommissions($proposal)) {
+            return [];
+        }
+
+        $salesService = $proposal->salesService;
+        if (!$salesService) {
+            return [];
+        }
+
+        $mesAditivo = Carbon::parse($amendment->created_at ?? now())->startOfMonth();
+        $generated = [];
+
+        foreach (CommissionRule::where('is_active', true)->get() as $regra) {
+            $userId = $salesService->{$regra->role_column} ?? null;
+            if (!$userId) {
+                continue;
+            }
+
+            if ($regra->rule_type === 'opc' || $regra->role_column === 'opc_id') {
+                $oldScore = $this->opcScoreAmount($regra, $amendment->from_product_id, (float) ($amendment->old_quantity ?? 0));
+                $newScore = $this->opcScoreAmount($regra, $amendment->to_product_id, (float) ($amendment->new_quantity ?? 0));
+                $valor = round($newScore - $oldScore, 2);
+                $percent = 0;
+                $origin = 'opc';
+            } else {
+                $taxa = $regra->percentage / 100;
+                $base = round($diff * ($regra->distribution_base_percentage / 100), 2);
+                $valor = round($base * $taxa, 2);
+                $percent = $regra->percentage;
+                $origin = 'aditivo';
+            }
+
+            if ($valor <= 0) {
+                continue;
+            }
+
+            $commission = Commission::create([
+                'proposal_id' => $proposal->id,
+                'contract_amendment_id' => $amendment->id,
+                'user_id' => $userId,
+                'role' => $regra->name,
+                'total_amount' => $valor,
+                'base_sale_value' => $origin === 'opc' ? 0 : $diff,
+                'base_commission_percentage' => $percent,
+            ]);
+
+            CommissionInstallment::create([
+                'commission_id' => $commission->id,
+                'month_offset' => 1,
+                'due_date' => $mesAditivo->copy()->addMonth(),
+                'reference_month' => $mesAditivo->copy()->addMonth()->format('m/Y'),
+                'amount' => $valor,
+                'origin_type' => $origin,
+                'notes' => "Comissão sobre a diferença do upgrade (aditivo v{$amendment->to_version})",
+            ]);
+
+            $generated[] = $commission;
+        }
+
+        return $generated;
+    }
+
+    /**
+     * DOWNGRADE: estorna a comissão proporcional à redução do contrato.
+     *
+     * - Percentual (liner/closer): estorno = comissão ativa x (redução / valor anterior).
+     * - OPC: estorno = pontuação antiga - pontuação nova.
+     * O estorno abate primeiro parcelas ainda pendentes (das mais distantes para as
+     * mais próximas). O que já foi pago vira valor a recuperar, com responsável
+     * definido no aditivo (funcionário, cliente ou a definir).
+     */
+    public function reverseAmendmentCommissions(Proposal $proposal, ContractAmendment $amendment): array
+    {
+        $oldValue = (float) $amendment->old_total_value;
+        if ((float) $amendment->difference_amount >= 0 || $oldValue <= 0) {
+            return [];
+        }
+
+        $reduction = abs((float) $amendment->difference_amount);
+        $ratio = min(1, $reduction / $oldValue);
+        $responsible = $amendment->commission_reversal_responsible ?: ContractAmendment::RESPONSIBLE_UNDEFINED;
+        $rules = CommissionRule::all()->keyBy('name');
+        $reversals = [];
+        $opcHandled = [];
+
+        $commissions = Commission::with('installments')->where('proposal_id', $proposal->id)->get();
+
+        foreach ($commissions as $commission) {
+            $active = $commission->installments->where('status', '!=', 'cancelled');
+            $activeTotal = round((float) $active->sum('amount'), 2);
+            if ($activeTotal <= 0) {
+                continue;
+            }
+
+            $regra = $rules->get($commission->role);
+            $isOpc = $regra && ($regra->rule_type === 'opc' || $regra->role_column === 'opc_id');
+
+            if ($isOpc) {
+                // OPC: estorna uma única vez por funcionário/regra a diferença de pontuação
+                $key = $commission->role . '|' . $commission->user_id;
+                if (isset($opcHandled[$key])) {
+                    continue;
+                }
+                $opcHandled[$key] = true;
+                $oldScore = $this->opcScoreAmount($regra, $amendment->from_product_id, (float) ($amendment->old_quantity ?? 0));
+                $newScore = $this->opcScoreAmount($regra, $amendment->to_product_id, (float) ($amendment->new_quantity ?? 0));
+                $reversal = round(max(0, $oldScore - $newScore), 2);
+            } else {
+                $reversal = round($activeTotal * $ratio, 2);
+            }
+
+            $reversal = min($reversal, $activeTotal);
+            if ($reversal <= 0) {
+                continue;
+            }
+
+            // Abate das parcelas pendentes (mais distantes primeiro)
+            $remaining = $reversal;
+            $pendingReduced = 0;
+            $note = "Reduzida por downgrade (aditivo v{$amendment->to_version})";
+            foreach ($active->where('status', 'pending')->sortByDesc('due_date') as $inst) {
+                if ($remaining <= 0) {
+                    break;
+                }
+                $amount = (float) $inst->amount;
+                if ($amount <= $remaining) {
+                    $inst->update([
+                        'status' => 'cancelled',
+                        'notes' => trim(($inst->notes ? $inst->notes . ' | ' : '') . $note . ' - estornado R$ ' . number_format($amount, 2, ',', '.')),
+                    ]);
+                    $remaining = round($remaining - $amount, 2);
+                    $pendingReduced = round($pendingReduced + $amount, 2);
+                } else {
+                    $inst->update([
+                        'amount' => round($amount - $remaining, 2),
+                        'notes' => trim(($inst->notes ? $inst->notes . ' | ' : '') . $note . ' - valor original R$ ' . number_format($amount, 2, ',', '.')),
+                    ]);
+                    $pendingReduced = round($pendingReduced + $remaining, 2);
+                    $remaining = 0;
+                }
+            }
+
+            $reversals[] = CommissionReversal::create([
+                'commission_id' => $commission->id,
+                'contract_amendment_id' => $amendment->id,
+                'user_id' => $commission->user_id,
+                'reversal_amount' => $reversal,
+                'pending_reduced_amount' => $pendingReduced,
+                'to_recover_amount' => $remaining,
+                'responsible' => $responsible,
+                'status' => $remaining > 0 ? CommissionReversal::STATUS_PENDING : CommissionReversal::STATUS_RESOLVED,
+                'resolved_at' => $remaining > 0 ? null : now(),
+                'notes' => $remaining > 0
+                    ? 'Comissão já paga a recuperar devido ao downgrade.'
+                    : 'Estorno totalmente abatido de parcelas pendentes.',
+            ]);
+        }
+
+        return $reversals;
+    }
+
+    private function hasBaseCommissions(Proposal $proposal): bool
+    {
+        return Commission::where('proposal_id', $proposal->id)->whereNull('contract_amendment_id')->exists();
     }
 }

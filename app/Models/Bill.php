@@ -11,6 +11,9 @@ class Bill extends Model
     protected $fillable = [
         'client_id',
         'proposal_id',
+        'version',
+        'contract_amendment_id',
+        'replaced_by_amendment_id',
         'sales_service_id',
         'category',
         'description',
@@ -36,6 +39,16 @@ class Bill extends Model
     public function proposal()
     {
         return $this->belongsTo(Proposal::class);
+    }
+
+    public function amendment()
+    {
+        return $this->belongsTo(ContractAmendment::class, 'contract_amendment_id');
+    }
+
+    public function replacedByAmendment()
+    {
+        return $this->belongsTo(ContractAmendment::class, 'replaced_by_amendment_id');
     }
 
     public function salesService()

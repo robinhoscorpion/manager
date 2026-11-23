@@ -13,6 +13,9 @@ class ProposalPayment extends Model
 
     protected $fillable = [
         'proposal_id',
+        'version',
+        'is_current',
+        'contract_amendment_id',
         'category',
         'payment_method',
         'installments',
@@ -20,6 +23,15 @@ class ProposalPayment extends Model
         'total_value',
         'start_date'
     ];
+
+    protected $casts = [
+        'is_current' => 'boolean',
+    ];
+
+    public function amendment()
+    {
+        return $this->belongsTo(ContractAmendment::class, 'contract_amendment_id');
+    }
 
     public function proposal()
     {

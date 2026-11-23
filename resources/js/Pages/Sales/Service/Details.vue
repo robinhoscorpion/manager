@@ -671,7 +671,12 @@ const updateProtocolStatus = (protocolId, status) => {
                                 <div class="flex flex-wrap items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                                     <span v-if="client?.cpf">CPF: <span class="text-white font-mono">{{ client.cpf }}</span></span>
                                     <span v-if="product">Produto: <span class="text-white">{{ product.name }}</span></span>
-                                    <span v-if="proposal?.contract_number">Contrato: <span class="text-brand-green font-mono font-bold">{{ proposal.contract_number }}</span></span>
+                                    <span v-if="proposal?.contract_number">Contrato: <span class="text-brand-green font-mono font-bold">{{ proposal.contract_number }}</span><span v-if="proposal.current_version > 1" class="ml-1 text-amber-400" title="Contrato com aditivo (upgrade/downgrade)">v{{ proposal.current_version }}</span></span>
+                                    <Link v-if="proposal?.status === 'approved' && can('pos_venda.alteracao_contrato.gerenciar')"
+                                        :href="route('after-sales.contract-amendments.create', { proposal: proposal.id })"
+                                        class="px-3 py-1 rounded-full border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 transition-colors">
+                                        Upgrade / Downgrade
+                                    </Link>
                                 </div>
                             </div>
 
