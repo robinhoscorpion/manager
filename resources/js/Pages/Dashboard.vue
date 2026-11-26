@@ -114,9 +114,12 @@ const averageTicket = computed(() => props.total_contracts > 0 ? props.total_sal
 const dailyAverage = computed(() => currentDay.value > 0 ? (props.total_sales_revenue / currentDay.value) : 0);
 const isDailyGoalExceeded = computed(() => dailyAverage.value >= dailyGoal.value);
 
+// Aproveitamento: ignora qualificações marcadas como "não entra no cálculo" (ex.: NT)
 const conversionRate = computed(() => {
-    if (props.total_services <= 0) return 0;
-    return (props.total_contracts / props.total_services) * 100;
+    const services = props.metric_services ?? props.total_services;
+    const contracts = props.metric_contracts ?? props.total_contracts;
+    if (services <= 0) return 0;
+    return (contracts / services) * 100;
 });
 const formatConversionRate = (val) => val.toFixed(1).replace('.', ',') + '%';
 

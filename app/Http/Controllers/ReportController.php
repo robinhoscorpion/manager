@@ -95,7 +95,8 @@ class ReportController extends Controller
     private function buildRankingData($startDate, $endDate): array
     {
         // Fetch active qualifications
-        $activeQualifications = Qualification::where('is_active', true)->get(['code', 'name']);
+        $activeQualifications = Qualification::where('is_active', true)->get(['code', 'name', 'counts_in_metrics']);
+        $excludedCodes = Qualification::excludedFromMetricsCodes();
 
         // Fetch users with their roles (including deactivated ones)
         $users = User::with('roles')->whereHas('roles', function ($q) {
@@ -108,13 +109,13 @@ class ReportController extends Controller
 
         foreach ($users as $user) {
             if ($user->hasRole('promotor')) {
-                $this->pushIfVisible($opcs, $user, $this->calculateMetrics($user, 'opc_id', $startDate, $endDate, $activeQualifications));
+                $this->pushIfVisible($opcs, $user, $this->calculateMetrics($user, 'opc_id', $startDate, $endDate, $activeQualifications, $excludedCodes));
             }
             if ($user->hasRole('consultor')) {
-                $this->pushIfVisible($liners, $user, $this->calculateMetrics($user, 'liner_id', $startDate, $endDate, $activeQualifications));
+                $this->pushIfVisible($liners, $user, $this->calculateMetrics($user, 'liner_id', $startDate, $endDate, $activeQualifications, $excludedCodes));
             }
             if ($user->hasRole('supervisor')) {
-                $this->pushIfVisible($closers, $user, $this->calculateMetrics($user, 'closer_id', $startDate, $endDate, $activeQualifications));
+                $this->pushIfVisible($closers, $user, $this->calculateMetrics($user, 'closer_id', $startDate, $endDate, $activeQualifications, $excludedCodes));
             }
         }
 
@@ -137,12 +138,12 @@ class ReportController extends Controller
      */
     private function pushIfVisible(array &$list, User $user, array $metrics): void
     {
-        if ($user->status || $metrics['qualificacao']['show'] > 0) {
+        if ($user->status || $metrics['atendimentos'] > 0) {
             $list[] = $metrics;
         }
     }
 
-    private function calculateMetrics(User $user, string $roleColumn, $startDate, $endDate, $activeQualifications)
+    private function calculateMetrics(User $user, string $roleColumn, $startDate, $endDate, $activeQualifications, array $excludedCodes = [])
     {
         // Query Sales Services associated with the user as this specific role in the date range
         $services = SalesService::with('proposal')
@@ -158,6 +159,8 @@ class ReportController extends Controller
         }
 
         $vendidos = 0;
+        $vendidosCalculo = 0;
+        $show = 0;
         $total = 0;
 
         foreach ($services as $service) {
@@ -167,22 +170,31 @@ class ReportController extends Controller
                 $qualCounts[$qual]++;
             }
 
+            // Qualificações marcadas como "não entra no cálculo" (ex.: NT) não contam como show
+            $entraNoCalculo = Qualification::countsInMetrics($qual, $excludedCodes);
+            if ($entraNoCalculo) {
+                $show++;
+            }
+
             // Considera vendido se proposta está aprovada ou concluída (contrato ativo/finalizado)
             if ($service->proposal && in_array(strtolower($service->proposal->status ?? ''), ['approved', 'completed'])) {
                 $vendidos++;
+                if ($entraNoCalculo) {
+                    $vendidosCalculo++;
+                }
                 $total += (float) ($service->proposal->total_value ?? 0);
             }
         }
 
-        $show = $services->count();
         $qualCounts['show'] = $show;
 
-        // Aproveitamento = Vendidos ÷ Total de Shows (total de atendimentos)
-        $aproveitamento = $show > 0 ? ($vendidos / $show) * 100 : 0;
+        // Aproveitamento = Vendidos ÷ Shows (somente qualificações que entram no cálculo)
+        $aproveitamento = $show > 0 ? ($vendidosCalculo / $show) * 100 : 0;
 
         return [
             'name' => $user->name,
             'qualificacao' => $qualCounts,
+            'atendimentos' => $services->count(),
             'vendidos' => $vendidos,
             'aproveitamento' => round($aproveitamento, 2),
             'total' => $total
@@ -204,11 +216,13 @@ class ReportController extends Controller
             ->get(['id', 'qualification', 'local', 'opc_id', 'liner_id', 'closer_id', 'mkt_id']);
 
         // Venda e VGV de cada atendimento
-        $rows = $services->map(function ($service) {
+        $excludedCodes = Qualification::excludedFromMetricsCodes();
+        $rows = $services->map(function ($service) use ($excludedCodes) {
             $sold = $service->proposal && in_array(strtolower($service->proposal->status ?? ''), ['approved', 'completed']);
             return [
                 'service' => $service,
                 'sold' => $sold,
+                'in_metrics' => Qualification::countsInMetrics($service->qualification, $excludedCodes),
                 'vgv' => $sold ? (float) ($service->proposal->total_value ?? 0) : 0,
             ];
         });
@@ -269,14 +283,21 @@ class ReportController extends Controller
         $vendas = $group->where('sold', true)->count();
         $vgv = $group->sum('vgv');
 
+        // Base de conversão: ignora qualificações que não entram no cálculo (ex.: NT)
+        $calculo = $group->where('in_metrics', true);
+        $atendidosCalculo = $calculo->count();
+        $vendasCalculo = $calculo->where('sold', true)->count();
+        $vgvCalculo = $calculo->sum('vgv');
+
         return [
             'label' => $label,
             'atendidos' => $atendidos,
+            'atendidos_calculo' => $atendidosCalculo,
             'vendas' => $vendas,
-            'conversao' => $atendidos > 0 ? round($vendas / $atendidos * 100, 2) : 0,
+            'conversao' => $atendidosCalculo > 0 ? round($vendasCalculo / $atendidosCalculo * 100, 2) : 0,
             'vgv' => round($vgv, 2),
             'ticket_medio' => $vendas > 0 ? round($vgv / $vendas, 2) : 0,
-            'vgv_por_casal' => $atendidos > 0 ? round($vgv / $atendidos, 2) : 0,
+            'vgv_por_casal' => $atendidosCalculo > 0 ? round($vgvCalculo / $atendidosCalculo, 2) : 0,
         ];
     }
 }

@@ -22,6 +22,7 @@ const form = useForm({
     color: 'bg-blue-500',
     description: '',
     is_active: true,
+    counts_in_metrics: true,
 });
 
 const colors = [
@@ -49,6 +50,7 @@ const openEditModal = (qual) => {
     form.color = qual.color;
     form.description = qual.description || '';
     form.is_active = !!qual.is_active;
+    form.counts_in_metrics = qual.counts_in_metrics === undefined ? true : !!qual.counts_in_metrics;
     showEditModal.value = true;
 };
 
@@ -143,6 +145,9 @@ const closeModal = () => {
                             <div>
                                 <h3 class="text-slate-900 dark:text-white font-bold text-lg uppercase tracking-tight group-hover:text-brand-green transition-colors">{{ qual.name }}</h3>
                                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 truncate">{{ qual.description || 'Sem descrição' }}</p>
+                                <span v-if="!qual.counts_in_metrics" class="inline-block mt-2 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest border bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-600 dark:text-amber-400" title="Não entra no cálculo de aproveitamento/conversão">
+                                    Fora do cálculo
+                                </span>
                             </div>
 
                             <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -232,6 +237,17 @@ const closeModal = () => {
                             <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-green"></div>
                             <span class="ml-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Qualificação Ativa</span>
                         </label>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="form.counts_in_metrics" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-green"></div>
+                            <span class="ml-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Entra no cálculo de aproveitamento</span>
+                        </label>
+                        <p class="text-[10px] text-slate-400 leading-relaxed">
+                            Desmarque para qualificações que não devem contar como atendimento no aproveitamento/conversão (Dashboard, Ranking de Vendas e Desempenho Comercial). Ex.: NT - No Tour.
+                        </p>
                     </div>
 
                     <!-- Actions -->

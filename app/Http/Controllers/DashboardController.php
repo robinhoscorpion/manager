@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\PlatformGoal;
 use App\Models\Proposal;
+use App\Models\Qualification;
 use App\Models\SalesService;
 use Carbon\Carbon;
 
@@ -52,6 +53,17 @@ class DashboardController extends Controller
         }
 
         $totalServicesCount = $monthlyServices->count();
+
+        // Aproveitamento: ignora atendimentos cujas qualificações não entram no cálculo (ex.: NT)
+        $excludedCodes = Qualification::excludedFromMetricsCodes();
+        $metricServiceIds = $monthlyServices
+            ->filter(fn ($s) => Qualification::countsInMetrics($s->qualification, $excludedCodes))
+            ->pluck('id')
+            ->flip();
+        $metricServicesCount = $metricServiceIds->count();
+        $metricContractsCount = $monthlyProposals
+            ->filter(fn ($p) => $metricServiceIds->has($p->sales_service_id))
+            ->count();
 
         // Rankings
         $rankingPromotores = [];
@@ -122,6 +134,8 @@ class DashboardController extends Controller
             'total_sales_revenue' => $totalSalesRevenue,
             'total_contracts' => $totalContracts,
             'total_services' => $totalServicesCount,
+            'metric_services' => $metricServicesCount,
+            'metric_contracts' => $metricContractsCount,
             'chart_sales_data' => array_values($salesPerDay),
             'chart_services_data' => array_values($servicesPerDay),
             'ranking_promotores' => $formatRanking($rankingPromotores),

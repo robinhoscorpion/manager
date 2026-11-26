@@ -21,7 +21,8 @@ class QualificationController extends Controller
             'code' => 'required|string|max:5',
             'color' => 'required|string',
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'counts_in_metrics' => 'boolean',
         ]);
 
         Qualification::create($validated);
@@ -36,7 +37,8 @@ class QualificationController extends Controller
             'code' => 'required|string|max:5',
             'color' => 'required|string',
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'counts_in_metrics' => 'boolean',
         ]);
 
         $qualification->update($validated);
